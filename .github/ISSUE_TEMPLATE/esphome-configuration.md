@@ -1,13 +1,13 @@
 ---
 name: ESPHome Configuration
-about: Provide the configuration for your ESPHome device
-title: "[ESPHome] New Configuration Request"
-labels: ESPHome
+description: Provide the configuration for your ESPHome device
+title: '[ESPHome] New Configuration Request'
+labels: esphome
 assignees: ''
 
----
-
-attributes:
+body:
+  - type: markdown
+    attributes:
       value: |
         # ESPHome Configuration Request
         
