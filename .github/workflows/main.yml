@@ -2,7 +2,7 @@ name: Build ESPHome Firmware
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened]
 
 jobs:
   build:
@@ -78,4 +78,3 @@ To flash your device, use the ESPHome WebTools:
     )
 
     gh issue comment $ISSUE_NUMBER --body "$comment_body"
-    
