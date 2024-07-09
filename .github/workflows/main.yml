@@ -1,5 +1,6 @@
 name: Build ESPHome Firmware
-
+env:
+  GH_TOKEN: ${{ github.token }}
 on:
   issues:
     types: [opened, edited]
@@ -38,6 +39,7 @@ jobs:
 
     - name: Update ESPHome YAML
       run: |
+        
         device_yaml="esphome_config/${{ steps.user_input.outputs.device_name }}.yaml"
         sed -i "s/STATIC_IP/${{ steps.user_input.outputs.static_ip }}/" $device_yaml
         sed -i "s/GATEWAY/${{ steps.user_input.outputs.gateway }}/" $device_yaml
