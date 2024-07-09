@@ -52,29 +52,3 @@ jobs:
       with:
         name: firmware
         path: esphome_config/.esphome/build/*.bin
-
-    - name: Post comment with firmware link
-      env:
-        ISSUE_NUMBER: ${{ github.event.issue.number }}
-        REPO: ${{ github.repository }}
-        RUN_ID: ${{ github.run_id }}
-      run: |
-        firmware_url="https://github.com/${REPO}/actions/runs/${RUN_ID}/artifacts/firmware"
-
-        comment_body=$(cat <<EOF
-Firmware compilation complete. Download your firmware binary from [this link](${firmware_url}).
-
-To flash your device, use the ESPHome WebTools:
-
-```html
-<script src="https://esphome.github.io/esphome-webtools/webserial.js"></script>
-<script>
-    const esphomeWebSerial = new ESPHomeWebSerial();
-    esphomeWebSerial.firmwareUrl = '${firmware_url}';
-    esphomeWebSerial.start();
-</script>
-```
-    EOF
-    )
-
-    gh issue comment $ISSUE_NUMBER --body "$comment_body"
