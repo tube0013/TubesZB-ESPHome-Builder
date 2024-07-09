@@ -2,11 +2,12 @@ name: Build ESPHome Firmware
 
 on:
   issues:
-    types: [opened]
+    types: [opened, edited]
+  
 
 jobs:
   build:
-    if: contains(github.event.issue.labels.*.name, '[ESPHome]')
+    if: contains(github.event.issue.labels.*.name, 'esphome')
     runs-on: ubuntu-latest
 
     steps:
