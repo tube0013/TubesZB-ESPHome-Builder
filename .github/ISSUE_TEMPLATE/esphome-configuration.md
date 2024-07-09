@@ -1,4 +1,3 @@
----
 name: ESPHome Configuration
 description: Provide the configuration for your ESPHome device
 title: '[ESPHome] New Configuration Request'
