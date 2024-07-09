@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: ESPHome Configuration
-    url: https://github.com/tube0013/TubesZB-ESPHome-Builder/issues/new?template=esphome-configuration.md
+    url: https://github.com/tube0013/TubesZB-ESPHome-Builder/issues/new?template=esphome-static-ip-configuration.md
     about: Create a new ESPHome configuration request issue
