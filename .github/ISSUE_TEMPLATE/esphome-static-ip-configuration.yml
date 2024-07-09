@@ -1,14 +1,12 @@
 name: ESPHome Configuration
-description: Provide the configuration for your ESPHome device
-title: '[ESPHome] New Configuration Request'
+description: Provide the static IP configuration for your TubesZB device
+title: "[ESPHome] New Configuration Request "
 labels: esphome
-assignees: ''
-
 body:
   - type: markdown
     attributes:
       value: |
-        # ESPHome Configuration Request
+        # ESPHome Static IP Configuration Request
         
         ## Device Network Configuration
   - type: input
