@@ -1,6 +1,5 @@
 name: Build ESPHome Firmware
-env:
-  GH_TOKEN: ${{ github.token }}
+
 on:
   issues:
     types: [opened, edited]
@@ -38,6 +37,8 @@ jobs:
         echo "::set-output name=subnet::$subnet"
 
     - name: Update ESPHome YAML
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         
         device_yaml="esphome_config/${{ steps.user_input.outputs.device_name }}.yaml"
