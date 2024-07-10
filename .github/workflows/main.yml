@@ -31,11 +31,16 @@ jobs:
         issue_body=$(gh issue view $issue_number --json body --jq '.body')
         echo "Issue body: $issue_body"
 
-        # Process the issue body to extract values
-        device_name=$(echo "$issue_body" | awk '/^### Device Name$/ { getline; getline; print $1 }')
-        static_ip=$(echo "$issue_body" | awk '/^### Static IP$/ { getline; getline; print $1 }')
-        gateway=$(echo "$issue_body" | awk '/^### Gateway$/ { getline; getline; print $1 }')
-        subnet=$(echo "$issue_body" | awk '/^### Subnet$/ { getline; getline; print $1 }')
+        # Convert issue body to JSON
+        issue_json=$(echo "$issue_body" | jq -R 'split("\n") | map(select(length > 0)) | map(if test("^### ") then . else . end) | . as $in | reduce range(0; length) as $i ({}; . + if ($in[$i] | test("^### ")) then {($in[$i] | gsub("### "; ""; "g")): $in[$i+1]} else {} end)')
+
+        echo "Issue JSON: $issue_json"
+
+        # Extract values from JSON
+        device_name=$(echo "$issue_json" | jq -r '.["Device Name"]')
+        static_ip=$(echo "$issue_json" | jq -r '.["Static IP"]')
+        gateway=$(echo "$issue_json" | jq -r '.["Gateway"]')
+        subnet=$(echo "$issue_json" | jq -r '.["Subnet"]')
 
         # Debugging: Show parsed values
         echo "Parsed values:"
@@ -43,16 +48,6 @@ jobs:
         echo "Static IP: '$static_ip'"
         echo "Gateway: '$gateway'"
         echo "Subnet: '$subnet'"
-
-        if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
-          echo "Error: One or more required values are missing."
-          exit 1
-        fi
-
-        echo "::set-output name=device_name::$device_name"
-        echo "::set-output name=static_ip::$static_ip"
-        echo "::set-output name=gateway::$gateway"
-        echo "::set-output name=subnet::$subnet"
 
     - name: Update ESPHome YAML
       run: |
