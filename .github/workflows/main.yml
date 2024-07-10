@@ -22,19 +22,13 @@ jobs:
       run: |
         python -m pip install esphome
 
-    - name: Authenticate with GitHub CLI
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo $GH_TOKEN | gh auth login --with-token
-
     - name: Read user input from issue
       id: user_input
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         issue_number=${{ github.event.issue.number }}
-        issue_body=$(gh issue view $issue_number --json body -q '.body')
+        issue_body=$(gh issue view $issue_number --json body --jq '.body')
         echo "Issue body: $issue_body"
         
         device_name=$(echo "$issue_body" | grep -oP '(?<=Device Name: )\S+')
@@ -75,3 +69,4 @@ jobs:
       with:
         name: firmware
         path: esphome_config/.esphome/build/*.bin
+        
