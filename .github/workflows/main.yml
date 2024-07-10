@@ -31,16 +31,24 @@ jobs:
         issue_body=$(gh issue view $issue_number --json body --jq '.body')
         echo "Issue body: $issue_body"
 
+        # Debugging: Show lines in the issue body
+        echo "Issue body lines:"
+        echo "$issue_body" | while IFS= read -r line; do
+          echo "Line: '$line'"
+        done
+
+        # Attempt to parse each value
         device_name=$(echo "$issue_body" | grep -oP '(?<=Device Name: ).*')
         static_ip=$(echo "$issue_body" | grep -oP '(?<=Static IP: ).*')
         gateway=$(echo "$issue_body" | grep -oP '(?<=Gateway: ).*')
         subnet=$(echo "$issue_body" | grep -oP '(?<=Subnet: ).*')
 
+        # Debugging: Show parsed values
         echo "Parsed values:"
-        echo "Device Name: $device_name"
-        echo "Static IP: $static_ip"
-        echo "Gateway: $gateway"
-        echo "Subnet: $subnet"
+        echo "Device Name: '$device_name'"
+        echo "Static IP: '$static_ip'"
+        echo "Gateway: '$gateway'"
+        echo "Subnet: '$subnet'"
 
         if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
           echo "Error: One or more required values are missing."
