@@ -1,6 +1,4 @@
 name: Build ESPHome Firmware
-env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 on:
   issues:
@@ -77,4 +75,3 @@ jobs:
       with:
         name: firmware
         path: esphome_config/.esphome/build/*.bin
-        
