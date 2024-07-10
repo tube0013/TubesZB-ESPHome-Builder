@@ -30,11 +30,11 @@ jobs:
         issue_number=${{ github.event.issue.number }}
         issue_body=$(gh issue view $issue_number --json body --jq '.body')
         echo "Issue body: $issue_body"
-        
-        device_name=$(echo "$issue_body" | grep -oP '(?<=Device Name: )\S+')
-        static_ip=$(echo "$issue_body" | grep -oP '(?<=Static IP: )\S+')
-        gateway=$(echo "$issue_body" | grep -oP '(?<=Gateway: )\S+')
-        subnet=$(echo "$issue_body" | grep -oP '(?<=Subnet: )\S+')
+
+        device_name=$(echo "$issue_body" | sed -n 's/^Device Name:[[:space:]]*\(.*\)/\1/p')
+        static_ip=$(echo "$issue_body" | sed -n 's/^Static IP:[[:space:]]*\(.*\)/\1/p')
+        gateway=$(echo "$issue_body" | sed -n 's/^Gateway:[[:space:]]*\(.*\)/\1/p')
+        subnet=$(echo "$issue_body" | sed -n 's/^Subnet:[[:space:]]*\(.*\)/\1/p')
 
         echo "Parsed values:"
         echo "Device Name: $device_name"
@@ -69,4 +69,3 @@ jobs:
       with:
         name: firmware
         path: esphome_config/.esphome/build/*.bin
-        
