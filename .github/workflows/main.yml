@@ -39,8 +39,8 @@ jobs:
         issue_body=$(echo '${{ steps.parse.outputs.payload }}')
         echo "Issue body: $issue_body"
 
-        device_name=$(echo '${{ fromJson(steps.parse.outputs.payload)["Device Name"] }}')
-        static_ip=$(echo '${{ fromJson(steps.parse.outputs.payload)["Static IP"] }}')
+        device_name=$(echo '${{ fromJson(steps.parse.outputs.payload)["Device_Name"] }}')
+        static_ip=$(echo '${{ fromJson(steps.parse.outputs.payload)["Static_IP"] }}')
         gateway=$(echo '${{ fromJson(steps.parse.outputs.payload)["Gateway"] }}')
         subnet=$(echo '${{ fromJson(steps.parse.outputs.payload)["Subnet"] }}')
         echo "device_name=$device_name"

@@ -12,14 +12,14 @@ body:
   - type: input
     id: device_name
     attributes:
-      label: Device Name
+      label: Device_Name
       description: Provide the device name for your ESPHome device (e.g., tubeszb-cc2652p2-2023 or tubeszb-cc2652p7-2023)
     validations:
       required: true
   - type: input
     id: static_ip
     attributes:
-      label: Static IP
+      label: Static_IP
       description: Provide the static IP for your ESPHome device
     validations:
       required: true
