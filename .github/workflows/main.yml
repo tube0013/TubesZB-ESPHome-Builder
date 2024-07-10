@@ -1,10 +1,10 @@
 name: Build ESPHome Firmware
 env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 on:
   issues:
     types: [opened, edited]
-  
 
 jobs:
   build:
@@ -24,14 +24,37 @@ jobs:
       run: |
         python -m pip install esphome
 
+    - name: Authenticate with GitHub CLI
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo $GH_TOKEN | gh auth login --with-token
+
     - name: Read user input from issue
       id: user_input
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         issue_number=${{ github.event.issue.number }}
-        device_name=$(gh issue view $issue_number --json body -q '.body' | grep -oP '(?<=Device Name: )\S+')
-        static_ip=$(gh issue view $issue_number --json body -q '.body' | grep -oP '(?<=Static IP: )\S+')
-        gateway=$(gh issue view $issue_number --json body -q '.body' | grep -oP '(?<=Gateway: )\S+')
-        subnet=$(gh issue view $issue_number --json body -q '.body' | grep -oP '(?<=Subnet: )\S+')
+        issue_body=$(gh issue view $issue_number --json body -q '.body')
+        echo "Issue body: $issue_body"
+        
+        device_name=$(echo "$issue_body" | grep -oP '(?<=Device Name: )\S+')
+        static_ip=$(echo "$issue_body" | grep -oP '(?<=Static IP: )\S+')
+        gateway=$(echo "$issue_body" | grep -oP '(?<=Gateway: )\S+')
+        subnet=$(echo "$issue_body" | grep -oP '(?<=Subnet: )\S+')
+
+        echo "Parsed values:"
+        echo "Device Name: $device_name"
+        echo "Static IP: $static_ip"
+        echo "Gateway: $gateway"
+        echo "Subnet: $subnet"
+
+        if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
+          echo "Error: One or more required values are missing."
+          exit 1
+        fi
+
         echo "::set-output name=device_name::$device_name"
         echo "::set-output name=static_ip::$static_ip"
         echo "::set-output name=gateway::$gateway"
@@ -39,7 +62,6 @@ jobs:
 
     - name: Update ESPHome YAML
       run: |
-        
         device_yaml="esphome_config/${{ steps.user_input.outputs.device_name }}.yaml"
         sed -i "s/STATIC_IP/${{ steps.user_input.outputs.static_ip }}/" $device_yaml
         sed -i "s/GATEWAY/${{ steps.user_input.outputs.gateway }}/" $device_yaml
@@ -55,3 +77,4 @@ jobs:
       with:
         name: firmware
         path: esphome_config/.esphome/build/*.bin
+        
