@@ -31,16 +31,14 @@ jobs:
         issue_body=$(gh issue view $issue_number --json body --jq '.body')
         echo "Issue body: $issue_body"
 
-        # Convert issue body to JSON
-        issue_json=$(echo "$issue_body" | jq -R 'split("\n") | map(select(length > 0)) | map(if test("^### ") then . else . end) | . as $in | reduce range(0; length) as $i ({}; . + if ($in[$i] | test("^### ")) then {($in[$i] | gsub("### "; ""; "g")): $in[$i+1]} else {} end)')
-
-        echo "Issue JSON: $issue_json"
-
-        # Extract values from JSON
-        device_name=$(echo "$issue_json" | jq -r '.["Device Name"]')
-        static_ip=$(echo "$issue_json" | jq -r '.["Static IP"]')
-        gateway=$(echo "$issue_json" | jq -r '.["Gateway"]')
-        subnet=$(echo "$issue_json" | jq -r '.["Subnet"]')
+        device_name=$(echo "$issue_body" | grep -E '^### Device Name\n.*' | cut -d ' ' -f3)
+        static_ip=$(echo "$issue_body" | grep -E '^### Static IP\n[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d ' ' -f2)
+        gateway=$(echo "$issue_body" | grep -E '^### Gateway\n[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d ' ' -f2)
+        subnet=$(echo "$issue_body" | grep -E '^### Subnet\n[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d ' ' -f2)
+        echo "device_name=$device_name"
+        echo "static_ip=$static_IP"  # Corrected typo
+        echo "gateway=$gateway"
+        echo "subnet=$subnet"
 
         # Debugging: Show parsed values
         echo "Parsed values:"
