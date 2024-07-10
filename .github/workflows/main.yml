@@ -22,30 +22,31 @@ jobs:
       run: |
         python -m pip install esphome
 
-    - name: Read user input from issue
-      id: user_input
+    - name: Parse Issue
+      id: parse
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: onmax/issue-form-parser@v1.5
+      with:
+        issue_number: ${{ github.event.issue.number }}
+
+    - name: Read user input from issue
+      id: user_input
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         issue_number=${{ github.event.issue.number }}
-        issue_body=$(gh issue view $issue_number --json body --jq '.body')
+        issue_body=${{ steps.parse.outputs.payload }}
         echo "Issue body: $issue_body"
 
-        device_name=$(echo "$issue_body" | grep -E '^### Device Name\n.*' | cut -d ' ' -f3)
-        static_ip=$(echo "$issue_body" | grep -E '^### Static IP\n[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d ' ' -f2)
-        gateway=$(echo "$issue_body" | grep -E '^### Gateway\n[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d ' ' -f2)
-        subnet=$(echo "$issue_body" | grep -E '^### Subnet\n[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d ' ' -f2)
+        device_name=$(echo '${{ fromJson(steps.parse.outputs.payload)["Device Name"] }}')
+        static_ip=$(echo '${{ fromJson(steps.parse.outputs.payload)["Static IP"] }}')
+        gateway=$(echo '${{ fromJson(steps.parse.outputs.payload)["Gateway"] }}')
+        subnet=$(echo '${{ fromJson(steps.parse.outputs.payload)["Subnet"] }}')
         echo "device_name=$device_name"
-        echo "static_ip=$static_IP"  # Corrected typo
+        echo "static_ip=$static_ip"
         echo "gateway=$gateway"
         echo "subnet=$subnet"
-
-        # Debugging: Show parsed values
-        echo "Parsed values:"
-        echo "Device Name: '$device_name'"
-        echo "Static IP: '$static_ip'"
-        echo "Gateway: '$gateway'"
-        echo "Subnet: '$subnet'"
 
     - name: Update ESPHome YAML
       run: |
