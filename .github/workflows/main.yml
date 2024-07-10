@@ -31,17 +31,11 @@ jobs:
         issue_body=$(gh issue view $issue_number --json body --jq '.body')
         echo "Issue body: $issue_body"
 
-        # Debugging: Show lines in the issue body
-        echo "Issue body lines:"
-        echo "$issue_body" | while IFS= read -r line; do
-          echo "Line: '$line'"
-        done
-
-        # Attempt to parse each value
-        device_name=$(echo "$issue_body" | grep -oP '(?<=Device Name: ).*')
-        static_ip=$(echo "$issue_body" | grep -oP '(?<=Static IP: ).*')
-        gateway=$(echo "$issue_body" | grep -oP '(?<=Gateway: ).*')
-        subnet=$(echo "$issue_body" | grep -oP '(?<=Subnet: ).*')
+        # Process the issue body to extract values
+        device_name=$(echo "$issue_body" | awk '/^### Device Name$/ { getline; getline; print $1 }')
+        static_ip=$(echo "$issue_body" | awk '/^### Static IP$/ { getline; getline; print $1 }')
+        gateway=$(echo "$issue_body" | awk '/^### Gateway$/ { getline; getline; print $1 }')
+        subnet=$(echo "$issue_body" | awk '/^### Subnet$/ { getline; getline; print $1 }')
 
         # Debugging: Show parsed values
         echo "Parsed values:"
