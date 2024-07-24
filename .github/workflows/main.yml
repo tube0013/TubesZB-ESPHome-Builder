@@ -29,8 +29,8 @@ jobs:
         issue_number: ${{ github.event.issue.number }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Examples on how to use the output
-  - name: Show parsed payload data
-    run: |
-      echo '${{ steps.parse.outputs.payload }}'
-      echo '${{ fromJson(steps.parse.outputs.payload)["Static_IP"] }}'
+    # Examples on how to use the output
+    - name: Show parsed payload data
+      run: |
+        echo '${{ steps.parse.outputs.payload }}'
+        echo '${{ fromJson(steps.parse.outputs.payload)["Static_IP"] }}'
