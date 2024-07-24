@@ -26,8 +26,8 @@ jobs:
       id: parse_form
       uses: onmax/issue-form-parser@v1.5
       with:
-        issue-number: ${{ github.event.issue.number }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        issue_number: ${{ github.event.issue.number }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Extract user input from form
       id: user_input
