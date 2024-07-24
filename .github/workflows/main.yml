@@ -67,7 +67,7 @@ jobs:
 
     - name: List build directory contents
       run: |
-        ls -R esphome-config/.esphome/build/
+        ls -Ra esphome-config/.esphome/build/
 
     - name: Upload Firmware
       uses: actions/upload-artifact@v2
