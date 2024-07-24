@@ -6,9 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        # ESPHome Static IP Configuration Request
-        
-        ## Device Network Configuration
+        ESPHome Static IP Configuration Request
   - type: input
     id: device_name
     attributes:
@@ -37,8 +35,3 @@ body:
       description: Provide the subnet for your ESPHome device
     validations:
       required: true
-  - type: markdown
-    attributes:
-      value: |
-        ## Additional Information
-        Provide any additional details here.
