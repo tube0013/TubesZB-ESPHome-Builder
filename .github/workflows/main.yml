@@ -55,18 +55,18 @@ jobs:
 
     - name: Update ESPHome YAML
       run: |
-        device_yaml="esphome_config/${{ steps.user_input.outputs.device_name }}.yaml"
+        device_yaml="esphome-config/${{ steps.user_input.outputs.device_name }}.yaml"
         sed -i "s/STATIC_IP/${{ steps.user_input.outputs.static_ip }}/" $device_yaml
         sed -i "s/GATEWAY/${{ steps.user_input.outputs.gateway }}/" $device_yaml
         sed -i "s/SUBNET/${{ steps.user_input.outputs.subnet }}/" $device_yaml
 
     - name: Compile ESPHome Firmware
       run: |
-        device_yaml="esphome_config/${{ steps.user_input.outputs.device_name }}.yaml"
+        device_yaml="esphome-config/${{ steps.user_input.outputs.device_name }}.yaml"
         esphome compile $device_yaml
 
     - name: Upload Firmware
       uses: actions/upload-artifact@v2
       with:
         name: firmware
-        path: esphome_config/.esphome/build/*.bin
+        path: esphome-config/.esphome/build/*.bin
