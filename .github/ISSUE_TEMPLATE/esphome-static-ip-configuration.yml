@@ -1,7 +1,7 @@
 name: ESPHome Configuration
 description: Provide the static IP configuration for your TubesZB device
 title: 'New ESPHome Static IP Configuration Request'
-labels: ['esphome']
+labels: ['ESPHome']
 body:
   - type: markdown
     attributes:
