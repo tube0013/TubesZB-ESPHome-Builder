@@ -76,13 +76,32 @@ jobs:
         path: |
           esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.factory.bin
           esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.ota.bin
-          
+
+    - name: Get artifact ID
+      id: get_artifact_id
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const artifacts = await github.rest.actions.listArtifactsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo
+          });
+
+          const artifact = artifacts.data.artifacts.find(artifact => artifact.name === 'firmware');
+
+          if (!artifact) {
+            throw new Error('Artifact not found');
+          }
+
+          core.setOutput('artifact_id', artifact.id);
+
     - name: Create comment with firmware link
       uses: actions/github-script@v6
       with:
         script: |
           const issue_number = ${{ github.event.issue.number }};
-          const firmwareArtifactUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts`;
+          const artifact_id = ${{ steps.get_artifact_id.outputs.artifact_id }};
+          const firmwareArtifactUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${artifact_id}`;
           const commentBody = `
           ## Firmware Build Complete
 
@@ -101,3 +120,5 @@ jobs:
             issue_number: issue_number,
             body: commentBody
           });
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
