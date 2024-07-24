@@ -48,17 +48,17 @@ jobs:
           exit 1
         fi
 
-        echo "::set-output name=device_name::$device_name"
-        echo "::set-output name=static_ip::$static_ip"
-        echo "::set-output name=gateway::$gateway"
-        echo "::set-output name=subnet::$subnet"
+        echo "device_name=$device_name" >> $GITHUB_ENV
+        echo "static_ip=$static_ip" >> $GITHUB_ENV
+        echo "gateway=$gateway" >> $GITHUB_ENV
+        echo "subnet=$subnet" >> $GITHUB_ENV
 
     - name: Update ESPHome YAML
       run: |
-        device_yaml="esphome-config/${{ steps.user_input.outputs.device_name }}.yaml"
-        sed -i "s/STATIC_IP/${{ steps.user_input.outputs.static_ip }}/" $device_yaml
-        sed -i "s/GATEWAY/${{ steps.user_input.outputs.gateway }}/" $device_yaml
-        sed -i "s/SUBNET/${{ steps.user_input.outputs.subnet }}/" $device_yaml
+        device_yaml="esphome-config/${{ env.device_name }}.yaml"
+        sed -i "s/STATIC_IP/${{ env.static_ip }}/" $device_yaml
+        sed -i "s/GATEWAY/${{ env.gateway }}/" $device_yaml
+        sed -i "s/SUBNET/${{ env.subnet }}/" $device_yaml
 
     - name: Compile ESPHome Firmware
       run: |
