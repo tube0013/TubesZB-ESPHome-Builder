@@ -74,5 +74,5 @@ jobs:
       with:
         name: firmware
         path: |
-          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.factory.bin
-          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.ota.bin
+          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.factory.bin
+          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.ota.bin
