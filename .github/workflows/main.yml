@@ -65,8 +65,13 @@ jobs:
         device_yaml="esphome-config/${{ steps.user_input.outputs.device_name }}.yaml"
         esphome compile $device_yaml
 
+    - name: List build directory contents
+      run: |
+        ls -R esphome-config/.esphome/build/
+
     - name: Upload Firmware
       uses: actions/upload-artifact@v2
       with:
         name: firmware
-        path: esphome-config/.esphome/build/*.bin
+        path: esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.factory.bin
+
