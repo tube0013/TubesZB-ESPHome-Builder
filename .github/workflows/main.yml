@@ -23,7 +23,7 @@ jobs:
         python -m pip install esphome
 
     - name: Parse issue form
-      id: parse_form
+      id: parse
       uses: onmax/issue-form-parser@v1.5
       with:
         issue_number: ${{ github.event.issue.number }}
