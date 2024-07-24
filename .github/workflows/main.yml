@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    if: contains(github.event.issue.labels.*.name, 'ESPHome')
+    if: contains(github.event.issue.labels.*.name, 'esphome')
     runs-on: ubuntu-latest
 
     steps:
@@ -22,31 +22,36 @@ jobs:
       run: |
         python -m pip install esphome
 
-    - name: Parse Issue
-      id: parse
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Parse issue form
+      id: parse_form
       uses: onmax/issue-form-parser@v1.5
       with:
-        issue_number: ${{ github.event.issue.number }}
+        issue-number: ${{ github.event.issue.number }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Read user input from issue
+    - name: Extract user input from form
       id: user_input
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        issue_number=${{ github.event.issue.number }}
-        issue_body=$(echo '${{ steps.parse.outputs.payload }}')
-        echo "Issue body: $issue_body"
+        device_name="${{ steps.parse_form.outputs.device_name }}"
+        static_ip="${{ steps.parse_form.outputs.static_ip }}"
+        gateway="${{ steps.parse_form.outputs.gateway }}"
+        subnet="${{ steps.parse_form.outputs.subnet }}"
 
-        device_name=${{ fromJson(steps.parse.outputs.payload)["Device_Name"] }}
-        static_ip=$(echo '${{ fromJson(steps.parse.outputs.payload)["Static_IP"] }}')
-        gateway=$(echo '${{ fromJson(steps.parse.outputs.payload)["Gateway"] }}')
-        subnet=$(echo '${{ fromJson(steps.parse.outputs.payload)["Subnet"] }}')
-        echo "device_name=$device_name"
-        echo "static_ip=$static_ip"
-        echo "gateway=$gateway"
-        echo "subnet=$subnet"
+        echo "Parsed values:"
+        echo "Device Name: $device_name"
+        echo "Static IP: $static_ip"
+        echo "Gateway: $gateway"
+        echo "Subnet: $subnet"
+
+        if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
+          echo "Error: One or more required values are missing."
+          exit 1
+        fi
+
+        echo "::set-output name=device_name::$device_name"
+        echo "::set-output name=static_ip::$static_ip"
+        echo "::set-output name=gateway::$gateway"
+        echo "::set-output name=subnet::$subnet"
 
     - name: Update ESPHome YAML
       run: |
