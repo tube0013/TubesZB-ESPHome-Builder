@@ -1,15 +1,13 @@
 name: ESPHome Configuration
 description: Provide the static IP configuration for your TubesZB device
-title: "[ESPHome] New Configuration Request "
-labels: esphome
+title: "New ESPHome Static IP Configuration Request "
+labels: ['esphome']
 body:
   - type: markdown
     attributes:
       value: |
-        # ESPHome Static IP Configuration Request
-        
-        ## Device Network Configuration
-  - type: input
+        ESPHome Static IP Configuration Request      
+ - type: input
     id: device_name
     attributes:
       label: Device_Name
@@ -37,8 +35,3 @@ body:
       description: Provide the subnet for your ESPHome device
     validations:
       required: true
-  - type: markdown
-    attributes:
-      value: |
-        ## Additional Information
-        Provide any additional details here.
