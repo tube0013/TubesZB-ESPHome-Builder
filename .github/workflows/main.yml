@@ -62,20 +62,20 @@ jobs:
 
     - name: Compile ESPHome Firmware
       run: |
-        device_yaml="esphome-config/${{ steps.user_input.outputs.device_name }}.yaml"
+        device_yaml="esphome-config/${{ env.device_name }}.yaml"
         esphome compile $device_yaml
 
-    - name: List build directory contents
-      run: |
-        ls -Ra esphome-config/.esphome/build/
+#    - name: List build directory contents
+#      run: |
+#        ls -Ra esphome-config/.esphome/build/
 
     - name: Upload Firmware
       uses: actions/upload-artifact@v4
       with:
         name: firmware
         path: |
-          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.factory.bin
-          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.ota.bin
+          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.factory.bin
+          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.ota.bin
 
     - name: Get artifact ID
       id: get_artifact_id
@@ -105,13 +105,13 @@ jobs:
           const commentBody = `
           ## Firmware Build Complete
 
-          The firmware build for your device \`${{ steps.user_input.outputs.device_name }}\` is complete. You can download the firmware files from the link below:
+          The firmware build for your device \`${{ env.device_name }}\` is complete. You can download the firmware files from the link below:
 
           [Download Firmware](${firmwareArtifactUrl})
 
-          - Static IP: \`${{ steps.user_input.outputs.static_ip }}\`
-          - Gateway: \`${{ steps.user_input.outputs.gateway }}\`
-          - Subnet: \`${{ steps.user_input.outputs.subnet }}\`
+          - Static IP: \`${{ env.static_ip }}\`
+          - Gateway: \`${{ env.gateway }}\`
+          - Subnet: \`${{ env.subnet }}\`
 
           `;
           await github.rest.issues.createComment({
