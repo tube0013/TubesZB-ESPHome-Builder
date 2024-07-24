@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    if: contains(github.event.issue.labels.*.name, 'ESPHome')
+#    if: contains(github.event.issue.labels.*.name, 'ESPHome')
     runs-on: ubuntu-latest
 
     steps:
