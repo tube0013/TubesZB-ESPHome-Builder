@@ -65,20 +65,14 @@ jobs:
         device_yaml="esphome-config/${{ steps.user_input.outputs.device_name }}.yaml"
         esphome compile $device_yaml
 
-    - name: Rename Firmware Files
-      run: |
-        build_dir="esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}"
-        mv "$build_dir/firmware.factory.bin" "$build_dir/firmware_${{ steps.user_input.outputs.static_ip }}.factory.bin"
-        mv "$build_dir/firmware.ota.bin" "$build_dir/firmware_${{ steps.user_input.outputs.static_ip }}.ota.bin"
-
     - name: List build directory contents
       run: |
-        ls -Ra esphome-config/.esphome/build/
+        ls -R esphome-config/.esphome/build/
 
     - name: Upload Firmware
       uses: actions/upload-artifact@v2
       with:
         name: firmware
         path: |
-          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware_${{ steps.user_input.outputs.static_ip }}.factory.bin
-          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware_${{ steps.user_input.outputs.static_ip }}.ota.bin
+          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.factory.bin
+          esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.ota.bin
