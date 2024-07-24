@@ -76,3 +76,28 @@ jobs:
         path: |
           esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.factory.bin
           esphome-config/.esphome/build/${{ steps.user_input.outputs.device_name }}/.pioenvs/${{ steps.user_input.outputs.device_name }}/firmware.ota.bin
+          
+    - name: Create comment with firmware link
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const issue_number = ${{ github.event.issue.number }};
+          const firmwareArtifactUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts`;
+          const commentBody = `
+          ## Firmware Build Complete
+
+          The firmware build for your device \`${{ steps.user_input.outputs.device_name }}\` is complete. You can download the firmware files from the link below:
+
+          [Download Firmware](${firmwareArtifactUrl})
+
+          - Static IP: \`${{ steps.user_input.outputs.static_ip }}\`
+          - Gateway: \`${{ steps.user_input.outputs.gateway }}\`
+          - Subnet: \`${{ steps.user_input.outputs.subnet }}\`
+
+          `;
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issue_number,
+            body: commentBody
+          });
