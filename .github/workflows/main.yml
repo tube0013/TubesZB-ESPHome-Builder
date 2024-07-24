@@ -70,7 +70,7 @@ jobs:
         ls -Ra esphome-config/.esphome/build/
 
     - name: Upload Firmware
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: firmware
         path: |
