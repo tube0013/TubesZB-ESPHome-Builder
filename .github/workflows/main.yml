@@ -29,44 +29,8 @@ jobs:
         issue_number: ${{ github.event.issue.number }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract user input from form
-      id: user_input
-      run: |
-        sections="${{ steps.parse_form.outputs.sections }}"
-        device_name=$(echo "$sections" | jq -r '.[] | select(startswith("Device_Name")) | split("\n\n")[1]' | tr -d '\n' | tr -d '\r')
-        static_ip=$(echo "$sections" | jq -r '.[] | select(startswith("Static_IP")) | split("\n\n")[1]' | tr -d '\n' | tr -d '\r')
-        gateway=$(echo "$sections" | jq -r '.[] | select(startswith("Gateway")) | split("\n\n")[1]' | tr -d '\n' | tr -d '\r')
-        subnet=$(echo "$sections" | jq -r '.[] | select(startswith("Subnet")) | split("\n\n")[1]' | tr -d '\n' | tr -d '\r')
-
-        echo "::set-output name=device_name::$device_name"
-        echo "::set-output name=static_ip::$static_ip"
-        echo "::set-output name=gateway::$gateway"
-        echo "::set-output name=subnet::$subnet"
-
-        if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
-          echo "Error: One or more required values are missing."
-          exit 1
-        fi
-
-        echo "::set-output name=device_name::$device_name"
-        echo "::set-output name=static_ip::$static_ip"
-        echo "::set-output name=gateway::$gateway"
-        echo "::set-output name=subnet::$subnet"
-
-    - name: Update ESPHome YAML
-      run: |
-        device_yaml="esphome_config/${{ steps.user_input.outputs.device_name }}.yaml"
-        sed -i "s/STATIC_IP/${{ steps.user_input.outputs.static_ip }}/" $device_yaml
-        sed -i "s/GATEWAY/${{ steps.user_input.outputs.gateway }}/" $device_yaml
-        sed -i "s/SUBNET/${{ steps.user_input.outputs.subnet }}/" $device_yaml
-
-    - name: Compile ESPHome Firmware
-      run: |
-        device_yaml="esphome_config/${{ steps.user_input.outputs.device_name }}.yaml"
-        esphome compile $device_yaml
-
-    - name: Upload Firmware
-      uses: actions/upload-artifact@v2
-      with:
-        name: firmware
-        path: esphome_config/.esphome/build/*.bin
+  # Examples on how to use the output
+  - name: Show parsed payload data
+    run: |
+      echo '${{ steps.parse.outputs.payload }}'
+      echo '${{ fromJson(steps.parse.outputs.payload)["Static_IP"] }}'
