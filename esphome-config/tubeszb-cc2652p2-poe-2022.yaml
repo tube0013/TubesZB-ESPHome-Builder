@@ -1,30 +1,36 @@
 esphome:
-  name: tubeszb-cc2652p2-ethusb-2023
+  name: tubeszb-cc2652-poe-2022
   project: 
-    name: tubeszb.cc2652p2-ethusb-2023
+    name: tubezb.cc2652-poe-2022
     version: "3.0"
+  on_boot:
+    priority: 600
+    then:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
 
 esp32:
   board: esp-wrover-kit
   framework:
-    type: esp-idf
+    type: arduino
 
 
 external_components:
   - source: github://oxan/esphome-stream-server
 
 dashboard_import:
-  package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-eth_usb/firmware/esphome/tubezb-cc2652p2-ethusb-2023.yaml
+  package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-poe-2022/firmware/esphome/tubeszb-cc2652-poe-2022.yaml
 
-#WT32-ETH01 Ethernet
+#Olimex ESP32-PoE Ethernet
 ethernet:
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
-  clk_mode: GPIO0_IN
-  phy_addr: 1
-  power_pin: GPIO16
-
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  power_pin: GPIO12
+  
     # Optional manual IP
   manual_ip:
     static_ip: STATIC_IP
@@ -44,7 +50,6 @@ ota:
 
 web_server:
   port: 80
-  local: True
 
 
 script:
@@ -63,24 +68,18 @@ script:
       
 switch:
   - platform: gpio
-    pin: 33
+    pin: 13
     id: zRST_gpio
     inverted: yes
     restore_mode: ALWAYS_OFF
       
   - platform: gpio
-    pin: 32
-    name: "zBSL"
+    pin: 4
+    name: "Zigbee Module Bootloader Pin"
     id: zBSL
     inverted: yes
     restore_mode: ALWAYS_OFF
-    
-  - platform: template
-    name: "Prep the cc2652p2 for firmware update"
-    turn_on_action:
-      - script.execute: fw_update_mode
-    turn_off_action:
-      - button.press: zRST
+    disabled_by_default: true
 
 button:
   - platform: restart
@@ -88,22 +87,28 @@ button:
 
   - platform: template
     name: "Zigbee Module Reset"
+    disabled_by_default: true
     id: zRST
     on_press:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
       - switch.turn_off: zRST_gpio
 
+  - platform: template
+    name: "Trigger Zigbee Module Bootloader"
+    disabled_by_default: true
+    on_press:
+      - script.execute: fw_update_mode
+
 uart:
   id: uart_bus
-  rx_pin: GPIO17
-  tx_pin: GPIO5
+  rx_pin: GPIO5
+  tx_pin: GPIO16
   baud_rate: 115200
   rx_buffer_size: 1024
 
 stream_server:
   uart_id: uart_bus
-  id: ss
   port: 6638 # optional, default is 6638
   buffer_size: 1024
 
