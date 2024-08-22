@@ -7,11 +7,19 @@ body:
     attributes:
       value: |
         ESPHome Static IP Configuration Request
-  - type: input
+  - type: dropdown
     id: device_name
+    label: Device
     attributes:
       label: Device_Name
-      description: Provide the device name for your ESPHome device (e.g., tubeszb-cc2652p2-poe-2023 or tubeszb-cc2652p7-poe-2023 or tubeszb-cc2652p2-poe-2023 or tubeszb-cc2652p2-ethusb-2022 or tubeszb-cc2652p2-ethusb-2023 )
+      description: Provide the device name for your ESPHome device 
+      options: 
+        - tubeszb-cc2652p2-poe-2023
+        - tubeszb-cc2652p7-poe-2023
+        - tubeszb-cc2652p2-poe-2022
+        - tubeszb-cc2652p2-ethusb-2023
+        - tubeszb-cc2652p2-ethusb-2022
+        - tubeszb-zw
     validations:
       required: true
   - type: input
