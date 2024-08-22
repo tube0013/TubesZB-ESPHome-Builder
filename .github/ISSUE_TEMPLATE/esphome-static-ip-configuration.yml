@@ -9,7 +9,6 @@ body:
         ESPHome Static IP Configuration Request
   - type: dropdown
     id: device_name
-    label: Device
     attributes:
       label: Device
       description: Select the device name for your TubesZB device
