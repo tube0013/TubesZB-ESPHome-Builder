@@ -11,8 +11,7 @@ body:
     id: device_name
     label: Device
     attributes:
-      label: Device_Name
-      description: Provide the device name for your ESPHome device 
+      description: Select the device name for your TubesZB device
       options: 
         - tubeszb-cc2652p2-poe-2023
         - tubeszb-cc2652p7-poe-2023
