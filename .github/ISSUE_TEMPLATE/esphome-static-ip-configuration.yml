@@ -11,6 +11,7 @@ body:
     id: device_name
     label: Device
     attributes:
+      label: Device
       description: Select the device name for your TubesZB device
       options: 
         - tubeszb-cc2652p2-poe-2023
@@ -19,6 +20,7 @@ body:
         - tubeszb-cc2652p2-ethusb-2023
         - tubeszb-cc2652p2-ethusb-2022
         - tubeszb-zw
+      default: 0
     validations:
       required: true
   - type: input
