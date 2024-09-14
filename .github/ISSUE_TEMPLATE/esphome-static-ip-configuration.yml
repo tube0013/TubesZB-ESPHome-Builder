@@ -18,6 +18,7 @@ body:
         - tubeszb-cc2652p2-poe-2022
         - tubeszb-cc2652p2-ethusb-2023
         - tubeszb-cc2652p2-ethusb-2022
+        - tubeszb-efr32-mgm24-2023
         - tubeszb-zw
       default: 0
     validations:
