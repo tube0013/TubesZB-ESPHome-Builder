@@ -3,7 +3,11 @@ esphome:
   project: 
     name: tubeszb.cc2652p2-ethusb-2022
     version: "3.0"
-
+  on_boot:
+    priority: 600
+    then:
+      - lambda: |-
+          id(mdns0).add_extra_service({ "_zigbee-gateway", "_tcp", 6638, {{"radio_type", "znp"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
 esp32:
   board: esp-wrover-kit
   framework:
@@ -112,14 +116,5 @@ binary_sensor:
       name: "TubesZB Serial Connected"
 
 mdns:
-  services:
-    - service: "_tubeszb"
-      protocol: "_tcp"
-      port: 6638
-      txt:
-        version: 1.0
-        name: TubesZB
-        radio_type: znp
-        baud_rate: 115200
-        data_flow_control: software
+  id: mdns0
 

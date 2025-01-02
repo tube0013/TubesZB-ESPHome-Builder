@@ -6,6 +6,9 @@ esphome:
   on_boot:
     priority: 600
     then:
+      - lambda: |-
+          id(mdns0).add_extra_service({ "_zigbee-gateway", "_tcp", 6638, {{"radio_type", "znp"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
+    then:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
       - switch.turn_off: zRST_gpio
@@ -118,14 +121,5 @@ binary_sensor:
       name: "TubesZB Serial Connected"
 
 mdns:
-  services:
-    - service: "_tubeszb"
-      protocol: "_tcp"
-      port: 6638
-      txt:
-        version: 1.0
-        name: TubesZB
-        radio_type: znp
-        baud_rate: 115200
-        data_flow_control: software
+  id: mdns0
 
