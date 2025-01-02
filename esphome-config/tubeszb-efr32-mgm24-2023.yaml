@@ -3,7 +3,7 @@ esphome:
   project:
     name: tubeszb.efr32_mgm24_2023
     version: "2024.09.14"
-on_boot:
+  on_boot:
     priority: 600
     then:
       - lambda: |-
