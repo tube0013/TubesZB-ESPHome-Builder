@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>TubesZB ESPHome Firmware Flasher</title>
+    <meta name="description" content="Flash TubesZB ESPHome firmware using your web browser" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        /* Custom styles for TubesZB */
+        body {
+            font-family: sans-serif;
+            /* Or a specific font */
+        }
+
+        .container-fluid {
+            max-width: 1000px;
+            /* Limit page width for readability */
+            margin: 0 auto;
+            /* Center the content */
+        }
+
+        nav {
+            background-color: #f0f0f0;
+            /* Light gray background for nav */
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        nav ul li {
+            margin-right: 1em;
+        }
+
+        header {
+            text-align: center;
+            padding: 2em 0;
+        }
+
+        fieldset {
+            border: 1px solid #ccc;
+            /* Add a subtle border */
+            padding: 1em;
+            margin-bottom: 1em;
+        }
+
+        legend {
+            font-weight: bold;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            /* Each label on its own line */
+            margin-bottom: 0.5em;
+        }
+
+        input[type="radio"] {
+            margin-right: 0.5em;
+        }
+
+        esp-web-install-button {
+            display: block;
+            margin: 1em auto;
+            /* Center the button */
+        }
+
+        footer {
+            text-align: center;
+            padding: 1em 0;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Semi-transparent background */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .modal-close {
+            color: #aaa;
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</head>
+
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li>
+                <a href="https://tubeszb.com"><img src="img/tubeszb-logo.png" alt="TubesZB" height="50"></a>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <a href="https://github.com/tube0013/TubesZB-ESPHome-Builder/releases">Firmware Releases</a>
+            </li>
+            <li>
+                <a href="https://github.com/tube0013/TubesZB-ESPHome-Builder">Github</a>
+            </li>
+        </ul>
+    </nav>
+    <header class="container-fluid">
+        <h1>TubesZB ESPHome Flasher</h1>
+        <p>
+            Select your TubesZB device below to configure the web-based ESPHome firmware flasher.
+        </p>
+    </header>
+
+    <main class="container-fluid">
+        <fieldset>
+            <legend>Select your device</legend>
+            <label data-manifest="./manifest-tubeszb-cc2652p2-ethusb-2022.json"
+                title="CC2652P2 with Ethernet and USB, 2022 version">
+                <input type="radio" name="device" value="tubeszb-cc2652p2-ethusb-2022" />
+                TubesZB CC2652P2 ethusb 2022
+            </label>
+            <label data-manifest="./manifest-tubeszb-cc2652p2-ethusb-2023.json"
+                title="CC2652P2 with Ethernet and USB, 2023 version">
+                <input type="radio" name="device" value="tubeszb-cc2652p2-ethusb-2023" />
+                TubesZB CC2652P2 ethusb 2023
+            </label>
+            <label data-manifest="./manifest-tubeszb-cc2652p2-poe-2022.json"
+                title="CC2652P2 with PoE, 2022 version">
+                <input type="radio" name="device" value="tubeszb-cc2652p2-poe-2022" />
+                TubesZB CC2652P2 PoE 2022
+            </label>
+            <label data-manifest="./manifest-tubeszb-cc2652p2-poe-2023.json"
+                title="CC2652P2 with PoE, 2023 version">
+                <input type="radio" name="device" value="tubeszb-cc2652p2-poe-2023" />
+                TubesZB CC2652P2 PoE 2023
+            </label>
+            <label data-manifest="./manifest-tubeszb-cc2652p7-poe-2023.json"
+                title="CC2652P7 with PoE, 2023 version">
+                <input type="radio" name="device" value="tubeszb-cc2652p7-poe-2023" />
+                TubesZB CC2652P7 PoE 2023
+            </label>
+            <label data-manifest="./manifest-tubeszb-dual-radio-kit-cc2652.json"
+                title="Dual Radio Kit with CC2652">
+                <input type="radio" name="device" value="tubeszb-dual-radio-kit-cc2652" />
+                TubesZB Dual Radio Kit CC2652
+            </label>
+            <label data-manifest="./manifest-tubeszb-dual-radio-kit-mgm24.json"
+                title="Dual Radio Kit with MGM24">
+                <input type="radio" name="device" value="tubeszb-dual-radio-kit-mgm24" />
+                TubesZB Dual Radio Kit MGM24
+            </label>
+            <label data-manifest="./manifest-tubeszb-efr32-mgm210-poe-2023.json"
+                title="MGM210 with PoE, 2023 version">
+                <input type="radio" name="device" value="tubeszb-efr32-mgm210-poe-2023" />
+                TubesZB MGM21 PoE 2023
+            </label>
+            <label data-manifest="./manifest-tubeszb-efr32-mgm24-2023.json"
+                title="MGM24 with PoE, 2023 version">
+                <input type="radio" name="device" value="tubeszb-efr32-mgm24-2023" />
+                TubesZB MGM24 PoE
+            </label>
+            <label data-manifest="./manifest-tubeszb-zw.json" title="ZWave Kit">
+                <input type="radio" name="device" value="tubeszb-zw" />
+                TubesZB ZWave Kit
+            </label>
+
+
+        </fieldset>
+        <esp-web-install-button class="hidden"></esp-web-install-button>
+
+        <div class="modal" id="device-info-modal" aria-hidden="true">
+            <div class="modal-overlay" aria-hidden="true"></div>
+            <div class="modal-content" role="dialog" aria-modal="true">
+                <h3 style="color: black;">Selected Device:</h3>
+                <div id="device-info-content" style="color: black;">
+                    </div>
+                <esp-web-install-button id="modal-install-button"></esp-web-install-button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="container-fluid">
+        Installer powered by <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a> and <a
+            href="https://picocss.com/">Pico CSS</a>.
+    </footer>
+    <script>
+        const deviceInfo = {
+            "tubeszb-cc2652p2-ethusb-2022": "CC2652P2 with Ethernet and USB, 2022 version.",
+            "tubeszb-cc2652p2-ethusb-2023": "CC2652P2 with Ethernet and USB, 2023 version.",
+            "tubeszb-cc2652p2-poe-2022": "CC2652P2 with PoE, 2022 version.",
+            "tubeszb-cc2652p2-poe-2023": "CC2652P2 with PoE, 2023 version.",
+            "tubeszb-cc2652p7-poe-2023": "CC2652P7 with PoE, 2023 version.",
+            "tubeszb-dual-radio-kit-cc2652": "Dual Radio Kit with CC2652 based radio.",
+            "tubeszb-dual-radio-kit-mgm24": "Dual Radio Kit with MGM24 base radio.",
+            "tubeszb-efr32-mgm210-poe-2023": "MGM210 with PoE, 2023 version.",
+            "tubeszb-efr32-mgm24-2023": "MGM24 with PoE, 2023 version.",
+            "tubeszb-zw": "ZWave Kit.",
+            // ... add details for other devices
+        };
+
+        document.querySelectorAll('input[name="device"]').forEach((radio) =>
+            radio.addEventListener("change", () => {
+                const mainButton = document.querySelector('esp-web-install-button');
+                const modalButton = document.querySelector('#modal-install-button');
+                const modal = document.getElementById('device-info-modal');
+                const modalContent = document.getElementById('device-info-content');
+
+                mainButton.manifest = radio.parentElement.dataset.manifest;
+                modalButton.manifest = radio.parentElement.dataset.manifest; // Sync the manifest to the modal button
+                mainButton.classList.add('hidden'); // Hide the main button
+                modal.style.display = "block";
+                modalContent.innerHTML = deviceInfo[radio.value] || "No information available.";
+            }
+            ));
+
+        // No close button needed, clicking outside closes the modal
+
+        window.addEventListener('click', (event) => {
+            if (event.target == document.getElementById('device-info-modal')) {
+                document.getElementById('device-info-modal').style.display = "none";
+            }
+        });
+    </script>
+</body>
+
+</html>
