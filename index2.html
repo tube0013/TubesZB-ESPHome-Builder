@@ -269,9 +269,37 @@
         fileUpload.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
-                const button = document.querySelector('esp-web-install-button');
-                button.manifest = file; // Set the manifest to the uploaded file
-                button.classList.remove('hidden'); // Show the button
+                const reader = new FileReader();
+
+                reader.onload = (event) => {
+                    const fileData = event.target.result; // This is the ArrayBuffer
+                    //   const button = document.querySelector('esp-web-install-button');
+                    //   button.manifest = fileData; // This is likely incorrect
+
+                    // Get the install button element
+                    const installButton = document.querySelector('esp-web-install-button');
+                    const modalInstallButton = document.querySelector('#modal-install-button');
+
+                    // Dispatch a custom event with the file data
+                    const installEvent = new CustomEvent('esphome.install', {
+                        detail: {
+                            manifest: fileData, // Pass the ArrayBuffer as manifest
+                        },
+                    });
+                    installButton.dispatchEvent(installEvent);
+                    modalInstallButton.dispatchEvent(installEvent);
+
+
+
+                    //   button.classList.remove('hidden'); // Show the button - Not needed
+                };
+
+                reader.onerror = (event) => {
+                    console.error("Error reading file:", event);
+                    // Handle errors here (e.g., display a message to the user)
+                };
+
+                reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer
             }
         });
     </script>
