@@ -106,7 +106,8 @@ uart:
   - id: uart_bus_zb
     rx_pin: GPIO36
     tx_pin: GPIO4
-    baud_rate: 460800
+    baud_rate: 115200
+    rx_buffer_size: 1024
   - id: uart_bus_zw
     rx_pin: GPIO15
     tx_pin: GPIO14
@@ -116,6 +117,7 @@ stream_server:
   - id: zb
     uart_id: uart_bus_zb
     port: 6638 # optional, default is 6638
+    buffer_size: 1024
   - id: zw
     uart_id: uart_bus_zw
     port: 6639
