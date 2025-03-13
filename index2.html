@@ -272,26 +272,20 @@
                 const reader = new FileReader();
 
                 reader.onload = (event) => {
-                    const fileData = event.target.result; // This is the ArrayBuffer
-                    //   const button = document.querySelector('esp-web-install-button');
-                    //   button.manifest = fileData; // This is likely incorrect
+                    const fileData = event.target.result;
 
-                    // Get the install button element
+                    // Get the install button elements
                     const installButton = document.querySelector('esp-web-install-button');
                     const modalInstallButton = document.querySelector('#modal-install-button');
 
-                    // Dispatch a custom event with the file data
-                    const installEvent = new CustomEvent('esphome.install', {
-                        detail: {
-                            manifest: fileData, // Pass the ArrayBuffer as manifest
-                        },
-                    });
-                    installButton.dispatchEvent(installEvent);
-                    modalInstallButton.dispatchEvent(installEvent);
+                    // Create a Blob from the ArrayBuffer
+                    const blob = new Blob([fileData]);
+                    // Create a URL for the Blob
+                    const url = URL.createObjectURL(blob);
 
-
-
-                    //   button.classList.remove('hidden'); // Show the button - Not needed
+                    // Update the manifest property of both buttons
+                    installButton.manifest = url;
+                    modalInstallButton.manifest = url;
                 };
 
                 reader.onerror = (event) => {
