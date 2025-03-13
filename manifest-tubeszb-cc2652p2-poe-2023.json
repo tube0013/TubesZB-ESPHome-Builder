@@ -1,0 +1,18 @@
+{
+    "name": "tubeszb-cc2652p2-poe-2023",
+    "version": "v0.0.1",
+    "builds": [
+        {
+            "chipFamily": "ESP32",
+            "ota": {
+                "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-cc2652p2-poe-2023.ota.bin"
+            },
+            "parts": [
+                {
+                    "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-cc2652p2-poe-2023.factory.bin",
+                    "offset": 0
+                }
+            ]
+        }
+    ]
+}
