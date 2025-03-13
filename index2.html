@@ -115,16 +115,6 @@
         .hidden {
             display: none !important;
         }
-
-        #firmware-upload {
-            display: none;
-            margin-top: 1em;
-        }
-
-        #connect-button {
-            display: block;
-            margin: 1em auto;
-        }
     </style>
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
@@ -153,14 +143,6 @@
     </header>
 
     <main class="container-fluid">
-        <section class="container-fluid">
-            <p>
-                Did you need a static IP build of ESPHome? If so please use the issue template in the
-                <a href="https://github.com/tube0013/TubesZB-ESPHome-Builder/issues/new/choose">
-                    github repository to submit a request
-                </a>
-            </p>
-        </section>
         <fieldset>
             <legend>Select your device</legend>
             <label data-manifest="./manifest-tubeszb-cc2652p2-ethusb-2022.json"
@@ -214,24 +196,31 @@
             </label>
         </fieldset>
 
-        <button id="connect-button">
-            Connect
-        </button>
-
-        <label for="firmware-upload">Or upload a custom firmware.bin file:</label>
-        <input type="file" id="firmware-upload" name="firmware-upload" accept=".bin">
-
-        <esp-web-install-button id="install-button" class="hidden"></esp-web-install-button>
+        <section>
+            <p>
+                To flash your TubesZB device, please use the
+                <a href="https://web.esphome.io" target="_blank">ESPHome Web Installer</a>.
+            </p>
+        </section>
 
         <div class="modal" id="device-info-modal" aria-hidden="true">
             <div class="modal-overlay" aria-hidden="true"></div>
             <div class="modal-content" role="dialog" aria-modal="true">
-                <h3 style="color: black;">Selected Device:</h3>
-                <div id="device-info-content" style="color: black;">
+                <button class="modal-close" aria-label="Close">✕</button>
+                <h3>Device Information</h3>
+                <div id="device-info-content">
                     </div>
-                <esp-web-install-button id="modal-install-button"></esp-web-install-button>
             </div>
         </div>
+
+        <section class="container-fluid">
+            <p>
+                Did you need a static IP build of ESPHome? If so please use the issue template in the
+                <a href="https://github.com/tube0013/TubesZB-ESPHome-Builder/issues/new/choose">
+                    github repository to submit a request
+                </a>
+            </p>
+        </section>
     </main>
 
     <footer class="container-fluid">
@@ -255,65 +244,22 @@
 
         document.querySelectorAll('input[name="device"]').forEach((radio) =>
             radio.addEventListener("change", () => {
+                // Show device info
                 const modal = document.getElementById('device-info-modal');
                 const modalContent = document.getElementById('device-info-content');
+                modalContent.innerHTML = deviceInfo[radio.value] || "No information available."; // Display device info or a default message
                 modal.style.display = "block";
-                modalContent.innerHTML = deviceInfo[radio.value] || "No information available.";
             }
             ));
 
-        // No close button needed, clicking outside closes the modal
+        // Close the modal
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            document.getElementById('device-info-modal').style.display = "none";
+        });
 
         window.addEventListener('click', (event) => {
             if (event.target == document.getElementById('device-info-modal')) {
                 document.getElementById('device-info-modal').style.display = "none";
-            }
-        });
-
-        const connectButton = document.getElementById('connect-button');
-        const installButton = document.getElementById('install-button');
-        const fileUpload = document.getElementById('firmware-upload');
-
-        connectButton.addEventListener('click', async () => {
-            try {
-                // Attempt to connect using esp-web-tools
-                await installButton.start(); // Or however you initiate the connection
-
-                // Connection successful, show the file upload
-                fileUpload.style.display = 'block';
-                connectButton.style.display = 'none'; // Hide the connect button
-            } catch (error) {
-                console.error("Connection failed:", error);
-                // Handle connection errors (e.g., display a message to the user)
-            }
-        });
-
-        fileUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-
-                reader.onload = (event) => {
-                    const fileData = event.target.result;
-
-                    // Create a Blob from the ArrayBuffer
-                    const blob = new Blob([fileData]);
-                    // Create a URL for the Blob
-                    const url = URL.createObjectURL(blob);
-
-                    // Update the manifest property of the install button
-                    installButton.manifest = url;
-
-                    // Trigger the installation
-                    installButton.click();
-                };
-
-                reader.onerror = (event) => {
-                    console.error("Error reading file:", event);
-                    // Handle errors here (e.g., display a message to the user)
-                };
-
-                reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer
             }
         });
     </script>
