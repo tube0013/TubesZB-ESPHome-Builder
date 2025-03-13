@@ -18,7 +18,6 @@
             max-width: 1000px;
             /* Limit page width for readability */
             margin: 0 auto;
-            /* Center the content */
         }
 
         nav {
@@ -116,6 +115,16 @@
         .hidden {
             display: none !important;
         }
+
+        #firmware-upload {
+            display: none;
+            margin-top: 1em;
+        }
+
+        #connect-button {
+            display: block;
+            margin: 1em auto;
+        }
     </style>
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
@@ -204,12 +213,15 @@
                 TubesZB ZWave Kit
             </label>
         </fieldset>
-        <esp-web-install-button class="hidden"></esp-web-install-button>
 
-        <section>
-            <label for="firmware-upload">Or upload a custom firmware.bin file:</label>
-            <input type="file" id="firmware-upload" name="firmware-upload" accept=".bin">
-        </section>
+        <button id="connect-button">
+            Connect
+        </button>
+
+        <label for="firmware-upload">Or upload a custom firmware.bin file:</label>
+        <input type="file" id="firmware-upload" name="firmware-upload" accept=".bin">
+
+        <esp-web-install-button id="install-button" class="hidden"></esp-web-install-button>
 
         <div class="modal" id="device-info-modal" aria-hidden="true">
             <div class="modal-overlay" aria-hidden="true"></div>
@@ -243,14 +255,8 @@
 
         document.querySelectorAll('input[name="device"]').forEach((radio) =>
             radio.addEventListener("change", () => {
-                const mainButton = document.querySelector('esp-web-install-button');
-                const modalButton = document.querySelector('#modal-install-button');
                 const modal = document.getElementById('device-info-modal');
                 const modalContent = document.getElementById('device-info-content');
-
-                mainButton.manifest = radio.parentElement.dataset.manifest;
-                modalButton.manifest = radio.parentElement.dataset.manifest; // Sync the manifest to the modal button
-                mainButton.classList.add('hidden'); // Hide the main button
                 modal.style.display = "block";
                 modalContent.innerHTML = deviceInfo[radio.value] || "No information available.";
             }
@@ -264,8 +270,24 @@
             }
         });
 
-        // Handle file upload
+        const connectButton = document.getElementById('connect-button');
+        const installButton = document.getElementById('install-button');
         const fileUpload = document.getElementById('firmware-upload');
+
+        connectButton.addEventListener('click', async () => {
+            try {
+                // Attempt to connect using esp-web-tools
+                await installButton.start(); // Or however you initiate the connection
+
+                // Connection successful, show the file upload
+                fileUpload.style.display = 'block';
+                connectButton.style.display = 'none'; // Hide the connect button
+            } catch (error) {
+                console.error("Connection failed:", error);
+                // Handle connection errors (e.g., display a message to the user)
+            }
+        });
+
         fileUpload.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
@@ -274,21 +296,16 @@
                 reader.onload = (event) => {
                     const fileData = event.target.result;
 
-                    // Get the install button elements
-                    const installButton = document.querySelector('esp-web-install-button');
-                    const modalInstallButton = document.querySelector('#modal-install-button');
-
                     // Create a Blob from the ArrayBuffer
                     const blob = new Blob([fileData]);
                     // Create a URL for the Blob
                     const url = URL.createObjectURL(blob);
 
-                    // Update the manifest property of both buttons
+                    // Update the manifest property of the install button
                     installButton.manifest = url;
-                    modalInstallButton.manifest = url;
 
-                    // Trigger a click event on the modal button to start the installation
-                    modalInstallButton.click();
+                    // Trigger the installation
+                    installButton.click();
                 };
 
                 reader.onerror = (event) => {
