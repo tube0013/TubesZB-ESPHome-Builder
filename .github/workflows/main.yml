@@ -1,4 +1,4 @@
-name: Build ESPHome Firmware
+name: Build Static IP ESPHome Firmware
 
 on:
   issues:
