@@ -16,4 +16,4 @@ The download will include 2 .bin files.
 The firmware.factory.bin is suitible for flashing over usb using https://web.esphome.io
 The firmware.ota.bin can be flashed through the devices web frontend (if option exists).
 
-> Inspired by works from @nerivic, @shawly & more.
+> Inspired by works from @nerivec, @shawly & more.
