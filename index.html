@@ -8,9 +8,70 @@
     <meta name="description" content="Flash TubesZB ESPHome firmware using your web browser" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <style>
-        .hidden {
-            display: none !important;
+        /* Custom styles for TubesZB */
+        body {
+            font-family: sans-serif; /* Or a specific font */
         }
+    
+        .container-fluid {
+            max-width: 1000px; /* Limit page width for readability */
+            margin: 0 auto; /* Center the content */
+        }
+    
+        nav {
+            background-color: #f0f0f0; /* Light gray background for nav */
+        }
+    
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+    
+        nav ul li {
+            margin-right: 1em;
+        }
+    
+        header {
+            text-align: center;
+            padding: 2em 0;
+        }
+    
+        fieldset {
+            border: 1px solid #ccc; /* Add a subtle border */
+            padding: 1em;
+            margin-bottom: 1em;
+        }
+    
+        legend {
+            font-weight: bold;
+            color: #333;
+        }
+    
+        label {
+            display: block; /* Each label on its own line */
+            margin-bottom: 0.5em;
+        }
+    
+        input[type="radio"] {
+            margin-right: 0.5em;
+        }
+    
+        esp-web-install-button {
+            display: block;
+            margin: 1em auto; /* Center the button */
+        }
+    
+        footer {
+            text-align: center;
+            padding: 1em 0;
+            font-size: 0.8em;
+            color: #666;
+        }
+    
+        /* Add more styles as needed */
     </style>
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
