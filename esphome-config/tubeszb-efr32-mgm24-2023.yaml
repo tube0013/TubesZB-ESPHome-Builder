@@ -50,6 +50,17 @@ ota:
 web_server:
   port: 80
   local: true
+
+script:
+  - id: fw_update_mode
+    then:
+      - switch.turn_on: zBSL
+      - delay: 1s
+      - switch.turn_on: zRST_gpio
+      - delay: 1s
+      - switch.turn_off: zRST_gpio
+      - delay: 5s
+      - switch.turn_off: zBSL
    
 switch:
   - platform: gpio
