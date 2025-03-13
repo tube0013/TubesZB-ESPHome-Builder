@@ -1,0 +1,78 @@
+name: Build ESPHome Firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      manifest_glob:
+        description: 'Manifest glob'
+        required: false
+  release:
+    types:
+      - published
+
+jobs:
+  list-manifests:
+    name: List firmware manifests
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          echo "matrix=$(find manifests -type f -name "${{ inputs.manifest_glob || '*' }}.yaml" -print | sort | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+
+  build-firmwares:
+    name: Firmware builder
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/esphome/esphome
+    needs: [list-manifests]
+    strategy:
+      # fail-fast: false
+      matrix:
+        manifest: ${{ fromJson(needs.list-manifests.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile ESPHome Firmware
+        id: compile-firmware
+        run: |
+          esphome compile ${{ matrix.manifest }}
+
+          device_name=$(basename ${{ matrix.manifest }} .yaml)
+
+          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.factory.bin" "$device_name.factory.bin"
+          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.ota.bin" "$device_name.ota.bin"
+
+          echo "device_name=$device_name" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-build-${{ steps.compile-firmware.outputs.device_name }}
+          path: |
+            ${{ steps.compile-firmware.outputs.device_name }}.factory.bin
+            ${{ steps.compile-firmware.outputs.device_name }}.ota.bin
+          if-no-files-found: error
+
+  release-assets:
+    name: Upload release assets
+    needs: [build-firmwares]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+          pattern: firmware-build-*
+
+      - name: Upload artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.bin

@@ -1,3 +1,11 @@
+# ESPHome firmware builder
+
+Build ESPHome firmware for specific TubesZB devices.
+
+> Inspired by works from @nerivic, @shawly & more.
+
+For Static IP Firmware Builds:
+
 This Repository can create binaries for TubesZB devices which require a static IP.
 
 To Start Create an Issue using the Issue Form, selecting the device name, inputting the desired network configuration.

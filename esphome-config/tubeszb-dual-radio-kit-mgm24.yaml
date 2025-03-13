@@ -1,16 +1,19 @@
 esphome:
-  name: tubeszb-efr32-mgm24-2023
-  project:
-    name: tubeszb.efr32_mgm24_2023
-    version: "2024.09.14"
+  name: tubeszb-dual-radio-kit-mgm24
+  project: 
+    name: tubezb.mgm24+zw
+    version: "3.0"
   on_boot:
     priority: 600
     then:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
       - lambda: |-
           id(mdns0).add_extra_service({ "_zigbee-coordinator", "_tcp", 6638, {{"radio_type", "ezsp"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
-
+          id(mdns0).add_extra_service({ "_zwave", "_tcp", 6639, {{"version", "1.0"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
 esp32:
-  board: esp-wrover-kit
+  board: esp32-poe
   framework:
     type: esp-idf
 
@@ -18,8 +21,7 @@ external_components:
   - source: github://oxan/esphome-stream-server
   - source: github://tube0013/esphome-components
     components: [uart]
-#dashboard_import:
-  #package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-efr32-MGM24/firmware/ESPHome/tubeszb-mgm24.yaml
+
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -29,16 +31,17 @@ ethernet:
   clk_mode: GPIO17_OUT
   phy_addr: 0
   power_pin: GPIO12
- 
+  
 # Optional manual IP
   manual_ip:
     static_ip: STATIC_IP
     gateway: GATEWAY
     subnet: SUBNET
 
+
 # Enable logging
 logger:
-  level: DEBUG
+  level: INFO
   
 # Enable Home Assistant API
 api:
@@ -50,7 +53,19 @@ ota:
 web_server:
   port: 80
   local: true
-   
+
+
+script:
+  - id: fw_update_mode
+    then:
+      - switch.turn_on: zBSL
+      - delay: 1s
+      - switch.turn_on: zRST_gpio
+      - delay: 1s
+      - switch.turn_off: zRST_gpio
+      - delay: 5s
+      - switch.turn_off: zBSL
+
 switch:
   - platform: gpio
     pin: 5
@@ -87,36 +102,44 @@ button:
       - script.execute: fw_update_mode
 
 uart:
-  id: uart_bus
-  rx_pin: GPIO36
-  tx_pin: GPIO4
-  cts_pin: GPIO13
-  rts_pin: GPIO2
-  # possible values are
-  # - DISABLE = disable hardware flow control
-  # - RTS = enable RX hardware flow control (rts)
-  # - CTS = enable TX hardware flow control (cts)
-  # - CTS_RTS = enable hardware flow control
-  # - MAX = ?
-  hw_flow_control: CTS_RTS  
-  baud_rate: 115200
-  rx_buffer_size: 1024
-
+  - id: uart_bus_zb
+    rx_pin: GPIO36
+    tx_pin: GPIO4
+    cts_pin: GPIO13
+    rts_pin: GPIO2
+    # possible values are
+    # - DISABLE = disable hardware flow control
+    # - RTS = enable RX hardware flow control (rts)
+    # - CTS = enable TX hardware flow control (cts)
+    # - CTS_RTS = enable hardware flow control
+    # - MAX = ?
+    hw_flow_control: CTS_RTS  
+    baud_rate: 115200
+    rx_buffer_size: 1024
+  - id: uart_bus_zw
+    rx_pin: GPIO15
+    tx_pin: GPIO14
+    baud_rate: 115200
 
 stream_server:
-  uart_id: uart_bus
-  port: 6638 # optional, default is 6638
-  buffer_size: 1024
+#  buffer_size: 2048
+  - id: zb
+    uart_id: uart_bus_zb
+    port: 6638 # optional, default is 6638
+    buffer_size: 1024
+  - id: zw
+    uart_id: uart_bus_zw
+    port: 6639
 
 binary_sensor:
   - platform: stream_server
+    stream_server: zb
     connected:
-      name: "TubesZB Serial Connected"
-sensor:
+      name: "TubesZB Zigbee Serial Connected"
   - platform: stream_server
-    connection_count:
-      name: "Connection Count"
+    stream_server: zw
+    connected:
+      name: "TubesZB Z-Wave Serial Connected"
 
 mdns:
   id: mdns0
-

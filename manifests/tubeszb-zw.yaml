@@ -25,10 +25,10 @@ ethernet:
   power_pin: GPIO12
   
     # Optional manual IP
-  manual_ip:
-    static_ip: STATIC_IP
-    gateway: GATEWAY
-    subnet: SUBNET
+  #manual_ip:
+  #  static_ip: STATIC_IP
+  #  gateway: GATEWAY
+  #  subnet: SUBNET 
 
 # Enable logging
 logger:

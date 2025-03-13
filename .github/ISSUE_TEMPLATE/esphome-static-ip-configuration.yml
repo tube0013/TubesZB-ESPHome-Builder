@@ -11,15 +11,17 @@ body:
     id: device_name
     attributes:
       label: Device_Name
-      description: Select the device name for your TubesZB device
+      description: Required - Select the TubesZB device for the firmware
       options: 
         - tubeszb-cc2652p2-poe-2023
         - tubeszb-cc2652p7-poe-2023
         - tubeszb-cc2652p2-poe-2022
         - tubeszb-cc2652p2-ethusb-2023
         - tubeszb-cc2652p2-ethusb-2022
-        - tubeszb-efr32-mgm24-2023
+        - tubeszb-dual-radio-kit-cc2652
         - tubeszb-efr32-mgm210-poe-2023
+        - tubeszb-efr32-mgm24-2023
+        - tubeszb-dual-radio-kit-mgm24
         - tubeszb-zw
       default: 0
     validations:

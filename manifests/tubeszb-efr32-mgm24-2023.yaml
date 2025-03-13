@@ -30,11 +30,11 @@ ethernet:
   phy_addr: 0
   power_pin: GPIO12
  
-# Optional manual IP
-  manual_ip:
-    static_ip: STATIC_IP
-    gateway: GATEWAY
-    subnet: SUBNET
+    # Optional manual IP
+  #manual_ip:
+  #  static_ip: STATIC_IP
+  #  gateway: GATEWAY
+  #  subnet: SUBNET 
 
 # Enable logging
 logger:
