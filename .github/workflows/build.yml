@@ -76,3 +76,36 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*.bin
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Download all workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+          pattern: firmware-build-*
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.bin
+
+      - name: Copy Assets to latest-release folder
+        run: |
+          mkdir -p latest-release
+          cp artifacts/*.bin latest-release/
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Commit and Push Changes to gh-pages
+        run: |
+          git add latest-release/
+          git commit -m "Update latest-release with firmware from release ${{ github.event.release.tag_name }}"
+          git push
