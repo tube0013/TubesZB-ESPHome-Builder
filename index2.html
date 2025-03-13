@@ -286,6 +286,9 @@
                     // Update the manifest property of both buttons
                     installButton.manifest = url;
                     modalInstallButton.manifest = url;
+
+                    // Trigger a click event on the modal button to start the installation
+                    modalInstallButton.click();
                 };
 
                 reader.onerror = (event) => {
