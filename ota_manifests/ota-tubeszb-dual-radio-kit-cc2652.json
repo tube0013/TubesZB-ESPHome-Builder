@@ -1,0 +1,15 @@
+{
+    "name": "tubeszb-dual-radio-kit-cc2652",
+    "version": "2025.3.16.1",
+    "builds": [
+        {
+            "chipFamily": "ESP32",
+            "ota": {
+                "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-cc2652.ota.bin",
+                "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.03.16.1",
+                "summary": "Add HTTP Uodates"
+            }
+            
+        }
+    ]
+}
