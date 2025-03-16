@@ -41,7 +41,7 @@ ethernet:
 
 # Enable logging
 logger:
-  level: INFO
+  level: DEBUG
   
 # Enable Home Assistant API
 api:
