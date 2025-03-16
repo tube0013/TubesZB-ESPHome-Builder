@@ -6,6 +6,7 @@
             "chipFamily": "ESP32",
             "ota": {
                 "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-cc2652.ota.bin",
+                "md5": "43fd27ed2eb68912c74ecccf6dd0d943",
                 "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.03.16.3",
                 "summary": "Add HTTP Uodates"
             }
