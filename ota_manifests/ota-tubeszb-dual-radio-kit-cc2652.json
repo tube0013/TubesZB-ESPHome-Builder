@@ -1,6 +1,6 @@
 {
     "name": "tubeszb-dual-radio-kit-cc2652",
-    "version": "2025.3.16.3",
+    "version": "2025.3.16.4",
     "builds": [
         {
             "chipFamily": "ESP32",
@@ -8,7 +8,7 @@
                 "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-cc2652.ota.bin",
                 "md5": "9ca817f238c5c2bce2f9a3705d9c6e54",
                 "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.03.16.3",
-                "summary": "Add HTTP Uodates"
+                "summary": "Increase LWIP Sockets"
             }
             
         }
