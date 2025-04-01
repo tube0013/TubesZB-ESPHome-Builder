@@ -1,8 +1,8 @@
 esphome:
   name: tubeszb-dual-radio-kit-cc2652
   project: 
-    name: tubezb.cc2652+zw
-    version: "2025.03.16.4"
+    name: tubeszb.cc2652+zw
+    version: "2025.04.01.0"
   on_boot:
     priority: 600
     then:
@@ -58,8 +58,14 @@ update:
 
 web_server:
   port: 80
+  version: 2
+  js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
   local: true
 
+text_sensor:
+  - platform: project_version
+    name: "TubesZB Device Firmware Version"
+    internal: true
 
 script:
   - id: fw_update_mode
