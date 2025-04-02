@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dual-radio-kit-mgm24
   project: 
     name: tubezb.mgm24+zw
-    version: "3.0"
+    version: "2025.03.16.4"
   on_boot:
     priority: 600
     then:
@@ -16,6 +16,8 @@ esp32:
   board: esp32-poe
   framework:
     type: esp-idf
+    sdkconfig_options:
+      CONFIG_LWIP_MAX_SOCKETS: "16" 
 
 external_components:
   - source: github://oxan/esphome-stream-server
