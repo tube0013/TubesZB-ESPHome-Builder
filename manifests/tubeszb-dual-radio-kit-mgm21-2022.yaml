@@ -1,5 +1,5 @@
 esphome:
-  name: tubeszb-dual-radio-kit-mgm21
+  name: tubeszb-dual-radio-kit-mgm21-2022
   project: 
     name: tubezb.mgm21+zw
     version: "3.0"
