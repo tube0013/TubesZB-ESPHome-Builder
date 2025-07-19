@@ -6,7 +6,7 @@
             "chipFamily": "ESP32",
             "ota": {
                 "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-mgm24.ota.bin",
-                "md5": "79a54c8ae86226bab15baec6cfb2f98b",
+                "md5": "1ea54f55153a2bfcd068eb74e9fa9ab9",
                 "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.07.19.0",
                 "summary": "Increase LWIP Sockets"
             }
