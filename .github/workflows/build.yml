@@ -1,16 +1,19 @@
 name: Build ESPHome Firmware
 
 on:
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
       manifest_glob:
-        description: 'Manifest glob'
+        description: 'Manifest glob for selective builds'
         required: false
+  # Triggers the workflow when a new release is published
   release:
     types:
       - published
 
 jobs:
+  # This job finds all your device .yaml files in the 'manifests' directory
   list-manifests:
     name: List firmware manifests
     runs-on: ubuntu-latest
@@ -22,14 +25,15 @@ jobs:
         run: |
           echo "matrix=$(find manifests -type f -name "${{ inputs.manifest_glob || '*' }}.yaml" -print | sort | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
+  # This job builds the firmware for each device found in the previous job
   build-firmwares:
     name: Firmware builder
     runs-on: ubuntu-latest
+    # Using the official ESPHome container for consistency
     container:
       image: ghcr.io/esphome/esphome
     needs: [list-manifests]
     strategy:
-      # fail-fast: false
       matrix:
         manifest: ${{ fromJson(needs.list-manifests.outputs.matrix) }}
 
@@ -40,15 +44,20 @@ jobs:
       - name: Compile ESPHome Firmware
         id: compile-firmware
         run: |
+          # Compile the firmware using the manifest file
           esphome compile ${{ matrix.manifest }}
 
+          # Extract the device name from the manifest path
           device_name=$(basename ${{ matrix.manifest }} .yaml)
 
+          # Move the compiled binaries to the root and rename them
           mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.factory.bin" "$device_name.factory.bin"
           mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.ota.bin" "$device_name.ota.bin"
 
+          # Pass the device name to subsequent steps/jobs
           echo "device_name=$device_name" >> $GITHUB_OUTPUT
 
+      # Upload the compiled binaries as artifacts to be used in the release job
       - uses: actions/upload-artifact@v4
         with:
           name: firmware-build-${{ steps.compile-firmware.outputs.device_name }}
@@ -57,22 +66,25 @@ jobs:
             ${{ steps.compile-firmware.outputs.device_name }}.ota.bin
           if-no-files-found: error
 
+  # This job handles releasing the assets and generating the OTA manifests
   release-assets:
-    name: Upload release assets
+    name: Upload release assets and OTA Manifests
     needs: [build-firmwares]
+    # This job only runs when the workflow is triggered by a release event
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
+      # Required to write to the release assets
       contents: write
     steps:
-      - name: Download all workflow artifacts
+      - name: Download all firmware artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
           pattern: firmware-build-*
 
-      - name: Upload artifacts
+      - name: Upload firmware binaries to release
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*.bin
@@ -82,22 +94,68 @@ jobs:
         with:
           ref: gh-pages
 
-      - name: Download all workflow artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-          pattern: firmware-build-*
-
-      - name: Upload artifacts to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/*.bin
-
       - name: Copy Assets to latest-release folder
         run: |
           mkdir -p latest-release
           cp artifacts/*.bin latest-release/
+
+      # --- GENERATE JSON MANIFESTS ---
+      - name: Generate OTA Manifests
+        id: generate-manifests
+        run: |
+          # Create the directory for the manifests if it doesn't exist
+          mkdir -p ota_manifest
+
+          # Get the repository owner and name for constructing URLs
+          REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+          # Loop through each .ota.bin file in the artifacts directory
+          for ota_file in artifacts/*.ota.bin; do
+            device_name=$(basename "$ota_file" .ota.bin)
+            
+            echo "Generating manifest for $device_name..."
+
+            # Calculate the MD5 checksum of the OTA binary
+            md5_checksum=$(md5sum "$ota_file" | cut -d' ' -f1)
+            
+            # Construct the full URL to the OTA binary on the gh-pages site
+            ota_url="https://${REPO_OWNER}.github.io/${REPO_NAME}/latest-release/${device_name}.ota.bin"
+            
+            # Use jq to safely create the JSON manifest file
+            # This avoids issues with special characters in the release summary
+            jq -n \
+              --arg name "$device_name" \
+              --arg version "${{ github.event.release.tag_name }}" \
+              --arg chipFamily "ESP32" \
+              --arg path "$ota_url" \
+              --arg md5 "$md5_checksum" \
+              --arg release_url "${{ github.event.release.html_url }}" \
+              --arg summary "${{ github.event.release.body }}" \
+              '{
+                "name": $name,
+                "version": $version,
+                "builds": [
+                  {
+                    "chipFamily": $chipFamily,
+                    "parts": [
+                      {
+                        "path": $path,
+                        "offset": 0
+                      }
+                    ],
+                    "ota": {
+                      "path": $path,
+                      "md5": $md5,
+                      "release_url": $release_url,
+                      "summary": $summary
+                    }
+                  }
+                ]
+              }' > "ota_manifest/ota-${device_name}.json"
+
+              echo "Manifest for $device_name created."
+          done
 
       - name: Configure Git
         run: |
@@ -106,6 +164,12 @@ jobs:
 
       - name: Commit and Push Changes to gh-pages
         run: |
-          git add latest-release/
-          git commit -m "Update latest-release with firmware from release ${{ github.event.release.tag_name }}"
-          git push
+          # Add both the new firmware and the new manifests to git
+          git add latest-release/ ota_manifest/
+          # Check if there are any changes to commit
+          if ! git diff --staged --quiet; then
+            git commit -m "Update release binaries and OTA manifests for ${{ github.event.release.tag_name }}"
+            git push
+          else
+            echo "No changes to commit."
+          fi

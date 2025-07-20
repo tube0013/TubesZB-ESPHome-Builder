@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-efr32-mgm210-poe-2023
   project:
     name: tubeszb.efr32_mgm210_poe_2023
-    version: "3.0"
+    version: "2025.07.19.4"
   on_boot:
     priority: 600
     then:
@@ -49,7 +49,15 @@ api:
   reboot_timeout: 0s
 
 ota:
-  platform: esphome
+  - platform: esphome
+  - platform: http_request
+  - platform: web_server
+
+http_request:
+update:
+  - platform: http_request
+    name: TubesZB ESPHome FW Update
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-efr32-mgm210-poe-2023.json
 
 web_server:
   port: 80
@@ -107,3 +115,25 @@ sensor:
 
 mdns:
   id: mdns0
+
+text_sensor:
+  - platform: template
+    name: "ESPHome Project Version"
+    id: esphome_project_version_text_short
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 600s
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
+
+  - platform: ethernet_info
+    ip_address:
+      name: ESP IP Address
+    mac_address:
+      name: ESP MAC Address
+
+  - platform: uptime
+    name: Uptime
+    format:
+      separator: " "
+      days: "D"

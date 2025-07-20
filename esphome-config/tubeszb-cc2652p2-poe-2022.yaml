@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-cc2652p2-poe-2022
   project: 
     name: tubezb.cc2652p2-poe-2022
-    version: "3.0"
+    version: "2025.07.19.4"
   on_boot:
     priority: 600
     then:
@@ -48,7 +48,8 @@ api:
   reboot_timeout: 0s
 
 ota:
-  platform: esphome
+  - platform: esphome
+  - platform: web_server
 
 web_server:
   port: 80
@@ -122,3 +123,24 @@ binary_sensor:
 mdns:
   id: mdns0
 
+text_sensor:
+  - platform: template
+    name: "ESPHome Project Version"
+    id: esphome_project_version_text_short
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 600s
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
+
+  - platform: ethernet_info
+    ip_address:
+      name: ESP IP Address
+    mac_address:
+      name: ESP MAC Address
+
+  - platform: uptime
+    name: Uptime
+    format:
+      separator: " "
+      days: "D"
