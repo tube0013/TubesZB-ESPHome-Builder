@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dual-radio-kit-cc2652
   project: 
     name: tubezb.cc2652+zw
-    version: "2025.07.19.4"
+    version: "2025.07.19.5"
   on_boot:
     priority: 600
     then:
@@ -27,7 +27,7 @@ ethernet:
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
-  clk_mode: GPIO17_OUT
+  clk: GPIO17_OUT
   phy_addr: 0
   power_pin: GPIO12
   
