@@ -3,6 +3,7 @@ esphome:
   project: 
     name: tubeszb.cc2652p2-ethusb-2022
     version: "2025.07.19.5"
+  min_version: 2025.7.2
   on_boot:
     priority: 600
     then:
@@ -25,9 +26,13 @@ ethernet:
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
-  clk: GPIO0_IN
+  clk:
+    pin: GPIO0
+    mode: CLK_EXT_IN
   phy_addr: 1
   power_pin: GPIO16
+  phy_addr: 0
+  power_pin: GPIO12
 
     # Optional manual IP
   manual_ip:

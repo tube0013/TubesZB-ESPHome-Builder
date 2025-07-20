@@ -3,6 +3,7 @@ esphome:
   project: 
     name: tubezb.cc2652p2-poe-2022
     version: "2025.07.19.5"
+  min_version: 2025.7.2
   on_boot:
     priority: 600
     then:
@@ -29,7 +30,9 @@ ethernet:
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
-  clk: GPIO17_OUT
+  clk:
+    pin: GPIO17
+    mode: CLK_OUT
   phy_addr: 0
   power_pin: GPIO12
   
