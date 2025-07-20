@@ -89,24 +89,24 @@ jobs:
         with:
           files: artifacts/*.bin
 
-      - name: Checkout gh-pages branch
+      # --- FIX: Checkout gh-pages into a subdirectory to preserve artifacts ---
+      - name: Checkout gh-pages branch into a subdirectory
         uses: actions/checkout@v4
         with:
           ref: gh-pages
+          path: gh-pages
 
-      - name: Copy Assets to latest-release folder
+      - name: Copy Assets to latest-release folder in gh-pages checkout
         run: |
-          mkdir -p latest-release
-          cp artifacts/*.bin latest-release/
+          mkdir -p gh-pages/latest-release
+          cp artifacts/*.bin gh-pages/latest-release/
 
-      # --- GENERATE JSON MANIFESTS ---
       - name: Generate OTA Manifests
         id: generate-manifests
         run: |
-          # Create the directory for the manifests if it doesn't exist
-          mkdir -p ota_manifest
+          # Create the directory for the manifests inside the gh-pages checkout
+          mkdir -p gh-pages/ota_manifest
 
-          # Get the repository owner and name for constructing URLs
           REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
 
@@ -116,14 +116,11 @@ jobs:
             
             echo "Generating manifest for $device_name..."
 
-            # Calculate the MD5 checksum of the OTA binary
             md5_checksum=$(md5sum "$ota_file" | cut -d' ' -f1)
             
-            # Construct the full URL to the OTA binary on the gh-pages site
             ota_url="https://${REPO_OWNER}.github.io/${REPO_NAME}/latest-release/${device_name}.ota.bin"
             
-            # Use jq to safely create the JSON manifest file
-            # This avoids issues with special characters in the release summary
+            # Use jq to create the JSON manifest file inside the gh-pages checkout
             jq -n \
               --arg name "$device_name" \
               --arg version "${{ github.event.release.tag_name }}" \
@@ -152,18 +149,17 @@ jobs:
                     }
                   }
                 ]
-              }' > "ota_manifest/ota-${device_name}.json"
+              }' > "gh-pages/ota_manifest/ota-${device_name}.json"
 
               echo "Manifest for $device_name created."
           done
 
-      - name: Configure Git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
       - name: Commit and Push Changes to gh-pages
         run: |
+          # Change directory to the gh-pages checkout
+          cd gh-pages
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
           # Add both the new firmware and the new manifests to git
           git add latest-release/ ota_manifest/
           # Check if there are any changes to commit
@@ -171,5 +167,5 @@ jobs:
             git commit -m "Update release binaries and OTA manifests for ${{ github.event.release.tag_name }}"
             git push
           else
-            echo "No changes to commit."
+            echo "No changes to commit in gh-pages."
           fi
