@@ -1,6 +1,6 @@
 {
     "name": "tubeszb-dual-radio-kit-mgm24",
-    "version": "2025.7.19.3",
+    "version": "2025.07.19.3",
     "builds": [
         {
             "chipFamily": "ESP32",
