@@ -6,7 +6,7 @@
             "chipFamily": "ESP32",
             "ota": {
                 "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-mgm24.ota.bin",
-                "md5": "1ea54f55153a2bfcd068eb74e9fa9ab9",
+                "md5": "2fb076a7ca80c6498f246b6c4e1d9bae",
                 "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.07.19.3",
                 "summary": "Fix MG24 Dual Radio FW for concurrent connections, add Web and HTTP FW updates, and Text Sensors"
             }
