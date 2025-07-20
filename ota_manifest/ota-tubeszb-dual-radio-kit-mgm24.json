@@ -1,0 +1,21 @@
+{
+  "name": "tubeszb-dual-radio-kit-mgm24",
+  "version": "2025.07.19.5",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-mgm24.ota.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-mgm24.ota.bin",
+        "md5": "9ecc90e4572058296e9df2575220909f",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.07.19.5",
+        "summary": "Update some remaining devices to esp-idf framework. update ethernet clk_mode to clk before it is depreciated.\r\n\r\nAdd web server OTA, http update for dhcp builds\r\nUnify version strings, Add web server OTA, http update for dhcp builds. Add Text Sensors. update build action to create ota jsons. Fix MG24 Dual Radio FW for concurrent connections\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.03.15.2...2025.07.19.5"
+      }
+    }
+  ]
+}
