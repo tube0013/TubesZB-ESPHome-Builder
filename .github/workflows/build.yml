@@ -105,7 +105,7 @@ jobs:
         id: generate-manifests
         run: |
           # Create the directory for the manifests inside the gh-pages checkout
-          mkdir -p gh-pages/ota_manifest
+          mkdir -p gh-pages/ota_manifests
 
           REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
@@ -149,7 +149,7 @@ jobs:
                     }
                   }
                 ]
-              }' > "gh-pages/ota_manifest/ota-${device_name}.json"
+              }' > "gh-pages/ota_manifests/ota-${device_name}.json"
 
               echo "Manifest for $device_name created."
           done
