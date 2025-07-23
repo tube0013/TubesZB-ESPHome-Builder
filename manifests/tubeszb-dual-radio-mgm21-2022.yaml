@@ -1,0 +1,125 @@
+esphome:
+  name: tubeszb-dual-radio-mgm21-2022
+  project: 
+    name: tubezb.mgm21+zw
+    version: "3.0"
+  on_boot:
+    priority: 600
+    then:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
+      - lambda: |-
+          id(mdns0).add_extra_service({ "_zigbee-coordinator", "_tcp", 6638, {{"radio_type", "ezsp"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
+          id(mdns0).add_extra_service({ "_zwave", "_tcp", 6639, {{"version", "1.0"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
+esp32:
+  board: esp32-poe
+  framework:
+    type: esp-idf
+
+external_components:
+  - source: github://oxan/esphome-stream-server
+  - source: github://tube0013/esphome-components
+    components: [uart]
+
+
+#Olimex ESP32-PoE Ethernet
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  power_pin: GPIO12
+  
+    # Optional manual IP
+#  manual_ip:
+#    static_ip: STATIC_IP
+#    gateway: GATEWAY
+#    subnet: SUBNET
+
+# Enable logging
+logger:
+  level: INFO
+  
+# Enable Home Assistant API
+api:
+  reboot_timeout: 0s
+
+ota:
+  platform: esphome
+
+web_server:
+  port: 80
+  local: true
+
+switch:
+  - platform: gpio
+    pin: 2
+    id: zRST_gpio
+    inverted: yes
+    restore_mode: ALWAYS_OFF
+
+
+button:    
+  - platform: restart
+    name: "Restart the Gateway"
+    disabled_by_default: true
+
+  - platform: template
+    name: "EFR32 Reset"
+    id: zRST
+    disabled_by_default: true  
+    on_press:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
+
+uart:
+  - id: uart_bus_zb
+    rx_pin: GPIO5
+    tx_pin: GPIO16
+    #cts_pin: GPIO13
+    #rts_pin: GPIO4
+    # possible values are
+    # - DISABLE = disable hardware flow control
+    # - RTS = enable RX hardware flow control (rts)
+    # - CTS = enable TX hardware flow control (cts)
+    # - CTS_RTS = enable hardware flow control
+    # - MAX = ?
+    hw_flow_control: DISABLE
+    baud_rate: 115200
+    rx_buffer_size: 1024
+  - id: uart_bus_zw
+    rx_pin: GPIO15
+    tx_pin: GPIO14
+    baud_rate: 115200
+
+stream_server:
+#  buffer_size: 2048
+  - id: zb
+    uart_id: uart_bus_zb
+    port: 6638 # optional, default is 6638
+    buffer_size: 1024
+  - id: zw
+    uart_id: uart_bus_zw
+    port: 6639
+
+binary_sensor:
+  - platform: stream_server
+    stream_server: zb
+    connected:
+      name: "TubesZB Zigbee Serial Connected"
+  - platform: stream_server
+    stream_server: zw
+    connected:
+      name: "TubesZB Z-Wave Serial Connected"
+
+  - platform: gpio
+    pin: 36
+    name: "Bootloader pin (PA0)"
+    id: zBSL
+    disabled_by_default: true  
+
+mdns:
+  id: mdns0
