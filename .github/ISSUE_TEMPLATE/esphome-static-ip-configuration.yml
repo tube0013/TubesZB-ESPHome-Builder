@@ -10,7 +10,7 @@ body:
   - type: dropdown
     id: device_name
     attributes:
-      label: Device_Name
+      label: Device Name
       description: Required - Select the TubesZB device for the firmware
       options: 
         - tubeszb-cc2652p2-poe-2023
@@ -29,21 +29,24 @@ body:
   - type: input
     id: static_ip
     attributes:
-      label: Static_IP
+      label: Static IP
       description: Provide the static IP for your ESPHome device
+      placeholder: 192.168.1.251
     validations:
       required: true
   - type: input
     id: gateway
     attributes:
       label: Gateway
-      description: Provide the gateway for your ESPHome device
+      description: Provide the address of the local network gateway
+      placeholder: 192.168.1.1
     validations:
       required: true
   - type: input
     id: subnet
     attributes:
-      label: Subnet
-      description: Provide the subnet for your ESPHome device
+      label: Subnet Mask
+      description: "Provide the subnet mask for the local network (Note: CIDR notation is not supported)"
+      placeholder: 255.255.255.0
     validations:
       required: true
