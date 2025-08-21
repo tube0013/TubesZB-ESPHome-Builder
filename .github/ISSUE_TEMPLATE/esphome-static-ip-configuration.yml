@@ -22,6 +22,7 @@ body:
         - tubeszb-efr32-mgm210-poe-2023
         - tubeszb-efr32-mgm24-2023
         - tubeszb-dual-radio-kit-mgm24
+        - tubeszb-dual-radio-kit-mgm21-2022
         - tubeszb-zw
       default: 0
     validations:
