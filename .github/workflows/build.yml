@@ -161,7 +161,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           # Add both the new firmware and the new manifests to git
-          git add latest-release/ ota_manifest/
+          git add latest-release/ ota_manifests/
           # Check if there are any changes to commit
           if ! git diff --staged --quiet; then
             git commit -m "Update release binaries and OTA manifests for ${{ github.event.release.tag_name }}"
