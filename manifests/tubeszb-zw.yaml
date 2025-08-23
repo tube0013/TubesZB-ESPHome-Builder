@@ -7,9 +7,6 @@ esphome:
 
   min_version: 2025.8.0
 
-  on_boot:
-    priority: 600
-
 esp32:
   board: esp32-poe
   framework:

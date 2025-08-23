@@ -4,11 +4,7 @@ esphome:
     name: tubezb.zw
     version: "2025.08.22.1"
 
-
   min_version: 2025.8.0
-
-  on_boot:
-    priority: 600
 
 esp32:
   board: esp32-poe
