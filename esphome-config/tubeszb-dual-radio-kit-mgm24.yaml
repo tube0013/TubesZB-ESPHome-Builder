@@ -14,7 +14,7 @@ esphome:
       - delay: 15ms
       - switch.turn_off: zRST_gpio
  
- esp32:
+esp32:
   board: esp32-poe
   framework:
     type: esp-idf
