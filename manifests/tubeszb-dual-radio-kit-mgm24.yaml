@@ -2,18 +2,18 @@ esphome:
   name: tubeszb-dual-radio-kit-mgm24
   project: 
     name: tubezb.mgm24+zw
-    version: "2025.07.19.5"
-  min_version: 2025.7.2
+    version: "2025.08.22.0"
+
+  min_version: 2025.8.0
+
   on_boot:
     priority: 600
     then:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
       - switch.turn_off: zRST_gpio
-      - lambda: |-
-          id(mdns0).add_extra_service({ "_zigbee-coordinator", "_tcp", 6638, {{"radio_type", "ezsp"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
-          id(mdns0).add_extra_service({ "_zwave", "_tcp", 6639, {{"version", "1.0"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
-esp32:
+ 
+ esp32:
   board: esp32-poe
   framework:
     type: esp-idf
@@ -38,10 +38,11 @@ ethernet:
   power_pin: GPIO12
   
     # Optional manual IP
-#  manual_ip:
-#    static_ip: STATIC_IP
-#    gateway: GATEWAY
-#    subnet: SUBNET
+  #manual_ip:
+  #  static_ip: STATIC_IP
+  #  gateway: GATEWAY
+  #  subnet: SUBNET 
+
 
 # Enable logging
 logger:
@@ -53,14 +54,7 @@ api:
 
 ota:
   - platform: esphome
-  - platform: http_request
   - platform: web_server
-
-http_request:
-update:
-  - platform: http_request
-    name: TubesZB ESPHome FW Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-kit-mgm24.json
 
 web_server:
   port: 80
@@ -154,7 +148,22 @@ binary_sensor:
       name: "TubesZB Z-Wave Serial Connected"
 
 mdns:
-  id: mdns0
+  services:
+    - service: "_zigbee-coordinator"
+      protocol: "_tcp"
+      port: 6638
+      txt:
+        version: 1
+        name: "TubesZB"
+        radio_type: "ezsp"
+        serial_number: !lambda 'return esphome::get_mac_address();'
+    - service: "_zwave"
+      protocol: "_tcp"
+      port: 6639
+      txt:
+        version: 1
+        name: "TubesZB"
+        serial_number: !lambda 'return esphome::get_mac_address();'
 
 text_sensor:
   - platform: template

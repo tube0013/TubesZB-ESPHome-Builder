@@ -2,13 +2,13 @@ esphome:
   name: tubeszb-cc2652p7-poe-2023
   project: 
     name: tubezb.cc2652p7-poe-2023
-    version: "2025.07.19.5"
-  min_version: 2025.7.2
+    version: "2025.08.22.0"
+
+  min_version: 2025.8.0
+
   on_boot:
     priority: 600
     then:
-      - lambda: |-
-          id(mdns0).add_extra_service({ "_zigbee-coordinator", "_tcp", 6638, {{"radio_type", "znp"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
       - switch.turn_on: zRST_gpio
       - delay: 15ms
       - switch.turn_off: zRST_gpio
@@ -125,7 +125,15 @@ binary_sensor:
       name: "TubesZB Serial Connected"
 
 mdns:
-  id: mdns0
+  services:
+    - service: "_zigbee-coordinator"
+      protocol: "_tcp"
+      port: 6638
+      txt:
+        version: 1
+        name: "TubesZB"
+        radio_type: "znp"
+        serial_number: !lambda 'return esphome::get_mac_address();'
 
 text_sensor:
   - platform: template

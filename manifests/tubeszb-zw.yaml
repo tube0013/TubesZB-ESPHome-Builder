@@ -2,13 +2,12 @@ esphome:
   name: tubeszb-zw
   project: 
     name: tubezb.zw
-    version: "2025.07.19.5"
-  min_version: 2025.7.2
+    version: "2025.08.22.0"
+
+  min_version: 2025.8.0
+
   on_boot:
     priority: 600
-    then:
-      - lambda: |-
-          id(mdns0).add_extra_service({ "_zwave", "_tcp", 6639, {{"version", "1.0"}, {"name", "TubesZB"},{"serial_number", get_mac_address()}} });
 
 esp32:
   board: esp32-poe
@@ -77,7 +76,14 @@ binary_sensor:
       name: "TubesZB ZW Serial Connected"
 
 mdns:
-  id: mdns0
+  services:
+    - service: "_zwave"
+      protocol: "_tcp"
+      port: 6638
+      txt:
+        version: 1
+        name: "TubesZB"
+        serial_number: !lambda 'return esphome::get_mac_address();'
 
 text_sensor:
   - platform: template
