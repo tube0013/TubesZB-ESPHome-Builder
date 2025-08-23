@@ -2,7 +2,8 @@ esphome:
   name: tubeszb-zw
   project: 
     name: tubezb.zw
-    version: "2025.08.22.0"
+    version: "2025.08.22.1"
+
 
   min_version: 2025.8.0
 

@@ -2,7 +2,8 @@ esphome:
   name: tubeszb-efr32-mgm210-poe-2023
   project:
     name: tubeszb.efr32_mgm210_poe_2023
-    version: "2025.08.22.0"
+    version: "2025.08.22.1"
+
 
   min_version: 2025.8.0
 

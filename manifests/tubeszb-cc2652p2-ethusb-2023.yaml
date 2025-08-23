@@ -2,7 +2,8 @@ esphome:
   name: tubeszb-cc2652p2-ethusb-2023
   project: 
     name: tubeszb.cc2652p2-ethusb-2023
-    version: "2025.08.22.0"
+    version: "2025.08.22.1"
+
 
   min_version: 2025.8.0
 
