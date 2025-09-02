@@ -6,7 +6,6 @@ on:
 
 jobs:
   build:
-#    if: contains(github.event.issue.labels.*.name, 'ESPHome')
     runs-on: ubuntu-latest
 
     steps:
@@ -29,51 +28,116 @@ jobs:
         issue_number: ${{ github.event.issue.number }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Debug show raw parser payload
+    - name: Debug: show raw parser payload
       run: |
         echo "Raw parser payload:"
         echo '${{ steps.parse_form.outputs.payload }}'
 
-    - name: Extract user input from form
+    - name: Extract user input from form (robust)
       id: user_input
       run: |
-        # NOTE: keys come from the issue form "id" values (not the label)
-        device_name='${{ fromJson(steps.parse_form.outputs.payload).device_name }}'
-        static_ip='${{ fromJson(steps.parse_form.outputs.payload).static_ip }}'
-        gateway='${{ fromJson(steps.parse_form.outputs.payload).gateway }}'
-        subnet='${{ fromJson(steps.parse_form.outputs.payload).subnet }}'
+        # payload from the onmax parser
+        PAYLOAD='${{ steps.parse_form.outputs.payload }}'
+        echo "Writing raw payload to a file for debugging"
+        printf '%s\n' "$PAYLOAD" > /tmp/issue_payload.json
+        echo "Payload saved to /tmp/issue_payload.json"
+        python - <<'PY'
+import os, json, sys
 
-        echo "Parsed values:"
-        echo "Device Name: $device_name"
-        echo "Static IP: $static_ip"
-        echo "Gateway: $gateway"
-        echo "Subnet: $subnet"
+p = os.getenv('PAYLOAD', '')
+try:
+    payload = json.loads(p) if p else {}
+except Exception as e:
+    print("Failed to parse payload as JSON:", e, file=sys.stderr)
+    print("Raw payload:", p, file=sys.stderr)
+    sys.exit(1)
 
-        if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
-          echo "Error: One or more required values are missing."
-          exit 1
-        fi
+# helper to attempt many shapes that the parser might produce
+def extract_value(key):
+    if key not in payload:
+        # try capitalized or label-named variants
+        for alt in (key.upper(), key.capitalize(), key.replace('_',' '), key.replace('_','-')):
+            if alt in payload:
+                return payload[alt]
+        return None
+    val = payload[key]
+    # If the field is an object, common shapes:
+    if isinstance(val, dict):
+        # try common subkeys for dropdown/input values
+        for sub in ('value','selected','selected_option','text','label','answer'):
+            if sub in val and val[sub] not in (None, ''):
+                return val[sub]
+        # sometimes the parser nests the user's selection under 'value' as a dict with 'label'
+        if 'value' in val and isinstance(val['value'], dict) and 'label' in val['value']:
+            return val['value']['label']
+        # fallback: return stringified dict if useful for debugging
+        return json.dumps(val)
+    # If it's a list, take first non-empty item
+    if isinstance(val, list):
+        for item in val:
+            if item not in (None, ''):
+                if isinstance(item, dict):
+                    for sub in ('value','label','text'):
+                        if sub in item and item[sub]:
+                            return item[sub]
+                    return json.dumps(item)
+                return item
+        return None
+    # primitive (string/int)
+    return val
 
-        echo "device_name=$device_name" >> $GITHUB_ENV
-        echo "static_ip=$static_ip" >> $GITHUB_ENV
-        echo "gateway=$gateway" >> $GITHUB_ENV
-        echo "subnet=$subnet" >> $GITHUB_ENV
+device_name = extract_value('device_name')
+static_ip   = extract_value('static_ip')
+gateway     = extract_value('gateway')
+subnet      = extract_value('subnet')
+
+# For debugging, show the resolved values and full payload keys/structure if device_name missing
+resolved = {
+    'device_name': device_name,
+    'static_ip': static_ip,
+    'gateway': gateway,
+    'subnet': subnet
+}
+print("Resolved values:", json.dumps(resolved, indent=2))
+
+missing = [k for k,v in resolved.items() if not v]
+if missing:
+    print("Missing required fields:", missing, file=sys.stderr)
+    print("\nFull payload (for debugging):", file=sys.stderr)
+    print(json.dumps(payload, indent=2), file=sys.stderr)
+    # Write debug file to workspace so logs include it
+    with open('/tmp/parsed_debug.json','w') as f:
+        json.dump({'resolved':resolved,'payload':payload}, f, indent=2)
+    sys.exit(1)
+
+# export values to GITHUB_ENV
+github_env = os.getenv('GITHUB_ENV')
+if not github_env:
+    print("GITHUB_ENV not set", file=sys.stderr)
+    sys.exit(1)
+with open(github_env, 'a') as f:
+    f.write(f"device_name={device_name}\n")
+    f.write(f"static_ip={static_ip}\n")
+    f.write(f"gateway={gateway}\n")
+    f.write(f"subnet={subnet}\n")
+
+print("Exported device_name, static_ip, gateway, subnet to GITHUB_ENV")
+PY
+      env:
+        PAYLOAD: ${{ steps.parse_form.outputs.payload }}
 
     - name: Update ESPHome YAML
       run: |
         device_yaml="esphome-config/${{ env.device_name }}.yaml"
-        sed -i "s/STATIC_IP/${{ env.static_ip }}/" $device_yaml
-        sed -i "s/GATEWAY/${{ env.gateway }}/" $device_yaml
-        sed -i "s/SUBNET/${{ env.subnet }}/" $device_yaml
+        echo "Updating $device_yaml with STATIC_IP/GATEWAY/SUBNET"
+        sed -i "s/STATIC_IP/${{ env.static_ip }}/" "$device_yaml"
+        sed -i "s/GATEWAY/${{ env.gateway }}/" "$device_yaml"
+        sed -i "s/SUBNET/${{ env.subnet }}/" "$device_yaml"
 
     - name: Compile ESPHome Firmware
       run: |
         device_yaml="esphome-config/${{ env.device_name }}.yaml"
-        esphome compile $device_yaml
-
-#    - name: List build directory contents
-#      run: |
-#        ls -Ra esphome-config/.esphome/build/
+        esphome compile "$device_yaml"
 
     - name: Upload Firmware
       uses: actions/upload-artifact@v4
@@ -101,7 +165,6 @@ jobs:
             throw new Error('Artifact not found');
           }
 
-          // Return an output object; actions/github-script maps returned object to step outputs
           return { artifact_id: artifact.id };
 
     - name: Create comment with firmware link
