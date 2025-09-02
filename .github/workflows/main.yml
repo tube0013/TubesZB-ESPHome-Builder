@@ -28,7 +28,7 @@ jobs:
         issue_number: ${{ github.event.issue.number }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Debug show raw parser payload
+    - name: Debug: show raw parser payload
       run: |
         echo "Raw parser payload:"
         printf '%s\n' "${{ steps.parse_form.outputs.payload }}"
@@ -40,8 +40,8 @@ jobs:
         printf '%s' "${{ steps.parse_form.outputs.payload }}" > /tmp/issue_payload.json
         echo "Saved parser payload to /tmp/issue_payload.json"
 
-        # Robust Python extraction: handles string, dict, list shapes returned by the parser
-        python3 - <<'PY'
+        # Create a Python script file (avoid using a heredoc inline that can confuse YAML)
+        cat > /tmp/parse_payload.py <<'PY'
 import json, sys, os
 
 pfile = '/tmp/issue_payload.json'
@@ -54,15 +54,13 @@ except Exception as e:
         with open(pfile, 'r') as f:
             print("Raw payload content:", file=sys.stderr)
             print(f.read(), file=sys.stderr)
-    except:
+    except Exception:
         pass
     sys.exit(1)
 
 def extract_value(payload, key):
-    # direct hit
     if key in payload and payload[key] not in (None, ''):
         return payload[key]
-    # try common alt keys
     for alt in (key.upper(), key.capitalize(), key.replace('_',' '), key.replace('_','-')):
         if alt in payload and payload[alt] not in (None, ''):
             return payload[alt]
@@ -129,6 +127,9 @@ with open(github_env, 'a') as f:
 
 print("Exported device_name, static_ip, gateway, subnet to GITHUB_ENV")
 PY
+
+        # Run the parser script
+        python3 /tmp/parse_payload.py
 
     - name: Update ESPHome YAML
       run: |
