@@ -32,8 +32,8 @@ jobs:
     - name: Extract user input from form
       id: user_input
       run: |
-        # Use bracket notation for keys with spaces, and match casing for others.
-        device_name='${{ fromJson(steps.parse_form.outputs.payload)['Device Name'] }}'
+        # Match the exact key names from the parser's JSON output from the debug log.
+        device_name='${{ fromJson(steps.parse_form.outputs.payload).Device_Name }}'
         static_ip='${{ fromJson(steps.parse_form.outputs.payload).Static_IP }}'
         gateway='${{ fromJson(steps.parse_form.outputs.payload).Gateway }}'
         subnet='${{ fromJson(steps.parse_form.outputs.payload).Subnet }}'
