@@ -32,11 +32,11 @@ jobs:
     - name: Extract user input from form
       id: user_input
       run: |
-        # Corrected key names to be lowercase to match the parser's output
-        device_name='${{ fromJson(steps.parse_form.outputs.payload).device_name }}'
-        static_ip='${{ fromJson(steps.parse_form.outputs.payload).static_ip }}'
-        gateway='${{ fromJson(steps.parse_form.outputs.payload).gateway }}'
-        subnet='${{ fromJson(steps.parse_form.outputs.payload).subnet }}'
+        # Use bracket notation for keys with spaces, and match casing for others.
+        device_name='${{ fromJson(steps.parse_form.outputs.payload)['Device Name'] }}'
+        static_ip='${{ fromJson(steps.parse_form.outputs.payload).Static_IP }}'
+        gateway='${{ fromJson(steps.parse_form.outputs.payload).Gateway }}'
+        subnet='${{ fromJson(steps.parse_form.outputs.payload).Subnet }}'
 
         echo "Parsed values:"
         echo "Device Name: $device_name"
@@ -114,3 +114,4 @@ jobs:
             issue_number: issue_number,
             body: commentBody
           });
+
