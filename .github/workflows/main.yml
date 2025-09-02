@@ -28,7 +28,7 @@ jobs:
         issue_number: ${{ github.event.issue.number }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Debug: show raw parser payload
+    - name: Debug show raw parser payload
       run: |
         echo "Raw parser payload:"
         echo '${{ steps.parse_form.outputs.payload }}'
