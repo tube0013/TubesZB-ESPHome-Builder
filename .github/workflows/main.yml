@@ -29,13 +29,19 @@ jobs:
         issue_number: ${{ github.event.issue.number }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Debug: show raw parser payload
+      run: |
+        echo "Raw parser payload:"
+        echo '${{ steps.parse_form.outputs.payload }}'
+
     - name: Extract user input from form
       id: user_input
       run: |
-        device_name='${{ fromJson(steps.parse_form.outputs.payload).Device_Name }}'
-        static_ip='${{ fromJson(steps.parse_form.outputs.payload).Static_IP }}'
-        gateway='${{ fromJson(steps.parse_form.outputs.payload).Gateway }}'
-        subnet='${{ fromJson(steps.parse_form.outputs.payload).Subnet }}'
+        # NOTE: keys come from the issue form "id" values (not the label)
+        device_name='${{ fromJson(steps.parse_form.outputs.payload).device_name }}'
+        static_ip='${{ fromJson(steps.parse_form.outputs.payload).static_ip }}'
+        gateway='${{ fromJson(steps.parse_form.outputs.payload).gateway }}'
+        subnet='${{ fromJson(steps.parse_form.outputs.payload).subnet }}'
 
         echo "Parsed values:"
         echo "Device Name: $device_name"
@@ -80,6 +86,8 @@ jobs:
     - name: Get artifact ID
       id: get_artifact_id
       uses: actions/github-script@v6
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         script: |
           const artifacts = await github.rest.actions.listArtifactsForRepo({
@@ -93,10 +101,13 @@ jobs:
             throw new Error('Artifact not found');
           }
 
-          core.setOutput('artifact_id', artifact.id);
+          // Return an output object; actions/github-script maps returned object to step outputs
+          return { artifact_id: artifact.id };
 
     - name: Create comment with firmware link
       uses: actions/github-script@v6
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         script: |
           const issue_number = ${{ github.event.issue.number }};
@@ -120,5 +131,3 @@ jobs:
             issue_number: issue_number,
             body: commentBody
           });
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
