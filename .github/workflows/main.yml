@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-#    if: contains(github.event.issue.labels.*.name, 'ESPHome')
+#   if: contains(github.event.issue.labels.*.name, 'ESPHome')
     runs-on: ubuntu-latest
 
     steps:
@@ -32,10 +32,11 @@ jobs:
     - name: Extract user input from form
       id: user_input
       run: |
-        device_name='${{ fromJson(steps.parse_form.outputs.payload).Device_Name }}'
-        static_ip='${{ fromJson(steps.parse_form.outputs.payload).Static_IP }}'
-        gateway='${{ fromJson(steps.parse_form.outputs.payload).Gateway }}'
-        subnet='${{ fromJson(steps.parse_form.outputs.payload).Subnet }}'
+        # Corrected key names to be lowercase to match the parser's output
+        device_name='${{ fromJson(steps.parse_form.outputs.payload).device_name }}'
+        static_ip='${{ fromJson(steps.parse_form.outputs.payload).static_ip }}'
+        gateway='${{ fromJson(steps.parse_form.outputs.payload).gateway }}'
+        subnet='${{ fromJson(steps.parse_form.outputs.payload).subnet }}'
 
         echo "Parsed values:"
         echo "Device Name: $device_name"
@@ -65,60 +66,51 @@ jobs:
         device_yaml="esphome-config/${{ env.device_name }}.yaml"
         esphome compile $device_yaml
 
-#    - name: List build directory contents
-#      run: |
-#        ls -Ra esphome-config/.esphome/build/
-
     - name: Upload Firmware
       uses: actions/upload-artifact@v4
       with:
-        name: firmware
+        name: firmware-${{ env.device_name }}-${{ github.run_id }}
         path: |
           esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.factory.bin
-          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.ota.bin
-
-    - name: Get artifact ID
-      id: get_artifact_id
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const artifacts = await github.rest.actions.listArtifactsForRepo({
-            owner: context.repo.owner,
-            repo: context.repo.repo
-          });
-
-          const artifact = artifacts.data.artifacts.find(artifact => artifact.name === 'firmware');
-
-          if (!artifact) {
-            throw new Error('Artifact not found');
-          }
-
-          core.setOutput('artifact_id', artifact.id);
+          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.bin
 
     - name: Create comment with firmware link
       uses: actions/github-script@v6
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const issue_number = ${{ github.event.issue.number }};
-          const artifact_id = ${{ steps.get_artifact_id.outputs.artifact_id }};
-          const firmwareArtifactUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${artifact_id}`;
+          const artifact_name = 'firmware-${{ env.device_name }}-${{ github.run_id }}';
+          
+          const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: ${{ github.run_id }},
+          });
+
+          const artifact = artifacts.data.artifacts.find(art => art.name === artifact_name);
+
+          if (!artifact) {
+            throw new Error(`Artifact with name ${artifact_name} not found.`);
+          }
+          
+          const firmwareArtifactUrl = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}/artifacts/${artifact.id}`;
+          
           const commentBody = `
           ## Firmware Build Complete
 
-          The firmware build for your device \`${{ env.device_name }}\` is complete. You can download the firmware files from the link below:
+          The firmware build for your device \`${{ env.device_name }}\` is complete. You can download the firmware files from the artifact link below (you must be logged into GitHub to download).
 
-          [Download Firmware](${firmwareArtifactUrl})
+          [Download Firmware Artifact](${firmwareArtifactUrl})
 
-          - Static IP: \`${{ env.static_ip }}\`
-          - Gateway: \`${{ env.gateway }}\`
-          - Subnet: \`${{ env.subnet }}\`
-
+          - **Static IP:** \`${{ env.static_ip }}\`
+          - **Gateway:** \`${{ env.gateway }}\`
+          - **Subnet:** \`${{ env.subnet }}\`
           `;
+          
           await github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: issue_number,
             body: commentBody
           });
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
