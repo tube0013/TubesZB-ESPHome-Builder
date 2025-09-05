@@ -19,6 +19,7 @@ body:
         - tubeszb-cc2652p2-ethusb-2023
         - tubeszb-cc2652p2-ethusb-2022
         - tubeszb-dual-radio-kit-cc2652
+        - tubeszb-efr32-mgm210-poe-2022
         - tubeszb-efr32-mgm210-poe-2023
         - tubeszb-efr32-mgm24-2023
         - tubeszb-dual-radio-kit-mgm24

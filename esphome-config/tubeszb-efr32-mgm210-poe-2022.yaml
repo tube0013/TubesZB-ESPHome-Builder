@@ -1,0 +1,141 @@
+esphome:
+  name: tubeszb-efr32-mgm210-poe-2022
+  project:
+    name: tubeszb.efr32_mgm210_poe_2022
+    version: "2025.08.22.1"
+
+
+  min_version: 2025.8.0
+
+esp32:
+  board: esp-wrover-kit
+  framework:
+    type: esp-idf
+
+external_components:
+  - source: github://oxan/esphome-stream-server
+
+#Olimex ESP32-PoE Ethernet
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    pin: GPIO17
+    mode: CLK_OUT
+  phy_addr: 0
+  power_pin: GPIO12
+
+#WT32_ETH01 Ethernet
+#ethernet:
+#  type: LAN8720
+#  mdc_pin: GPIO23
+#  mdio_pin: GPIO18
+#  clk: GPIO0_IN
+#  phy_addr: 1
+#  power_pin: GPIO16
+  
+# Optional manual IP
+  manual_ip:
+    static_ip: STATIC_IP
+    gateway: GATEWAY
+    subnet: SUBNET
+
+# Enable logging
+logger:
+  level: DEBUG
+  
+# Enable Home Assistant API
+api:
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+  - platform: web_server
+
+web_server:
+  port: 80
+  local: true
+    
+switch:
+  - platform: gpio
+    pin: 13
+    id: zRST_gpio
+    inverted: yes
+    restore_mode: ALWAYS_OFF
+        
+  - platform: gpio
+    pin: 4
+    name: "Pull Bootloader pin (PA0) to Low"
+    id: zBSL
+    inverted: yes
+    restore_mode: ALWAYS_OFF
+    disabled_by_default: true  
+    
+button:    
+  - platform: restart
+    name: "Restart the Gateway"
+    disabled_by_default: true
+
+  - platform: template
+    name: "EFR32 Reset"
+    id: zRST
+    disabled_by_default: true  
+    on_press:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
+
+uart:
+  id: uart_bus
+  rx_pin: GPIO5 #2022 5 # 2023 36
+  tx_pin: GPIO16 #2022 16 # 2023 4
+  baud_rate: 115200
+
+
+stream_server:
+  uart_id: uart_bus
+  port: 6638 # optional, default is 6638
+#  buffer_size: 512
+
+binary_sensor:
+  - platform: stream_server
+    connected:
+      name: "TubesZB Serial Connected"
+sensor:
+  - platform: stream_server
+    connection_count:
+      name: "Connection Count"
+
+mdns:
+  services:
+    - service: "_zigbee-coordinator"
+      protocol: "_tcp"
+      port: 6638
+      txt:
+        version: 1
+        name: "TubesZB"
+        radio_type: "ezsp"
+        serial_number: !lambda 'return esphome::get_mac_address();'
+
+text_sensor:
+  - platform: template
+    name: "ESPHome Project Version"
+    id: esphome_project_version_text_short
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 600s
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
+
+  - platform: ethernet_info
+    ip_address:
+      name: ESP IP Address
+    mac_address:
+      name: ESP MAC Address
+
+  - platform: uptime
+    name: Uptime
+    format:
+      separator: " "
+      days: "D"
