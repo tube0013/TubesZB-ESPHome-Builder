@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-efr32-mgm210-poe-2022",
-  "version": "2025.09.19",
+  "version": "2025.09.19.2",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-efr32-mgm210-poe-2022.ota.bin",
-        "md5": "533b405c025a7438bb18ce355b0a0474",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.05...2025.09.19"
+        "md5": "01b34ac051f36f00518feacaa6a2fcb5",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19.2",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.1...2025.09.19.2"
       }
     }
   ]
