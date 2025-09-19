@@ -12,7 +12,7 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-cc2652p2-ethusb-2022.ota.bin",
-        "md5": "9df3ca2dcd09d8b12621aef70f02ff05",
+        "md5": "27a283ce7e6ed7a22c5114c1c146dfac",
         "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19.2",
         "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.1...2025.09.19.2"
       }
