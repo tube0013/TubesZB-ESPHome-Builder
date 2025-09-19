@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-cc2652p2-ethusb-2022
   project: 
     name: tubeszb.cc2652p2-ethusb-2022
-    version: "2025.08.23.0"
+    version: "2025.09.19.2"
   min_version: 2025.8.0
 
 esp32:
@@ -45,6 +45,14 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
+  - platform: http_request
+
+http_request:
+  
+update:
+  - platform: http_request
+    name: TubesZB Firmware Update
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json
 
 web_server:
   port: 80

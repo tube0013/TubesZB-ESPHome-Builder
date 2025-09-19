@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-efr32-mgm24-2023
   project:
     name: tubeszb.efr32_mgm24_2023
-    version: "2025.08.22.1"
+    version: "2025.09.19.2"
 
 
   min_version: 2025.8.0

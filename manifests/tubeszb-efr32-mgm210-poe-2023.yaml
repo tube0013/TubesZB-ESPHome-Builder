@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-efr32-mgm210-poe-2023
   project:
     name: tubeszb.efr32_mgm210_poe_2023
-    version: "2025.08.22.1"
+    version: "2025.09.19.2"
 
 
   min_version: 2025.8.0
@@ -52,6 +52,14 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
+  - platform: http_request
+
+http_request:
+  
+update:
+  - platform: http_request
+    name: TubesZB Firmware Update
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-efr32-mgm210-poe-2023.json
 
 web_server:
   port: 80
