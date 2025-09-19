@@ -4,6 +4,18 @@ esphome:
     name: tubeszb.cc2652p2-ethusb-2022
     version: "2025.09.19.2"
   min_version: 2025.8.0
+  on_boot:
+    - priority: 600
+      then:
+        - switch.turn_on: zRST_gpio
+        - delay: 15ms
+        - switch.turn_off: zRST_gpio
+    - priority: -10
+      then:
+        - delay: 20s
+        - component.update: fw_updater
+
+
 
 esp32:
   board: esp-wrover-kit
@@ -76,10 +88,6 @@ script:
       - switch.turn_on: zRST_gpio
       - delay: 1s
       - switch.turn_off: zRST_gpio
-    - priority: -10
-      then:
-        - delay: 20s
-        - component.update: fw_updater
       - logger.log: "Delaying ~10 seconds for cc2652p2 to settle"
       - delay: 11s
       - switch.turn_off: zBSL

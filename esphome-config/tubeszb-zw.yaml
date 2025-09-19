@@ -3,9 +3,7 @@ esphome:
   project: 
     name: tubezb.zw
     version: "2025.09.19.2"
-
   min_version: 2025.8.0
-
   on_boot:
     - priority: -10
       then:

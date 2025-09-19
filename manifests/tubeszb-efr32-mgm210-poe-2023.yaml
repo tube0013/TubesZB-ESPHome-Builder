@@ -3,9 +3,12 @@ esphome:
   project:
     name: tubeszb.efr32_mgm210_poe_2023
     version: "2025.09.19.2"
-
-
   min_version: 2025.8.0
+  on_boot:
+    - priority: -10
+      then:
+        - delay: 20s
+        - component.update: fw_updater
 
 esp32:
   board: esp-wrover-kit
@@ -103,10 +106,6 @@ button:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
       - switch.turn_off: zRST_gpio
-    - priority: -10
-      then:
-        - delay: 20s
-        - component.update: fw_updater
 
 uart:
   id: uart_bus
