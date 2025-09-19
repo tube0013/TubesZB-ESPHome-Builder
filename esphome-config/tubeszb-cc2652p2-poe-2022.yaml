@@ -8,16 +8,27 @@ esphome:
   min_version: 2025.8.0
 
   on_boot:
-    priority: 600
-    then:
-      - switch.turn_on: zRST_gpio
-      - delay: 15ms
-      - switch.turn_off: zRST_gpio
+    - priority: 600
+      then:
+        - switch.turn_on: zRST_gpio
+        - delay: 15ms
+        - switch.turn_off: zRST_gpio
+    - priority: -10
+      then:
+        - delay: 20s
+        - component.update: fw_updater
 
 esp32:
   board: esp-wrover-kit
   framework:
     type: esp-idf
+    sdkconfig_options:
+      CONFIG_LWIP_MAX_SOCKETS: "16"
+      CONFIG_PM_ENABLE: "n"
+      # Prevent IDF from trying to power-down UART in light sleep, which causes
+      # uart_param_config to return ESP_ERR_NOT_SUPPORTED on some targets
+      CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP: "n"
+      CONFIG_UART_ISR_IN_IRAM: "y"
 
 
 external_components:
@@ -54,6 +65,18 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
+  - platform: http_request
+
+http_request:
+  
+update:
+  - platform: http_request
+    id: fw_updater
+    name: TubesZB Firmware Update
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-poe-2022.json
+    update_interval: 12h
+    timeout: 20s
+
 
 web_server:
   port: 80
