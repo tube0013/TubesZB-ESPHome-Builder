@@ -8,11 +8,17 @@ esphome:
   min_version: 2025.8.0
 
   on_boot:
-    priority: 600
-    then:
-      - switch.turn_on: zRST_gpio
-      - delay: 15ms
-      - switch.turn_off: zRST_gpio
+    - priority: 600
+      then:
+        - switch.turn_on: zRST_gpio
+        - delay: 15ms
+        - switch.turn_off: zRST_gpio
+    - priority: -10
+      then:
+        - wait_until:
+            condition:
+              ethernet.connected
+        - component.update: fw_updater
  
 esp32:
   board: esp32-poe
@@ -189,9 +195,3 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
-
-  - platform: uptime
-    name: Uptime
-    format:
-      separator: " "
-      days: "D"
