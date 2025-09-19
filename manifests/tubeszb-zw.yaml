@@ -69,7 +69,7 @@ update:
     name: TubesZB Firmware Update
     source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-zw.json
     update_interval: 12h
-    timeout: 20s
+    
 
 web_server:
   port: 80
