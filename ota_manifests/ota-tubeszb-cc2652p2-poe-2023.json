@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-cc2652p2-poe-2023",
-  "version": "2025.09.19.2",
+  "version": "2025.09.20.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-cc2652p2-poe-2023.ota.bin",
-        "md5": "113c5c8de21c3149860407e8b5b0a577",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19.2",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.1...2025.09.19.2"
+        "md5": "453b8e0cf23d0191ea734f66b9abcb58",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.20.0",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.2...2025.09.20.0"
       }
     }
   ]

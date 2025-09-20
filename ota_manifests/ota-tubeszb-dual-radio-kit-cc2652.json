@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dual-radio-kit-cc2652",
-  "version": "2025.09.19.2",
+  "version": "2025.09.20.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-cc2652.ota.bin",
-        "md5": "404dd4bdefb16a1d4d33c3d49b49877b",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19.2",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.1...2025.09.19.2"
+        "md5": "400f89fd34b9b4ae9f88ca10e7322ac5",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.20.0",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.2...2025.09.20.0"
       }
     }
   ]
