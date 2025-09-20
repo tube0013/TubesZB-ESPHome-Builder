@@ -5,6 +5,17 @@ esphome:
     version: "2025.09.19.2"
   min_version: 2025.8.0
   on_boot:
+    - priority: 800
+      then:
+        - lambda: |-
+            // The #include directive is now INSIDE the lambda.
+            #include "driver/uart.h"
+
+            ESP_LOGD("custom", "Applying HW Flow Control to uart_bus_zb...");
+            // This re-configures the pins and enables CTS/RTS flow control.
+            uart_set_pin(UART_NUM_1, 4, 36, 2, 13);
+            // This NEW LINE actually enables the CTS/RTS flow control mode
+            uart_set_hw_flow_ctrl(UART_NUM_1, UART_HW_FLOWCTRL_CTS_RTS, 122);
     - priority: -10
       then:
         - delay: 20s
@@ -123,15 +134,6 @@ uart:
   id: uart_bus
   rx_pin: GPIO36
   tx_pin: GPIO4
-  cts_pin: GPIO13
-  rts_pin: GPIO2
-  # possible values are
-  # - DISABLE = disable hardware flow control
-  # - RTS = enable RX hardware flow control (rts)
-  # - CTS = enable TX hardware flow control (cts)
-  # - CTS_RTS = enable hardware flow control
-  # - MAX = ?
-  hw_flow_control: CTS_RTS  
   baud_rate: 115200
   rx_buffer_size: 1024
 

@@ -5,6 +5,17 @@ esphome:
     version: "2025.09.19.2"
   min_version: 2025.8.0
   on_boot:
+    - priority: 800
+      then:
+        - lambda: |-
+            // The #include directive is now INSIDE the lambda.
+            #include "driver/uart.h"
+
+            ESP_LOGD("custom", "Applying HW Flow Control to uart_bus_zb...");
+            // This re-configures the pins and enables CTS/RTS flow control.
+            uart_set_pin(UART_NUM_1, 4, 36, 2, 13);
+            // This NEW LINE actually enables the CTS/RTS flow control mode
+            uart_set_hw_flow_ctrl(UART_NUM_1, UART_HW_FLOWCTRL_CTS_RTS, 122);
     - priority: 600
       then:
         - switch.turn_on: zRST_gpio
@@ -29,8 +40,7 @@ esp32:
 
 external_components:
   - source: github://oxan/esphome-stream-server
-  - source: github://tube0013/esphome-components
-    components: [uart]
+
 #dashboard_import:
   #package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-efr32-MGM24/firmware/ESPHome/tubeszb-mgm24.yaml
 
@@ -73,8 +83,6 @@ update:
     source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-efr32-mgm24-2023.json
     update_interval: 12h
     
-
-
 web_server:
   port: 80
   local: true
@@ -129,18 +137,8 @@ uart:
   id: uart_bus
   rx_pin: GPIO36
   tx_pin: GPIO4
-  cts_pin: GPIO13
-  rts_pin: GPIO2
-  # possible values are
-  # - DISABLE = disable hardware flow control
-  # - RTS = enable RX hardware flow control (rts)
-  # - CTS = enable TX hardware flow control (cts)
-  # - CTS_RTS = enable hardware flow control
-  # - MAX = ?
-  hw_flow_control: CTS_RTS  
   baud_rate: 115200
   rx_buffer_size: 1024
-
 
 stream_server:
   uart_id: uart_bus

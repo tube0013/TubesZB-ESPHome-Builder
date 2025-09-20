@@ -5,6 +5,17 @@ esphome:
     version: "2025.09.19.2"
   min_version: 2025.8.0
   on_boot:
+    - priority: 800
+      then:
+        - lambda: |-
+            // The #include directive is now INSIDE the lambda.
+            #include "driver/uart.h"
+
+            ESP_LOGD("custom", "Applying HW Flow Control to uart_bus_zb...");
+            // This re-configures the pins and enables CTS/RTS flow control.
+            uart_set_pin(UART_NUM_1, 4, 36, 2, 13);
+            // This NEW LINE actually enables the CTS/RTS flow control mode
+            uart_set_hw_flow_ctrl(UART_NUM_1, UART_HW_FLOWCTRL_CTS_RTS, 122);
     - priority: 600
       then:
         - switch.turn_on: zRST_gpio
@@ -29,9 +40,6 @@ esp32:
 
 external_components:
   - source: github://oxan/esphome-stream-server
-  - source: github://tube0013/esphome-components
-    components: [uart]
-
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -73,12 +81,9 @@ update:
     source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-kit-mgm24.json
     update_interval: 12h
     
-
-
 web_server:
   port: 80
   local: true
-
 
 script:
   - id: fw_update_mode
