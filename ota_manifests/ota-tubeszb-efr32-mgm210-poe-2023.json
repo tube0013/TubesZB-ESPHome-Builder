@@ -12,7 +12,7 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-efr32-mgm210-poe-2023.ota.bin",
-        "md5": "2982e6be8e9da52aed041e0fa5822ea3",
+        "md5": "cf0098025bf66072b2dd0643bc08a4c7",
         "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19.2",
         "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.1...2025.09.19.2"
       }

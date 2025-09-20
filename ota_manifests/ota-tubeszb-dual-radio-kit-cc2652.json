@@ -12,7 +12,7 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-cc2652.ota.bin",
-        "md5": "86209c1c91beb99ee57e6a5b20625d37",
+        "md5": "404dd4bdefb16a1d4d33c3d49b49877b",
         "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19.2",
         "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.1...2025.09.19.2"
       }

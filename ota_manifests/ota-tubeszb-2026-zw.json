@@ -12,7 +12,7 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-2026-zw.ota.bin",
-        "md5": "1f2a8199c969eb0e7dd5eff5a4203008",
+        "md5": "89401ba0a680acf3c087d4f81f97fdb3",
         "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.19.2",
         "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.1...2025.09.19.2"
       }
