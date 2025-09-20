@@ -112,7 +112,6 @@ uart:
     baud_rate: 115200
 
 stream_server:
-    buffer_size: 1024
   - id: zb
     uart_id: uart_bus_zb
     port: 6638 # optional, default is 6638
