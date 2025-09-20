@@ -87,7 +87,7 @@ web_server:
   port: 80
   version: 2
   js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
-  local: true
+#  local: true
 
 script:
   - id: fw_update_mode
