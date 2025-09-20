@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-cc2652p7-poe-2023
   project: 
     name: tubezb.cc2652p7-poe-2023
-    version: "2025.09.19.2"
+    version: "2025.09.20.0"
   min_version: 2025.8.0
   on_boot:
     - priority: 600
@@ -29,6 +29,8 @@ esp32:
 
 external_components:
   - source: github://oxan/esphome-stream-server
+  - source: github://tjhorner/esphome-custom-components
+    components: [ project_version ]
 
 
 # dashboard_import:
@@ -77,6 +79,8 @@ update:
 
 web_server:
   port: 80
+  version: 2
+  js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
 
 
 script:
@@ -157,14 +161,9 @@ mdns:
         serial_number: !lambda 'return esphome::get_mac_address();'
 
 text_sensor:
-  - platform: template
-    name: "ESPHome Project Version"
-    id: esphome_project_version_text_short
-    icon: "mdi:information-box"
-    entity_category: "diagnostic"
-    update_interval: 600s
-    lambda: |-
-      return { ESPHOME_PROJECT_VERSION };
+  - platform: project_version
+    name: "TubesZB Device Firmware Version"
+    internal: true
 
   - platform: ethernet_info
     ip_address:
