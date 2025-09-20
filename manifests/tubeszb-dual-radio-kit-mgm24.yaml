@@ -42,8 +42,7 @@ external_components:
   - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
-  - source: github://tube0013/esphome-components
-    components: [uart]
+
 
 
 #Olimex ESP32-PoE Ethernet
