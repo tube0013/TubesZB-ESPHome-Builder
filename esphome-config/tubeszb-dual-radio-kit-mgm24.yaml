@@ -139,15 +139,6 @@ uart:
   - id: uart_bus_zb
     rx_pin: GPIO36
     tx_pin: GPIO4
-    cts_pin: GPIO13
-    rts_pin: GPIO2
-    # possible values are
-    # - DISABLE = disable hardware flow control
-    # - RTS = enable RX hardware flow control (rts)
-    # - CTS = enable TX hardware flow control (cts)
-    # - CTS_RTS = enable hardware flow control
-    # - MAX = ?
-    hw_flow_control: CTS_RTS  
     baud_rate: 115200
     rx_buffer_size: 1024
   - id: uart_bus_zw
