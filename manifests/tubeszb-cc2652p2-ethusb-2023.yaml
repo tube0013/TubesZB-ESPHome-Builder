@@ -34,8 +34,8 @@ external_components:
   - source: github://tube0013/esphome-components
     components: [cc2652_flasher]
   - source: github://oxan/esphome-stream-server
-  - source: github://tjhorner/esphome-custom-components
-    components: [ project_version ]
+#  - source: github://tjhorner/esphome-custom-components
+#    components: [ project_version ]
 
 # dashboard_import:
 #   package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-eth_usb/firmware/esphome/tubezb-cc2652p2-ethusb-2023.yaml
@@ -234,10 +234,19 @@ text_sensor:
     id: zb_variant
     icon: mdi:chip
 
-  - platform: project_version
-    name: "TubesZB Device Firmware Version"
-    internal: true
+#  - platform: project_version
+#    name: "TubesZB Device Firmware Version"
+#    internal: true
 
+  - platform: template
+    name: "TubesZB Device Firmware Version"
+    id: project_version
+    icon: "mdi:information-box"
+    entity_category: "diagnostic"
+    update_interval: 24h
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
+    internal: true
   - platform: ethernet_info
     ip_address:
       name: ESP IP Address
