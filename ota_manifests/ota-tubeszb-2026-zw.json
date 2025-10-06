@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-2026-zw",
-  "version": "2025.09.20.0",
+  "version": "2025.10.06.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-2026-zw.ota.bin",
-        "md5": "6954bb0eb9e0f0803835d1d2c471f627",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.20.0",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.2...2025.09.20.0"
+        "md5": "9696fad4b1ee95b162ded235aa5bfbb7",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.0",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.0"
       }
     }
   ]

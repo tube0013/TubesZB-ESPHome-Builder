@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dual-radio-kit-mgm24",
-  "version": "2025.09.20.0",
+  "version": "2025.10.06.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-mgm24.ota.bin",
-        "md5": "753b068086b138b8161a81cd90fb1bfa",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.09.20.0",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.19.2...2025.09.20.0"
+        "md5": "3f6cb7535b2b4d8b948c6b68e24c496e",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.0",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.0"
       }
     }
   ]
