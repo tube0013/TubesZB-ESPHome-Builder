@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-cc2652p2-poe-2022
   project: 
     name: tubezb.cc2652p2-poe-2022
-    version: "2025.09.20.0"
+    version: "2025.10.06.0"
   min_version: 2025.8.0
   on_boot:
     - priority: 600
@@ -10,6 +10,8 @@ esphome:
         - switch.turn_on: zRST_gpio
         - delay: 15ms
         - switch.turn_off: zRST_gpio
+        - cc2652_flasher.detect_variant:
+            id: zigbee_flasher
     - priority: -10
       then:
         - delay: 20s
@@ -27,8 +29,9 @@ esp32:
       CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP: "n"
       CONFIG_UART_ISR_IN_IRAM: "y"
 
-
 external_components:
+  - source: github://tube0013/esphome-components
+    components: [cc2652_flasher]
   - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
@@ -158,7 +161,89 @@ mdns:
         radio_type: "znp"
         serial_number: !lambda 'return esphome::get_mac_address();'
 
+cc2652_flasher:
+  id: zigbee_flasher
+  uart_id: uart_bus
+  url: "https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json"
+  bsl_switch: zBSL
+  rst_switch: zRST_gpio
+  boot_baud_rate: 500000
+  restore_baud_rate: 115200
+  erase_mode: bank
+  debug: false
+  show_progress: true
+  progress_step: 5
+  fw_version_text: zb_fw_version
+  ieee_text: zb_ieee
+  latest_fw_version_text: zb_latest_fw
+  variant_text: zb_variant
+  check_on_boot: false
+  check_interval_days: 7
+  detect_on_boot: true
+  detect_on_boot_delay_ms: 0
+
+
+button:
+  - platform: template
+    name: "Flash CC2652"
+    id: flash_cc2652
+    on_press:
+      then:
+        - cc2652_flasher.update_firmware:
+            id: zigbee_flasher
+
+  - platform: template
+    name: "Check CC2652 Update"
+    id: check_cc2652_update
+    on_press:
+      then:
+        - cc2652_flasher.check_update:
+            id: zigbee_flasher
+
+  - platform: template
+    name: "Detect CC2652 Variant"
+    id: detect_cc2652_variant
+    on_press:
+      then:
+        - cc2652_flasher.detect_variant:
+            id: zigbee_flasher
+
+  - platform: restart
+    name: "Restart the Device"
+
+  - platform: template
+    name: "Zigbee Module Reset"
+    disabled_by_default: true
+    id: zRST
+    on_press:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
+
+  - platform: template
+    name: "Trigger Zigbee Module Bootloader"
+    disabled_by_default: true
+    on_press:
+      - script.execute: fw_update_mode
+
 text_sensor:
+  - platform: template
+    name: "Zigbee FW Version"
+    id: zb_fw_version
+    icon: mdi:chip
+  - platform: template
+    name: "Zigbee IEEE"
+    id: zb_ieee
+    icon: mdi:identifier
+  - platform: template
+    name: "Zigbee Latest FW"
+    id: zb_latest_fw
+    icon: mdi:update
+  - platform: template
+    name: "Zigbee Variant"
+    id: zb_variant
+    icon: mdi:chip
+
   - platform: project_version
     name: "TubesZB Device Firmware Version"
     internal: true
@@ -168,9 +253,3 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
-
-  - platform: uptime
-    name: Uptime
-    format:
-      separator: " "
-      days: "D"
