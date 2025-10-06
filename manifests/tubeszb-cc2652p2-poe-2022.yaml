@@ -114,25 +114,6 @@ switch:
     restore_mode: ALWAYS_OFF
     disabled_by_default: true
 
-button:
-  - platform: restart
-    name: "Restart the Device"
-
-  - platform: template
-    name: "Zigbee Module Reset"
-    disabled_by_default: true
-    id: zRST
-    on_press:
-      - switch.turn_on: zRST_gpio
-      - delay: 15ms
-      - switch.turn_off: zRST_gpio
-
-  - platform: template
-    name: "Trigger Zigbee Module Bootloader"
-    disabled_by_default: true
-    on_press:
-      - script.execute: fw_update_mode
-
 uart:
   id: uart_bus
   rx_pin: GPIO5
