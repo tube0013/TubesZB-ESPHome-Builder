@@ -245,8 +245,13 @@ stream_server:
 
 binary_sensor:
   - platform: stream_server
+    stream_server: zb
     connected:
       name: "TubesZB Zigbee Serial Connected"
+  - platform: stream_server
+    stream_server: zw
+    connected:
+      name: "TubesZB Z-Wave Serial Connected"
   - platform: template
     id: ncp_busy
     name: NCP Busy
