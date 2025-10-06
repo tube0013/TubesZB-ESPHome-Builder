@@ -22,13 +22,13 @@ esphome:
             uart_set_hw_flow_ctrl(UART_NUM_1, UART_HW_FLOWCTRL_CTS_RTS, 122);
     - priority: 200   # after core init, before most components start traffic
       then:
-        - stream_server.pause: { id: stream_srv }
+        - stream_server.pause: { id: zb }
         - delay: 700ms
         - switch.turn_on: zRST_gpio
         - delay: 50ms
         - switch.turn_off: zRST_gpio
         - delay: 1s
-        - stream_server.resume: { id: stream_srv }
+        - stream_server.resume: { id: zb }
         - script.execute: boot_probe_sequence
     - priority: -10
       then:
@@ -266,11 +266,6 @@ binary_sensor:
       - text_sensor.template.publish:
           id: ss_status
           state: "Running"
-  - platform: stream_server
-    stream_server: zw
-    connected:
-      name: "TubesZB Z-Wave Serial Connected"
-
 mdns:
   services:
     - service: "_zigbee-coordinator"
