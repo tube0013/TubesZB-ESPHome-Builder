@@ -2,12 +2,16 @@ esphome:
   name: tubeszb-efr32-mgm24-2023
   project:
     name: tubeszb.efr32_mgm24_2023
-    version: "2025.09.20.0"
+    version: "2025.10.06.0"
   min_version: 2025.8.0
   on_boot:
-    - priority: 800
+    - priority: 900
       then:
         - lambda: |-
+            // Force GPIO2 low (RTS asserted) early; UART will take the pin later.
+            gpio_reset_pin(GPIO_NUM_2);
+            gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT);
+            gpio_set_level(GPIO_NUM_2, 0);
             // The #include directive is now INSIDE the lambda.
             #include "driver/uart.h"
 
@@ -16,10 +20,16 @@ esphome:
             uart_set_pin(UART_NUM_1, 4, 36, 2, 13);
             // This NEW LINE actually enables the CTS/RTS flow control mode
             uart_set_hw_flow_ctrl(UART_NUM_1, UART_HW_FLOWCTRL_CTS_RTS, 122);
-    - priority: -10
+    - priority: 200   # after core init, before most components start traffic
       then:
-        - delay: 20s
-        - component.update: fw_updater
+        - stream_server.pause: { id: stream_srv }
+        - delay: 700ms
+        - switch.turn_on: zRST_gpio
+        - delay: 50ms
+        - switch.turn_off: zRST_gpio
+        - delay: 1s
+        - stream_server.resume: { id: stream_srv }
+        - script.execute: boot_probe_sequence
 
 esp32:
   board: esp-wrover-kit
@@ -34,9 +44,16 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-  - source: github://oxan/esphome-stream-server
+  - source: github://tube0013/esphome-components
+    components: [stream_server, efr32_flasher, efr32_info]
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
+
+globals:
+  - id: boot_probe_done
+    type: bool
+    restore_value: no
+    initial_value: 'false'
 
 #dashboard_import:
   #package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-efr32-MGM24/firmware/ESPHome/tubeszb-mgm24.yaml
@@ -97,6 +114,33 @@ script:
       - switch.turn_off: zRST_gpio
       - delay: 5s
       - switch.turn_off: zBSL
+  - id: boot_probe_sequence
+    mode: queued
+    then:
+      - if:
+          condition:
+            lambda: 'return id(boot_probe_done);'
+          then:
+            - logger.log:
+                format: "Boot probe skipped (already executed)"
+                level: DEBUG
+          else:
+            - delay: 2s
+            - efr32_info.probe: { id: zigbee_info }
+            - wait_until:
+                condition:
+                  lambda: 'if (id(ncp_busy).state) App.feed_wdt(); return !id(ncp_busy).state;'
+                timeout: 45s
+            - delay: 500ms
+            - if:
+                condition:
+                  lambda: 'return id(board_name).state.empty();'
+                then:
+                  - logger.log:
+                      format: "Boot probe completed but board name sensor still empty"
+                      level: WARN
+            - efr32_flasher.check_update: { id: zigbee_efr32 }
+            - lambda: 'id(boot_probe_done) = true;'
    
 switch:
   - platform: gpio
@@ -118,10 +162,29 @@ button:
     name: "Restart the Gateway"
     disabled_by_default: true
 
+  # Manual Stream Server controls
+  - platform: template
+    name: "Serial Server Pause"
+    internal: true
+    on_press:
+      - stream_server.pause: { id: stream_srv }
+      - text_sensor.template.publish:
+          id: ss_status
+          state: "Paused"
+  - platform: template
+    name: "Serial Server Resume"
+    internal: true
+    on_press:
+      - stream_server.resume: { id: stream_srv }
+      - text_sensor.template.publish:
+          id: ss_status
+          state: "Running"
+
   - platform: template
     name: "EFR32 Reset"
     id: zRST
     disabled_by_default: true  
+   #  internal: true
     on_press:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
@@ -130,26 +193,63 @@ button:
   - platform: template
     name: "Trigger MGM24 Module Bootloader"
     disabled_by_default: true
+  #  internal: true
     on_press:
       - script.execute: fw_update_mode
-
+  - platform: template
+    name: "Flash EFR32"
+    id: flash_efr32
+  #  internal: true
+    on_press:
+      - efr32_flasher.update_firmware: { id: zigbee_efr32 }
+  - platform: template
+    name: "Check EFR32 Update"
+    id: check_efr32_update
+    on_press:
+      - efr32_flasher.check_update: { id: zigbee_efr32 }
+  - platform: template
+    name: "Probe EZSP Info"
+    id: ezsp_replay_identity
+    disabled_by_default: true
+  #  internal: true
+    on_press:
+      - efr32_info.probe: { id: zigbee_info }
+      - logger.log: "BTN: EZSP info probe triggered"
+  
 uart:
   id: uart_bus
   rx_pin: GPIO36
   tx_pin: GPIO4
-  baud_rate: 115200
-  rx_buffer_size: 1024
+  baud_rate: 115200 # 460800
+  rx_buffer_size: 8192
 
 
 stream_server:
+  id: stream_srv
   uart_id: uart_bus
   port: 6638 # optional, default is 6638
-  buffer_size: 1024
+  buffer_size: 8192
+  trace: false
 
 binary_sensor:
   - platform: stream_server
     connected:
       name: "TubesZB Serial Connected"
+  - platform: template
+    id: ncp_busy
+    name: NCP Busy
+    device_class: running
+    on_press:
+      - stream_server.pause: { id: stream_srv }
+      - text_sensor.template.publish:
+          id: ss_status
+          state: "Paused"
+    on_release:
+      - stream_server.resume: { id: stream_srv }
+      - text_sensor.template.publish:
+          id: ss_status
+          state: "Running"
+
 sensor:
   - platform: stream_server
     connection_count:
@@ -177,9 +277,55 @@ text_sensor:
     mac_address:
       name: ESP MAC Address
 
-  - platform: uptime
-    name: Uptime
-    format:
-      separator: " "
-      days: "D"
+  - platform: template
+    id: zb_latest_fw
+    name: Zigbee Latest FW
+  - platform: template
+    id: mfg_string
+    name: Zigbee MFG String
+  - platform: template
+    id: board_name
+    name: Zigbee Board Name
+  - platform: template
+    id: ss_status
+    name: Serial Server Status
+  - platform: template
+    id: ezsp_info_status
+    name: EZSP Info Status
+  - platform: template
+    id: ezsp_ieee
+    name: Zigbee IEEE Address
+  - platform: template
+    id: ezsp_firmware
+    name: "Zigbee - Current FW Version"
+
+# # EFR32 flasher integration
+efr32_flasher:
+  id: zigbee_efr32
+  uart_id: uart_bus
+  url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"
+  boot_switch: zBSL
+  rst_switch: zRST_gpio
+  # pause_switch intentionally not used; we coordinate via ncp_busy + YAML automations
+  busy_binary_sensor: ncp_busy
+  show_progress: true
+  progress_step: 5
+  variant: auto
+  board_name_text: board_name
+  mfg_string_text: mfg_string
+  latest_fw_version_text: zb_latest_fw
+  bootloader_baud_rate: 115200
+
+efr32_info:
+  id: zigbee_info
+  uart_id: uart_bus
+  stream_server_id: stream_srv
+  busy_binary_sensor: ncp_busy
+  status_text: ezsp_info_status
+  manufacturer_text: mfg_string
+  board_name_text: board_name
+  firmware_text: ezsp_firmware
+  ieee_text: ezsp_ieee
+  raw_capture: true
+
 
