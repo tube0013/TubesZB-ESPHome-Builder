@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-cc2652p2-ethusb-2023",
-  "version": "2025.10.06.0",
+  "version": "2025.10.06.1",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-cc2652p2-ethusb-2023.ota.bin",
-        "md5": "9cdd812a91b7125a34740301f2126c0f",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.0",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.0"
+        "md5": "8c21c5ba1d6705d93a2b3df8d0c4a4db",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.1",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.1\r\n\r\nAdd ESPHome based radio flashers"
       }
     }
   ]

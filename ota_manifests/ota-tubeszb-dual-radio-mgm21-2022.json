@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dual-radio-mgm21-2022",
-  "version": "2025.10.06.0",
+  "version": "2025.10.06.1",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-mgm21-2022.ota.bin",
-        "md5": "ad6ff509219a6f15fbd691b0e42af0fd",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.0",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.0"
+        "md5": "9faf8e0ff48f8f8c8191452fda1dffff",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.1",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.1\r\n\r\nAdd ESPHome based radio flashers"
       }
     }
   ]
