@@ -1,20 +1,20 @@
 {
   "name": "tubeszb-cc2652p2-poe-2022",
-  "version": "2025.10.06.1",
+  "version": "2025.10.06.2",
   "builds": [
     {
       "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-cc2652p2-poe-2022.ota.bin",
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-cc2652p2-poe-2022.ota.bin",
           "offset": 0
         }
       ],
       "ota": {
-        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-cc2652p2-poe-2022.ota.bin",
-        "md5": "4656c959262852e72b3aad3c62e86688",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.1",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.1\r\n\r\nAdd ESPHome based radio flashers"
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-cc2652p2-poe-2022.ota.bin",
+        "md5": "01397e6e9076e6b1eda69559ec7462c7",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.2",
+        "summary": "## What's Changed\r\n* Flashers by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/99\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.06.0...2025.10.06.2"
       }
     }
   ]

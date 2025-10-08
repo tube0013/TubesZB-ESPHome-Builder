@@ -1,20 +1,20 @@
 {
   "name": "tubeszb-2026-zw",
-  "version": "2025.10.06.1",
+  "version": "2025.10.06.2",
   "builds": [
     {
       "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-2026-zw.ota.bin",
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-2026-zw.ota.bin",
           "offset": 0
         }
       ],
       "ota": {
-        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-2026-zw.ota.bin",
-        "md5": "f0ece9895e165eedd61069ae31153796",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.1",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.1\r\n\r\nAdd ESPHome based radio flashers"
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-2026-zw.ota.bin",
+        "md5": "42f8c4486715a76db0622a4a0e014d81",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.2",
+        "summary": "## What's Changed\r\n* Flashers by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/99\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.06.0...2025.10.06.2"
       }
     }
   ]

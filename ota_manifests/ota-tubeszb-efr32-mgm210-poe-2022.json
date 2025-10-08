@@ -1,20 +1,20 @@
 {
   "name": "tubeszb-efr32-mgm210-poe-2022",
-  "version": "2025.10.06.1",
+  "version": "2025.10.06.2",
   "builds": [
     {
       "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-efr32-mgm210-poe-2022.ota.bin",
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-efr32-mgm210-poe-2022.ota.bin",
           "offset": 0
         }
       ],
       "ota": {
-        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-efr32-mgm210-poe-2022.ota.bin",
-        "md5": "cab12ed2e2d33c577e5f2ddb7d06c623",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.1",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.1\r\n\r\nAdd ESPHome based radio flashers"
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-efr32-mgm210-poe-2022.ota.bin",
+        "md5": "6be4f13a2c65e1e907a45a38fff55d5a",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.2",
+        "summary": "## What's Changed\r\n* Flashers by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/99\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.06.0...2025.10.06.2"
       }
     }
   ]

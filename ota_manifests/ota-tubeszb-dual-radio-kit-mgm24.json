@@ -1,20 +1,20 @@
 {
   "name": "tubeszb-dual-radio-kit-mgm24",
-  "version": "2025.10.06.1",
+  "version": "2025.10.06.2",
   "builds": [
     {
       "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-mgm24.ota.bin",
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dual-radio-kit-mgm24.ota.bin",
           "offset": 0
         }
       ],
       "ota": {
-        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-dual-radio-kit-mgm24.ota.bin",
-        "md5": "e4461160d11ee468d30b9ce70e2158a4",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.1",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.09.20.0...2025.10.06.1\r\n\r\nAdd ESPHome based radio flashers"
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dual-radio-kit-mgm24.ota.bin",
+        "md5": "1e3b5d68f68cb83d2c281d2223b3f211",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.2",
+        "summary": "## What's Changed\r\n* Flashers by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/99\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.06.0...2025.10.06.2"
       }
     }
   ]
