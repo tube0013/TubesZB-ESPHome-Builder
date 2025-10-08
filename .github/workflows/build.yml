@@ -101,12 +101,8 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-<<<<<<< Updated upstream
-      - name: Copy Assets to latest-release folder in gh-pages checkout
-=======
       - name: Copy Assets to Latest_Release folder in gh-pages checkout
         if: ${{ !github.event.release.prerelease }}
->>>>>>> Stashed changes
         run: |
           rm -rf gh-pages/latest-release
           mkdir -p gh-pages/Latest_Release
