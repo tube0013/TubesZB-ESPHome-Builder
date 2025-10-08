@@ -164,7 +164,7 @@ mdns:
 
 cc2652_flasher:
   id: zigbee_flasher
-  uart_id: uart_bus
+  uart_id: uart_bus_zb
   url: "https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json"
   bsl_switch: zBSL
   rst_switch: zRST_gpio

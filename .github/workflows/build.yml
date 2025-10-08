@@ -108,8 +108,9 @@ jobs:
         if: ${{ !github.event.release.prerelease }}
 >>>>>>> Stashed changes
         run: |
-          mkdir -p gh-pages/latest-release
-          cp artifacts/*.bin gh-pages/latest-release/
+          rm -rf gh-pages/latest-release
+          mkdir -p gh-pages/Latest_Release
+          cp artifacts/*.bin gh-pages/Latest_Release/
 
       - name: Generate OTA Manifests
         id: generate-manifests
@@ -129,7 +130,7 @@ jobs:
 
             md5_checksum=$(md5sum "$ota_file" | cut -d' ' -f1)
             
-            ota_url="https://${REPO_OWNER}.github.io/${REPO_NAME}/latest-release/${device_name}.ota.bin"
+            ota_url="https://${REPO_OWNER}.github.io/${REPO_NAME}/Latest_Release/${device_name}.ota.bin"
             
             # Use jq to create the JSON manifest file inside the gh-pages checkout
             jq -n \
@@ -173,7 +174,8 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           # Add both the new firmware and the new manifests to git
-          git add latest-release/ ota_manifests/
+          git add -A Latest_Release/ ota_manifests/
+          git add -A latest-release/ 2>/dev/null || true
           # Check if there are any changes to commit
           if ! git diff --staged --quiet; then
             git commit -m "Update release binaries and OTA manifests for ${{ github.event.release.tag_name }}"

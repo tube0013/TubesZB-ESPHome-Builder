@@ -44,7 +44,8 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-  - source: github://oxan/esphome-stream-server
+  - source: github://tube0013/esphome-components
+    components: [stream_server, efr32_flasher, efr32_info]
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
