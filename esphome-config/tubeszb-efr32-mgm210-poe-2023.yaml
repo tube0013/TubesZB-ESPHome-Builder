@@ -2,18 +2,8 @@ esphome:
   name: tubeszb-efr32-mgm210-poe-2023
   project:
     name: tubeszb.efr32_mgm210_poe_2023
-    version: "2025.09.20.0"
+    version: "2025.10.06.2"
   min_version: 2025.8.0
-  on_boot:
-    - priority: 600
-      then:
-        - switch.turn_on: zRST_gpio
-        - delay: 15ms
-        - switch.turn_off: zRST_gpio
-    - priority: -10
-      then:
-        - delay: 20s
-        - component.update: fw_updater
 
 esp32:
   board: esp-wrover-kit
@@ -52,7 +42,7 @@ ethernet:
 #  phy_addr: 1
 #  power_pin: GPIO16
   
-# Optional manual IP
+    # Optional manual IP
   manual_ip:
     static_ip: STATIC_IP
     gateway: GATEWAY
@@ -69,18 +59,6 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
-  - platform: http_request
-
-http_request:
-  
-update:
-  - platform: http_request
-    id: fw_updater
-    name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-efr32-mgm210-poe-2023.json
-    update_interval: 12h
-    
-
 
 web_server:
   port: 80

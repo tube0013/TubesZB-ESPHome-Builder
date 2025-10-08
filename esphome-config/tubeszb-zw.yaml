@@ -2,13 +2,13 @@ esphome:
   name: tubeszb-zw
   project: 
     name: tubezb.zw
-    version: "2025.09.20.0"
+    version: "2025.10.06.2"
   min_version: 2025.8.0
+
   on_boot:
     - priority: -10
       then:
         - delay: 20s
-        - component.update: fw_updater
 
 esp32:
   board: esp32-poe
@@ -58,18 +58,6 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
-  - platform: http_request
-
-http_request:
-  
-update:
-  - platform: http_request
-    id: fw_updater
-    name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-zw.json
-    update_interval: 12h
-    
-
 
 web_server:
   port: 80

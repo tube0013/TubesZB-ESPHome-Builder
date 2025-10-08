@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dual-radio-mgm21-2022
   project: 
     name: tubezb.mgm21+zw
-    version: "2025.09.20.0"
+    version: "2025.10.06.2"
   min_version: 2025.8.0
   on_boot:
     - priority: 600
@@ -10,10 +10,6 @@ esphome:
         - switch.turn_on: zRST_gpio
         - delay: 15ms
         - switch.turn_off: zRST_gpio
-    - priority: -10
-      then:
-        - delay: 20s
-        - component.update: fw_updater
 
 esp32:
   board: esp32-poe
@@ -43,7 +39,7 @@ ethernet:
   phy_addr: 0
   power_pin: GPIO12
   
-# Optional manual IP
+    # Optional manual IP
   manual_ip:
     static_ip: STATIC_IP
     gateway: GATEWAY
@@ -60,17 +56,6 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
-  - platform: http_request
-
-http_request:
-  
-update:
-  - platform: http_request
-    id: fw_updater
-    name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-mgm21-2022.json
-    update_interval: 12h
-    
 
 web_server:
   port: 80
@@ -104,15 +89,6 @@ uart:
   - id: uart_bus_zb
     rx_pin: GPIO5
     tx_pin: GPIO16
-    #cts_pin: GPIO13
-    #rts_pin: GPIO4
-    # possible values are
-    # - DISABLE = disable hardware flow control
-    # - RTS = enable RX hardware flow control (rts)
-    # - CTS = enable TX hardware flow control (cts)
-    # - CTS_RTS = enable hardware flow control
-    # - MAX = ?
-    hw_flow_control: DISABLE  
     baud_rate: 115200
     rx_buffer_size: 1024
   - id: uart_bus_zw
@@ -121,7 +97,6 @@ uart:
     baud_rate: 115200
 
 stream_server:
-#  buffer_size: 2048
   - id: zb
     uart_id: uart_bus_zb
     port: 6638 # optional, default is 6638

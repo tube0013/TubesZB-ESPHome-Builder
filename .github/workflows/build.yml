@@ -89,20 +89,31 @@ jobs:
         with:
           files: artifacts/*.bin
 
+      - name: Skip gh-pages updates for prereleases
+        if: ${{ github.event.release.prerelease }}
+        run: echo "Release is marked as prerelease; skipping gh-pages sync."
+
       # --- FIX: Checkout gh-pages into a subdirectory to preserve artifacts ---
       - name: Checkout gh-pages branch into a subdirectory
+        if: ${{ !github.event.release.prerelease }}
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: gh-pages
 
+<<<<<<< Updated upstream
       - name: Copy Assets to latest-release folder in gh-pages checkout
+=======
+      - name: Copy Assets to Latest_Release folder in gh-pages checkout
+        if: ${{ !github.event.release.prerelease }}
+>>>>>>> Stashed changes
         run: |
           mkdir -p gh-pages/latest-release
           cp artifacts/*.bin gh-pages/latest-release/
 
       - name: Generate OTA Manifests
         id: generate-manifests
+        if: ${{ !github.event.release.prerelease }}
         run: |
           # Create the directory for the manifests inside the gh-pages checkout
           mkdir -p gh-pages/ota_manifests
@@ -155,6 +166,7 @@ jobs:
           done
 
       - name: Commit and Push Changes to gh-pages
+        if: ${{ !github.event.release.prerelease }}
         run: |
           # Change directory to the gh-pages checkout
           cd gh-pages
