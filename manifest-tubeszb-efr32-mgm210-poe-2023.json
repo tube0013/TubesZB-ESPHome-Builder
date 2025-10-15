@@ -5,11 +5,11 @@
         {
             "chipFamily": "ESP32",
             "ota": {
-                "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-efr32-mgm210-poe-2023.ota.bin"
+                "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-efr32-mgm210-poe-2023.ota.bin"
             },
             "parts": [
                 {
-                    "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/latest-release/tubeszb-efr32-mgm210-poe-2023.factory.bin",
+                    "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-efr32-mgm210-poe-2023.factory.bin",
                     "offset": 0
                 }
             ]
