@@ -1,0 +1,18 @@
+{
+    "name": "tubeszb-zw-experimental",
+    "version": "v0.0.1",
+    "builds": [
+        {
+            "chipFamily": "ESP32",
+            "ota": {
+                "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-zw-experimental.ota.bin"
+            },
+            "parts": [
+                {
+                    "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-zw-experimental.factory.bin",
+                    "offset": 0
+                }
+            ]
+        }
+    ]
+}
