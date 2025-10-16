@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-efr32-mgm210-poe-2023",
-  "version": "2025.10.06.2",
+  "version": "2025.10.16.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-efr32-mgm210-poe-2023.ota.bin",
-        "md5": "b46778e29d504f06ca5e6427dff123a3",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.2",
-        "summary": "## What's Changed\r\n* Flashers by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/99\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.06.0...2025.10.06.2"
+        "md5": "9ff17795ca630e355648b3f6ce7a5ff6",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.16.0",
+        "summary": "Experimental Z-Wave Proxy builds"
       }
     }
   ]

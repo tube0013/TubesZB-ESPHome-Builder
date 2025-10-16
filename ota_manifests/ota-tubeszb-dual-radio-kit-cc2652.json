@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dual-radio-kit-cc2652",
-  "version": "2025.10.06.2",
+  "version": "2025.10.16.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dual-radio-kit-cc2652.ota.bin",
-        "md5": "ef920e99409b868cc7e19c901b8e3e99",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.2",
-        "summary": "## What's Changed\r\n* Flashers by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/99\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.06.0...2025.10.06.2"
+        "md5": "82859e80d5f1762faa682fd051c9277a",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.16.0",
+        "summary": "Experimental Z-Wave Proxy builds"
       }
     }
   ]
