@@ -1,5 +1,5 @@
 esphome:
-  name: tubeszb-2026-zw-experimental
+  name: tubeszb-2026-zw
   project: 
     name: tubezb.zw2026
     version: "2025.10.06.2"
