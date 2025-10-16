@@ -119,9 +119,3 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
-
-  - platform: uptime
-    name: Uptime
-    format:
-      separator: " "
-      days: "D"

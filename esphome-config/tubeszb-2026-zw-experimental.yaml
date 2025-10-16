@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-2026-zw-experimental
   project: 
     name: tubezb.zw2026exp
-    version: "2025.10.06.3"
+    version: "2025.10.16.0"
   min_version: 2025.10.0
   on_boot:
     - priority: -10
@@ -98,9 +98,3 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
-
-  - platform: uptime
-    name: Uptime
-    format:
-      separator: " "
-      days: "D"

@@ -1,9 +1,10 @@
 esphome:
-  name: tubeszb-2026-zw-experimental
+  name: tubeszb-zw-experimental
   project: 
-    name: tubezb.zw2026
+    name: tubezb.zwexp
     version: "2025.10.16.0"
   min_version: 2025.10.0
+
   on_boot:
     - priority: -10
       then:
@@ -40,7 +41,7 @@ ethernet:
     mode: CLK_OUT
   phy_addr: 0
   power_pin: GPIO12
-
+  
     # Optional manual IP
   #manual_ip:
   #  static_ip: STATIC_IP
@@ -66,7 +67,7 @@ update:
   - platform: http_request
     id: fw_updater
     name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-2026-zw-experimental.json
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-zw-experimental.json
     update_interval: 12h
     
 
@@ -82,8 +83,8 @@ button:
 
 uart:
   id: uart_bus
-  rx_pin: GPIO15
-  tx_pin: GPIO14
+  rx_pin: GPIO16
+  tx_pin: GPIO5
   baud_rate: 115200
   rx_buffer_size: 1024
 
