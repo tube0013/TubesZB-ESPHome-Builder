@@ -1,0 +1,106 @@
+esphome:
+  name: tubeszb-2026-zw-exp
+  project: 
+    name: tubezb.zw2026exp
+    version: "2025.10.06.3"
+  min_version: 2025.10.0
+  on_boot:
+    - priority: -10
+      then:
+        - delay: 20s
+
+esp32:
+  board: esp32-poe
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_LWIP_MAX_SOCKETS: "16"
+      CONFIG_PM_ENABLE: "n"
+      # Prevent IDF from trying to power-down UART in light sleep, which causes
+      # uart_param_config to return ESP_ERR_NOT_SUPPORTED on some targets
+      CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP: "n"
+      CONFIG_UART_ISR_IN_IRAM: "y"
+
+external_components:
+ # - source: github://oxan/esphome-stream-server
+  - source: github://tjhorner/esphome-custom-components
+    components: [ project_version ]
+
+#dashboard_import:
+#  package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-zw-kit/tubeszb-zw.yaml
+
+#Olimex ESP32-PoE Ethernet
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    pin: GPIO17
+    mode: CLK_OUT
+  phy_addr: 0
+  power_pin: GPIO12
+
+    # Optional manual IP
+#  manual_ip:
+#    static_ip: STATIC_IP
+#    gateway: GATEWAY
+#    subnet: SUBNET
+
+# Enable logging
+logger:
+  level: DEBUG
+  
+# Enable Home Assistant API
+api:
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+  - platform: web_server
+
+web_server:
+  port: 80
+  version: 2
+  js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
+
+
+button:
+  - platform: restart
+    name: "Restart the ESP32 Device"
+
+uart:
+  id: uart_bus
+  rx_pin: GPIO15
+  tx_pin: GPIO14
+  baud_rate: 115200
+  rx_buffer_size: 1024
+
+zwave_proxy:
+  uart_id: uart_bus
+
+mdns:
+  services:
+    - service: "_zwave"
+      protocol: "_tcp"
+      port: 6638
+      txt:
+        version: 1
+        name: "TubesZB"
+        serial_number: !lambda 'return esphome::get_mac_address();'
+
+text_sensor:
+  - platform: project_version
+    name: "TubesZB Device Firmware Version"
+    internal: true
+
+  - platform: ethernet_info
+    ip_address:
+      name: ESP IP Address
+    mac_address:
+      name: ESP MAC Address
+
+  - platform: uptime
+    name: Uptime
+    format:
+      separator: " "
+      days: "D"
