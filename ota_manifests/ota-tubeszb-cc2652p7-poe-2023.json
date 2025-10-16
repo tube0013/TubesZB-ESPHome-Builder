@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-cc2652p7-poe-2023",
-  "version": "2025.10.06.2",
+  "version": "2025.10.16.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-cc2652p7-poe-2023.ota.bin",
-        "md5": "90b0392dbe73188ef8e7da68e0deb171",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.06.2",
-        "summary": "## What's Changed\r\n* Flashers by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/99\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.06.0...2025.10.06.2"
+        "md5": "f025c763f36628680440a7c0a97ba89c",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.16.0",
+        "summary": "Experimental Z-Wave Proxy builds"
       }
     }
   ]

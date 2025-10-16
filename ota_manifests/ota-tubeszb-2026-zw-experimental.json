@@ -1,18 +1,18 @@
 {
-  "name": "tubeszb-cc2652p2-ethusb-2022",
+  "name": "tubeszb-2026-zw-experimental",
   "version": "2025.10.16.0",
   "builds": [
     {
       "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-cc2652p2-ethusb-2022.ota.bin",
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-2026-zw-experimental.ota.bin",
           "offset": 0
         }
       ],
       "ota": {
-        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-cc2652p2-ethusb-2022.ota.bin",
-        "md5": "4f0676414f14d203070498b6347caaf0",
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-2026-zw-experimental.ota.bin",
+        "md5": "27113a27a7286883f849a8b8cca1f1b9",
         "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.16.0",
         "summary": "Experimental Z-Wave Proxy builds"
       }
