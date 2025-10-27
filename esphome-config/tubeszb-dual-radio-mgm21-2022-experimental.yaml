@@ -1,17 +1,18 @@
 esphome:
-  name: tubeszb-efr32-mgm210-poe-2023
-  project:
-    name: tubeszb.efr32_mgm210_poe_2023
+  name: tubeszb-dual-radio-mgm21-2022-experimental
+  project: 
+    name: tubezb.mgm21+zw
     version: "2025.10.27.0"
-  min_version: 2025.8.0
+  min_version: 2025.10.0
   on_boot:
-    - priority: -10
+    - priority: 600
       then:
-        - delay: 20s
-        - component.update: fw_updater
+        - switch.turn_on: zRST_gpio
+        - delay: 15ms
+        - switch.turn_off: zRST_gpio
 
 esp32:
-  board: esp-wrover-kit
+  board: esp32-poe
   framework:
     type: esp-idf
     sdkconfig_options:
@@ -27,35 +28,26 @@ external_components:
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
+
+
 #Olimex ESP32-PoE Ethernet
 ethernet:
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
-  clk:
-    pin: GPIO17
-    mode: CLK_OUT
+  clk_mode: GPIO17_OUT
   phy_addr: 0
   power_pin: GPIO12
-
-#WT32_ETH01 Ethernet
-#ethernet:
-#  type: LAN8720
-#  mdc_pin: GPIO23
-#  mdio_pin: GPIO18
-#  clk: GPIO0_IN
-#  phy_addr: 1
-#  power_pin: GPIO16
   
     # Optional manual IP
-  #manual_ip:
-  #  static_ip: STATIC_IP
-  #  gateway: GATEWAY
-  #  subnet: SUBNET 
+  manual_ip:
+    static_ip: STATIC_IP
+    gateway: GATEWAY
+    subnet: SUBNET
 
 # Enable logging
 logger:
-  level: DEBUG
+  level: INFO
   
 # Enable Home Assistant API
 api:
@@ -64,39 +56,21 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
-  - platform: http_request
-
-http_request:
-  
-update:
-  - platform: http_request
-    id: fw_updater
-    name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-efr32-mgm210-poe-2023.json
-    update_interval: 12h
-    
 
 web_server:
   port: 80
   version: 2
   js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
 #  local: true
-    
+
 switch:
   - platform: gpio
-    pin: 5
+    pin: 2
     id: zRST_gpio
     inverted: yes
     restore_mode: ALWAYS_OFF
-        
-  - platform: gpio
-    pin: 16
-    name: "Pull Bootloader pin (PA0) to Low"
-    id: zBSL
-    inverted: yes
-    restore_mode: ALWAYS_OFF
-    disabled_by_default: true  
-    
+
+
 button:    
   - platform: restart
     name: "Restart the Gateway"
@@ -112,25 +86,36 @@ button:
       - switch.turn_off: zRST_gpio
 
 uart:
-  id: uart_bus
-  rx_pin: GPIO36 #2022 5 # 2023 36
-  tx_pin: GPIO4 #2022 16 # 2023 4
-  baud_rate: 115200
+  - id: uart_bus_zb
+    rx_pin: GPIO5
+    tx_pin: GPIO16
+    baud_rate: 115200
+    rx_buffer_size: 1024
+  - id: uart_bus_zw
+    rx_pin: GPIO15
+    tx_pin: GPIO14
+    baud_rate: 115200
 
+zwave_proxy:
+  uart_id: uart_bus_zw
 
 stream_server:
-  uart_id: uart_bus
-  port: 6638 # optional, default is 6638
-#  buffer_size: 512
+  - id: zb
+    uart_id: uart_bus_zb
+    port: 6638 # optional, default is 6638
+    buffer_size: 1024
 
 binary_sensor:
   - platform: stream_server
+    stream_server: zb
     connected:
-      name: "TubesZB Serial Connected"
-sensor:
-  - platform: stream_server
-    connection_count:
-      name: "Connection Count"
+      name: "TubesZB Zigbee Serial Connected"
+
+  - platform: gpio
+    pin: 36
+    name: "Bootloader pin (PA0)"
+    id: zBSL
+    disabled_by_default: true  
 
 mdns:
   services:
@@ -142,20 +127,9 @@ mdns:
         name: "TubesZB"
         radio_type: "ezsp"
         serial_number: !lambda 'return esphome::get_mac_address();'
-
-text_sensor:
-  - platform: project_version
-    name: "TubesZB Device Firmware Version"
-    internal: true
-
-  - platform: ethernet_info
-    ip_address:
-      name: ESP IP Address
-    mac_address:
-      name: ESP MAC Address
-
-  - platform: uptime
-    name: Uptime
-    format:
-      separator: " "
-      days: "D"
+    - service: "_zwave"
+      protocol: "_esphome"
+      txt:
+        version: 1
+        name: "TubesZB"
+        serial_number: !lambda 'return esphome::get_mac_address();'

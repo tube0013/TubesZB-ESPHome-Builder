@@ -1,9 +1,9 @@
 esphome:
-  name: tubeszb-cc2652p2-poe-2022
+  name: tubeszb-dual-radio-kit-cc2652-experimental
   project: 
-    name: tubezb.cc2652p2-poe-2022
+    name: tubezb.cc2652+zw
     version: "2025.10.27.0"
-  min_version: 2025.8.0
+  min_version: 2025.10.0
   on_boot:
     - priority: 600
       then:
@@ -18,7 +18,7 @@ esphome:
         - component.update: fw_updater
 
 esp32:
-  board: esp-wrover-kit
+  board: esp32-poe
   framework:
     type: esp-idf
     sdkconfig_options:
@@ -36,8 +36,6 @@ external_components:
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
-# dashboard_import:
-#   package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-poe-2022/firmware/esphome/tubeszb-cc2652-poe-2022.yaml
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -50,11 +48,12 @@ ethernet:
   phy_addr: 0
   power_pin: GPIO12
   
-     # Optional manual IP
+    # Optional manual IP
   #manual_ip:
   #  static_ip: STATIC_IP
   #  gateway: GATEWAY
   #  subnet: SUBNET 
+
 
 # Enable logging
 logger:
@@ -75,7 +74,7 @@ update:
   - platform: http_request
     id: fw_updater
     name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-poe-2022.json
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-kit-cc2652-experimental.json
     update_interval: 12h
     
 
@@ -83,6 +82,7 @@ web_server:
   port: 80
   version: 2
   js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
+#  local: true
 
 
 script:
@@ -101,13 +101,13 @@ script:
       
 switch:
   - platform: gpio
-    pin: 13
+    pin: 5
     id: zRST_gpio
     inverted: yes
     restore_mode: ALWAYS_OFF
       
   - platform: gpio
-    pin: 4
+    pin: 16
     name: "Zigbee Module Bootloader Pin"
     id: zBSL
     inverted: yes
@@ -115,21 +115,30 @@ switch:
     disabled_by_default: true
 
 uart:
-  id: uart_bus
-  rx_pin: GPIO5
-  tx_pin: GPIO16
-  baud_rate: 115200
-  rx_buffer_size: 1024
+  - id: uart_bus_zb
+    rx_pin: GPIO36
+    tx_pin: GPIO4
+    baud_rate: 115200
+  #  rx_buffer_size: 1024
+  - id: uart_bus_zw
+    rx_pin: GPIO15
+    tx_pin: GPIO14
+    baud_rate: 115200
+
+zwave_proxy:
+  uart_id: uart_bus_zw
 
 stream_server:
-  uart_id: uart_bus
-  port: 6638 # optional, default is 6638
-  buffer_size: 1024
+  - id: zb
+    uart_id: uart_bus_zb
+    port: 6638 # optional, default is 6638
+  #  buffer_size: 1024
 
 binary_sensor:
   - platform: stream_server
+    stream_server: zb
     connected:
-      name: "TubesZB Serial Connected"
+      name: "TubesZB Zigbee Serial Connected"
 
 mdns:
   services:
@@ -141,10 +150,16 @@ mdns:
         name: "TubesZB"
         radio_type: "znp"
         serial_number: !lambda 'return esphome::get_mac_address();'
+    - service: "_zwave"
+      protocol: "_esphome"
+      txt:
+        version: 1
+        name: "TubesZB"
+        serial_number: !lambda 'return esphome::get_mac_address();'
 
 cc2652_flasher:
   id: zigbee_flasher
-  uart_id: uart_bus
+  uart_id: uart_bus_zb
   url: "https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json"
   bsl_switch: zBSL
   rst_switch: zRST_gpio

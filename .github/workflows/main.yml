@@ -44,6 +44,29 @@ jobs:
         echo "Gateway: $gateway"
         echo "Subnet: $subnet"
 
+        allowed_devices=(
+          "tubeszb-cc2652p2-poe-2023"
+          "tubeszb-cc2652p7-poe-2023"
+          "tubeszb-cc2652p2-poe-2022"
+          "tubeszb-cc2652p2-ethusb-2023"
+          "tubeszb-cc2652p2-ethusb-2022"
+          "tubeszb-dual-radio-kit-cc2652"
+          "tubeszb-dual-radio-kit-cc2652-experimental"
+          "tubeszb-efr32-mgm210-poe-2022"
+          "tubeszb-efr32-mgm210-poe-2023"
+          "tubeszb-efr32-mgm24-2023"
+          "tubeszb-dual-radio-kit-mgm24"
+          "tubeszb-dual-radio-kit-mgm24-experimental"
+          "tubeszb-dual-radio-kit-mgm21-2022"
+          "tubeszb-dual-radio-mgm21-2022-experimental"
+          "tubeszb-zw"
+        )
+
+        if ! printf '%s\n' "${allowed_devices[@]}" | grep -qx "$device_name"; then
+          echo "Error: Unsupported device name '$device_name'."
+          exit 1
+        fi
+
         if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
           echo "Error: One or more required values are missing."
           exit 1
