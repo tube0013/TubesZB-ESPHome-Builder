@@ -110,7 +110,7 @@ jobs:
 
       - name: Generate directory listing for Latest_Release
         if: ${{ !github.event.release.prerelease }}
-        uses: jayanta525/github-pages-directory-listing@vmain
+        uses: jayanta525/github-pages-directory-listing@main
         with:
           FOLDER: gh-pages/Latest_Release
 
