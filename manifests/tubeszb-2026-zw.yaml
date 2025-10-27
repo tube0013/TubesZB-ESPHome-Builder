@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-2026-zw
   project: 
     name: tubezb.zw2026
-    version: "2025.10.27.0"
+    version: "2025.10.27.1"
   min_version: 2025.8.0
   on_boot:
     - priority: -10
@@ -87,8 +87,16 @@ uart:
   baud_rate: 115200
   rx_buffer_size: 1024
 
-zwave_proxy:
+stream_server:
+  buffer_size: 1024
   uart_id: uart_bus
+#  id: ss
+  port: 6638 # optional, default is 6638
+
+binary_sensor:
+  - platform: stream_server
+    connected:
+      name: "TubesZB ZW Serial Connected"
 
 mdns:
   services:

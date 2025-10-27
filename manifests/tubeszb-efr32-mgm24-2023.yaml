@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-efr32-mgm24-2023
   project:
     name: tubeszb.efr32_mgm24_2023
-    version: "2025.10.27.0"
+    version: "2025.10.27.1"
   min_version: 2025.8.0
   on_boot:
     - priority: 900
