@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dual-radio-kit-mgm24",
-  "version": "2025.10.16.0",
+  "version": "2025.10.27.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dual-radio-kit-mgm24.ota.bin",
-        "md5": "3a1be7b20225d2b1b3f86738a375c5a1",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.16.0",
-        "summary": "Experimental Z-Wave Proxy builds"
+        "md5": "a6ab8a37e048631094cdfeaf883e7491",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.27.0",
+        "summary": "Add Dual Radio Experimental yaml/builds with zwave_proxy component.\r\n\r\n## What's Changed\r\n* Bump version, add zwave proxy for dual radio kits by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/102\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.16.0...2025.10.27.0"
       }
     }
   ]
