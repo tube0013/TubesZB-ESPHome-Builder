@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-zw-experimental
   project: 
     name: tubezb.zwexp
-    version: "2025.10.16.0"
+    version: "2025.10.27.0"
   min_version: 2025.10.0
 
   on_boot:
@@ -94,8 +94,7 @@ zwave_proxy:
 mdns:
   services:
     - service: "_zwave"
-      protocol: "_tcp"
-      port: 6638
+      protocol: "_esphome"
       txt:
         version: 1
         name: "TubesZB"
@@ -111,4 +110,3 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
-
