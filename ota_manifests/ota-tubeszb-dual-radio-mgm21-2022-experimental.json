@@ -1,0 +1,21 @@
+{
+  "name": "tubeszb-dual-radio-mgm21-2022-experimental",
+  "version": "2025.10.27.0",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dual-radio-mgm21-2022-experimental.ota.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dual-radio-mgm21-2022-experimental.ota.bin",
+        "md5": "",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.27.0",
+        "summary": "Experimental Z-Wave Proxy builds"
+      }
+    }
+  ]
+}
