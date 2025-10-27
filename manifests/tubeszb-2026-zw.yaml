@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-2026-zw
   project: 
     name: tubezb.zw2026
-    version: "2025.10.27.1"
+    version: "2025.10.27.2"
   min_version: 2025.8.0
   on_boot:
     - priority: -10
@@ -66,7 +66,7 @@ update:
   - platform: http_request
     id: fw_updater
     name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-2026-zw-experimental.json
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-2026-zw.json
     update_interval: 12h
     
 
