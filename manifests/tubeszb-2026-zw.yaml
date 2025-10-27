@@ -23,7 +23,7 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-#  - source: github://oxan/esphome-stream-server
+  - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
