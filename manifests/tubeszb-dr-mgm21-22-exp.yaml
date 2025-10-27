@@ -1,5 +1,5 @@
 esphome:
-  name: tubeszb-dual-radio-mgm21-2022-experimental
+  name: tubeszb-dr-mgm21-22-exp
   project: 
     name: tubezb.mgm21+zw
     version: "2025.10.27.0"
@@ -10,6 +10,10 @@ esphome:
         - switch.turn_on: zRST_gpio
         - delay: 15ms
         - switch.turn_off: zRST_gpio
+    - priority: -10
+      then:
+        - delay: 20s
+        - component.update: fw_updater
 
 esp32:
   board: esp32-poe
@@ -40,10 +44,10 @@ ethernet:
   power_pin: GPIO12
   
     # Optional manual IP
-  manual_ip:
-    static_ip: STATIC_IP
-    gateway: GATEWAY
-    subnet: SUBNET
+#  manual_ip:
+#    static_ip: STATIC_IP
+#    gateway: GATEWAY
+#    subnet: SUBNET
 
 # Enable logging
 logger:
@@ -56,6 +60,17 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
+  - platform: http_request
+
+http_request:
+  
+update:
+  - platform: http_request
+    id: fw_updater
+    name: TubesZB Firmware Update
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dr-mgm21-22-exp.json
+    update_interval: 12h
+    
 
 web_server:
   port: 80

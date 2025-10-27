@@ -1,5 +1,5 @@
 esphome:
-  name: tubeszb-dual-radio-kit-mgm24-experimental
+  name: tubeszb-dr-mgm24-exp
   project: 
     name: tubezb.mgm24+zw
     version: "2025.10.27.0"
@@ -30,10 +30,7 @@ esphome:
         - delay: 1s
         - stream_server.resume: { id: zb }
         - script.execute: boot_probe_sequence
-    - priority: -10
-      then:
-        - delay: 20s
-        - component.update: fw_updater
+
  
 esp32:
   board: esp32-poe
@@ -71,10 +68,10 @@ ethernet:
   power_pin: GPIO12
   
     # Optional manual IP
-  #manual_ip:
-  #  static_ip: STATIC_IP
-  #  gateway: GATEWAY
-  #  subnet: SUBNET 
+  manual_ip:
+    static_ip: STATIC_IP
+    gateway: GATEWAY
+    subnet: SUBNET
 
 
 # Enable logging
@@ -88,17 +85,6 @@ api:
 ota:
   - platform: esphome
   - platform: web_server
-  - platform: http_request
-
-http_request:
-  
-update:
-  - platform: http_request
-    id: fw_updater
-    name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-kit-mgm24-experimental.json
-    update_interval: 12h
-    
 
 web_server:
   port: 80

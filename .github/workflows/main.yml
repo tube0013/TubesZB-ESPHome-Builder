@@ -51,14 +51,14 @@ jobs:
           "tubeszb-cc2652p2-ethusb-2023"
           "tubeszb-cc2652p2-ethusb-2022"
           "tubeszb-dual-radio-kit-cc2652"
-          "tubeszb-dual-radio-kit-cc2652-experimental"
+          "tubeszb-dr-cc2652-exp"
           "tubeszb-efr32-mgm210-poe-2022"
           "tubeszb-efr32-mgm210-poe-2023"
           "tubeszb-efr32-mgm24-2023"
           "tubeszb-dual-radio-kit-mgm24"
-          "tubeszb-dual-radio-kit-mgm24-experimental"
+          "tubeszb-dr-mgm24-exp"
           "tubeszb-dual-radio-kit-mgm21-2022"
-          "tubeszb-dual-radio-mgm21-2022-experimental"
+          "tubeszb-dr-mgm21-22-exp"
           "tubeszb-zw"
         )
 

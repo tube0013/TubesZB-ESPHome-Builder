@@ -1,5 +1,5 @@
 esphome:
-  name: tubeszb-dual-radio-kit-cc2652-experimental
+  name: tubeszb-dr-cc2652-exp
   project: 
     name: tubezb.cc2652+zw
     version: "2025.10.27.0"
@@ -74,7 +74,7 @@ update:
   - platform: http_request
     id: fw_updater
     name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-kit-cc2652-experimental.json
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dr-cc2652-exp.json
     update_interval: 12h
     
 

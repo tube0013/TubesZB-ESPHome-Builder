@@ -1,5 +1,5 @@
 esphome:
-  name: tubeszb-dual-radio-kit-cc2652-experimental
+  name: tubeszb-dr-cc2652-exp
   project: 
     name: tubezb.cc2652+zw
     version: "2025.10.27.0"
