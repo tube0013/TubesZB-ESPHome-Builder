@@ -1,139 +1,22 @@
-name: Build Static IP ESPHome Firmware
+name: CI
 
 on:
-  issues:
-    types: [opened, edited]
+  push:
+    branches:
+      - main
 
 jobs:
   build:
-#   if: contains(github.event.issue.labels.*.name, 'ESPHome')
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.x
-
-    - name: Install ESPHome
-      run: |
-        python -m pip install setuptools esphome
-
-    - name: Parse issue form
-      id: parse_form
-      uses: onmax/issue-form-parser@v1.5
-      with:
-        issue_number: ${{ github.event.issue.number }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract user input from form
-      id: user_input
-      run: |
-        # Match the exact key names from the parser's JSON output from the debug log.
-        device_name='${{ fromJson(steps.parse_form.outputs.payload).Device_Name }}'
-        static_ip='${{ fromJson(steps.parse_form.outputs.payload).Static_IP }}'
-        gateway='${{ fromJson(steps.parse_form.outputs.payload).Gateway }}'
-        subnet='${{ fromJson(steps.parse_form.outputs.payload).Subnet }}'
-
-        echo "Parsed values:"
-        echo "Device Name: $device_name"
-        echo "Static IP: $static_ip"
-        echo "Gateway: $gateway"
-        echo "Subnet: $subnet"
-
-        allowed_devices=(
-          "tubeszb-cc2652p2-poe-2023"
-          "tubeszb-cc2652p7-poe-2023"
-          "tubeszb-cc2652p2-poe-2022"
-          "tubeszb-cc2652p2-ethusb-2023"
-          "tubeszb-cc2652p2-ethusb-2022"
-          "tubeszb-dual-radio-kit-cc2652"
-          "tubeszb-dr-cc2652-exp"
-          "tubeszb-efr32-mgm210-poe-2022"
-          "tubeszb-efr32-mgm210-poe-2023"
-          "tubeszb-efr32-mgm24-2023"
-          "tubeszb-dual-radio-kit-mgm24"
-          "tubeszb-dr-mgm24-exp"
-          "tubeszb-dual-radio-kit-mgm21-2022"
-          "tubeszb-dr-mgm21-22-exp"
-          "tubeszb-zw"
-        )
-
-        if ! printf '%s\n' "${allowed_devices[@]}" | grep -qx "$device_name"; then
-          echo "Error: Unsupported device name '$device_name'."
-          exit 1
-        fi
-
-        if [ -z "$device_name" ] || [ -z "$static_ip" ] || [ -z "$gateway" ] || [ -z "$subnet" ]; then
-          echo "Error: One or more required values are missing."
-          exit 1
-        fi
-
-        echo "device_name=$device_name" >> $GITHUB_ENV
-        echo "static_ip=$static_ip" >> $GITHUB_ENV
-        echo "gateway=$gateway" >> $GITHUB_ENV
-        echo "subnet=$subnet" >> $GITHUB_ENV
-
-    - name: Update ESPHome YAML
-      run: |
-        device_yaml="esphome-config/${{ env.device_name }}.yaml"
-        sed -i "s/STATIC_IP/${{ env.static_ip }}/" $device_yaml
-        sed -i "s/GATEWAY/${{ env.gateway }}/" $device_yaml
-        sed -i "s/SUBNET/${{ env.subnet }}/" $device_yaml
-
-    - name: Compile ESPHome Firmware
-      run: |
-        device_yaml="esphome-config/${{ env.device_name }}.yaml"
-        esphome compile $device_yaml
-
-    - name: Upload Firmware
-      uses: actions/upload-artifact@v4
-      with:
-        name: firmware-${{ env.device_name }}-${{ github.run_id }}
-        path: |
-          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.factory.bin
-          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.bin
-
-    - name: Create comment with firmware link
-      uses: actions/github-script@v6
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const issue_number = ${{ github.event.issue.number }};
-          const artifact_name = 'firmware-${{ env.device_name }}-${{ github.run_id }}';
-          
-          const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            run_id: ${{ github.run_id }},
-          });
-
-          const artifact = artifacts.data.artifacts.find(art => art.name === artifact_name);
-
-          if (!artifact) {
-            throw new Error(`Artifact with name ${artifact_name} not found.`);
-          }
-          
-          const firmwareArtifactUrl = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}/artifacts/${artifact.id}`;
-          
-          const commentBody = `
-          ## Firmware Build Complete
-
-          The firmware build for your device \`${{ env.device_name }}\` is complete. You can download the firmware files from the artifact link below (you must be logged into GitHub to download).
-
-          [Download Firmware Artifact](${firmwareArtifactUrl})
-
-          - **Static IP:** \`${{ env.static_ip }}\`
-          - **Gateway:** \`${{ env.gateway }}\`
-          - **Subnet:** \`${{ env.subnet }}\`
-          `;
-          
-          await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: issue_number,
-            body: commentBody
-          });
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          pytest
