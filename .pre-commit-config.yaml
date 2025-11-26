@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: esphome-validate
+        name: Validate ESPHome manifests
+        entry: scripts/validate-esphome.sh
+        language: script
+        files: ^manifests/.*\.yaml$
+        pass_filenames: false
