@@ -117,13 +117,13 @@ select:
     icon: mdi:swap-horizontal
     set_action:
       - lambda: |-
-          id(uart_bus).flush();
+          id(uart_bus_zb).flush();
           uint32_t new_baud_rate = stoi(x);
           ESP_LOGD("change_baud_rate", "Changing baud rate from %i to %i",id(uart_bus_zb).get_baud_rate(), 
                     new_baud_rate);
           if (id(uart_bus_zb).get_baud_rate() != new_baud_rate) {
             id(uart_bus_zb).set_baud_rate(new_baud_rate);
-            id(uart_bus).load_settings();
+            id(uart_bus_zb).load_settings();
           }
 
 uart:
