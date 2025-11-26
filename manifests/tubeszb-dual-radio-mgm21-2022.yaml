@@ -100,6 +100,17 @@ button:
       - delay: 15ms
       - switch.turn_off: zRST_gpio
 
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    on_press:
+      - stream_server.pause: zb
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    on_press:
+      - stream_server.resume: zb
+
 select:
   - id: change_baud_rate
     name: Baud rate

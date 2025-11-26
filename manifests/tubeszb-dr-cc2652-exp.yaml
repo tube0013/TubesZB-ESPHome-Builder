@@ -275,3 +275,14 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
+
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    on_press:
+      - stream_server.pause: zb
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    on_press:
+      - stream_server.resume: zb

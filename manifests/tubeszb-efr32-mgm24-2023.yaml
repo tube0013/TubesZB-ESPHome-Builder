@@ -15,7 +15,7 @@ esphome:
             // The #include directive is now INSIDE the lambda.
             #include "driver/uart.h"
 
-            ESP_LOGD("custom", "Applying HW Flow Control to uart_bus_zb...");
+            ESP_LOGD("custom", "Applying HW Flow Control to uart_bus...");
             // This re-configures the pins and enables CTS/RTS flow control.
             uart_set_pin(UART_NUM_1, 4, 36, 2, 13);
             // This NEW LINE actually enables the CTS/RTS flow control mode
@@ -165,7 +165,7 @@ button:
   # Manual Stream Server controls
   - platform: template
     name: "Serial Server Pause"
-    internal: true
+    internal: false
     on_press:
       - stream_server.pause: { id: stream_srv }
       - text_sensor.template.publish:
@@ -173,7 +173,7 @@ button:
           state: "Paused"
   - platform: template
     name: "Serial Server Resume"
-    internal: true
+    internal: false
     on_press:
       - stream_server.resume: { id: stream_srv }
       - text_sensor.template.publish:

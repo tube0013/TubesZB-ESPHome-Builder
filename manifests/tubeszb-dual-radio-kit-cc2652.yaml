@@ -31,8 +31,8 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
-    components: [cc2652_flasher]
-  - source: github://oxan/esphome-stream-server
+    components: [stream_server, cc2652_flasher]
+#  - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
@@ -280,3 +280,15 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
+
+button:
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    on_press:
+      - stream_server.pause: zb
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    on_press:
+      - stream_server.resume: zb

@@ -168,7 +168,7 @@ button:
   # Manual Stream Server controls
   - platform: template
     name: "Serial Server Pause"
-    internal: true
+    internal: false
     on_press:
       - stream_server.pause: { id: zb }
       - text_sensor.template.publish:
@@ -176,7 +176,7 @@ button:
           state: "Paused"
   - platform: template
     name: "Serial Server Resume"
-    internal: true
+    internal: false
     on_press:
       - stream_server.resume: { id: zb }
       - text_sensor.template.publish:

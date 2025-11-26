@@ -111,6 +111,17 @@ button:
       - delay: 15ms
       - switch.turn_off: zRST_gpio
 
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    on_press:
+      - stream_server.pause: stream_srv
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    on_press:
+      - stream_server.resume: stream_srv
+
 select:
   - id: change_baud_rate
     name: Baud rate
@@ -145,6 +156,7 @@ uart:
 
 
 stream_server:
+  id: stream_srv
   uart_id: uart_bus
   port: 6638 # optional, default is 6638
 #  buffer_size: 512
