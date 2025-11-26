@@ -31,7 +31,7 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
-    components: [cc2652_flasher, stream-server]
+    components: [cc2652_flasher, stream_server]
   #- source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
