@@ -28,7 +28,9 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-  - source: github://oxan/esphome-stream-server
+  - source: github://tube0013/esphome-components
+    components: [stream_server]
+ # - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
@@ -99,6 +101,17 @@ button:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
       - switch.turn_off: zRST_gpio
+
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    on_press:
+      - stream_server.pause: { id: zb }
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    on_press:
+      - stream_server.resume: { id: zb }
 
 select:
   - id: change_baud_rate

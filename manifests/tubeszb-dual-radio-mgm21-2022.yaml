@@ -104,12 +104,12 @@ button:
     name: "Pause Stream"
     id: pause_stream
     on_press:
-      - stream_server.pause: zb
+      - stream_server.pause: { id: zb }
   - platform: template
     name: "Resume Stream"
     id: resume_stream
     on_press:
-      - stream_server.resume: zb
+      - stream_server.resume: { id: zb }
 
 select:
   - id: change_baud_rate

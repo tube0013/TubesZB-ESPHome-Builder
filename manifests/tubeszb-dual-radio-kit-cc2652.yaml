@@ -253,6 +253,17 @@ button:
     on_press:
       - script.execute: fw_update_mode
 
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    on_press:
+      - stream_server.pause: { id: zb }
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    on_press:
+      - stream_server.resume: { id: zb }
+
 text_sensor:
   - platform: template
     name: "Zigbee FW Version"
@@ -280,15 +291,3 @@ text_sensor:
       name: ESP IP Address
     mac_address:
       name: ESP MAC Address
-
-button:
-  - platform: template
-    name: "Pause Stream"
-    id: pause_stream
-    on_press:
-      - stream_server.pause: zb
-  - platform: template
-    name: "Resume Stream"
-    id: resume_stream
-    on_press:
-      - stream_server.resume: zb
