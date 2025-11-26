@@ -232,15 +232,25 @@ select:
     entity_category: config
     icon: mdi:swap-horizontal
     set_action:
+      - stream_server.pause: { id: stream_srv }
+      - delay: 50ms
       - lambda: |-
-          id(uart_bus).flush();
-          uint32_t new_baud_rate = stoi(x);
-          ESP_LOGD("change_baud_rate", "Changing baud rate from %i to %i",id(uart_bus).get_baud_rate(), 
-                    new_baud_rate);
-          if (id(uart_bus).get_baud_rate() != new_baud_rate) {
-            id(uart_bus).set_baud_rate(new_baud_rate);
-            id(uart_bus).load_settings();
+          auto *bus = id(uart_bus);
+          const uint32_t new_baud_rate = strtoul(x.c_str(), nullptr, 10);
+          const uint32_t current_baud = bus->get_baud_rate();
+          ESP_LOGD("change_baud_rate", "Changing baud rate from %u to %u", current_baud, new_baud_rate);
+          if (current_baud == new_baud_rate) {
+            ESP_LOGD("change_baud_rate", "Requested baud already active; skipping reconfig");
+            return;
           }
+          bus->flush();
+          App.feed_wdt();
+          bus->set_baud_rate(new_baud_rate);
+          App.feed_wdt();
+          bus->load_settings();
+          App.feed_wdt();
+      - delay: 50ms
+      - stream_server.resume: { id: stream_srv }
   
 uart:
   id: uart_bus
@@ -353,5 +363,3 @@ efr32_info:
   firmware_text: ezsp_firmware
   ieee_text: ezsp_ieee
   raw_capture: true
-
-
