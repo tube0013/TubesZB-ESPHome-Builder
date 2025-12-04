@@ -28,6 +28,9 @@ body:
         - tubeszb-dual-radio-kit-mgm21-2022
         - tubeszb-dr-mgm21-22-exp
         - tubeszb-zw
+        - tubeszb-zw-experimental
+        - tubeszb-2026-zw
+        - tubeszb-2026-zw-experimental
       default: 0
     validations:
       required: true
