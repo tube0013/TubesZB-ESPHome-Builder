@@ -76,21 +76,13 @@ uart:
   baud_rate: 115200
   rx_buffer_size: 1024
 
-stream_server:
-  buffer_size: 1024
+zwave_proxy:
   uart_id: uart_bus
-#  id: ss
-  port: 6638 # optional, default is 6638
-
-binary_sensor:
-  - platform: stream_server
-    connected:
-      name: "TubesZB ZW Serial Connected"
 
 mdns:
   services:
     - service: "_zwave"
-      protocol: "_tcp"
+      protocol: "_esphome"
       port: 6638
       txt:
         version: 1

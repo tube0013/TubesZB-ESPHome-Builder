@@ -80,7 +80,7 @@ zwave_proxy:
 
 mdns:
   services:
-    - service: "_zwave"
+    - service: "_esphome"
       protocol: "_tcp"
       port: 6638
       txt:
