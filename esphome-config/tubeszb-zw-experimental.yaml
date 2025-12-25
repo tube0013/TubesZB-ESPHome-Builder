@@ -2,8 +2,8 @@ esphome:
   name: tubeszb-zw-experimental
   project: 
     name: tubezb.zwexp
-    version: "2025.10.27.2"
-  min_version: 2025.10.0
+    version: "2025.12.25_pre1"
+  min_version: 2025.12.0
 
   on_boot:
     - priority: -10
@@ -23,7 +23,6 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-  - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
