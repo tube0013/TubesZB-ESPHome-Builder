@@ -12,6 +12,11 @@ esphome:
         - switch.turn_off: zRST_gpio
         - cc2652_flasher.detect_variant:
             id: zigbee_flasher
+    - priority: 540   # apply custom firmware URL override (if set)
+      then:
+        - script.execute:
+            id: apply_cc2652_fw_url
+            url_str: !lambda 'return id(cc2652_custom_fw_url).state;'
     - priority: -10
       then:
         - delay: 20s
@@ -34,6 +39,12 @@ external_components:
     components: [cc2652_flasher, stream_server]
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
+
+globals:
+  - id: cc2652_manifest_url_default
+    type: std::string
+    restore_value: no
+    initial_value: '"https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json"'
 
 # dashboard_import:
 #   package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-poe-2022/firmware/esphome/tubeszb-cc2652-poe-2022.yaml
@@ -97,6 +108,22 @@ script:
       - switch.turn_off: zBSL
       - logger.log: "Please try update with cc2538-bsl tool now"
       - logger.log: "cc-bsl usage: cc2538-bsl.py -p socket://ip-of-gw:6638 -evw firmware.hex"
+  - id: apply_cc2652_fw_url
+    mode: queued
+    parameters:
+      url_str: string
+    then:
+      - if:
+          condition:
+            lambda: 'return url_str.empty();'
+          then:
+            - lambda: |-
+                id(zigbee_flasher).set_update_url(id(cc2652_manifest_url_default));
+                ESP_LOGD("cc2652_custom_url", "Custom URL cleared; using default manifest");
+          else:
+            - lambda: |-
+                id(zigbee_flasher).set_update_url(url_str);
+                ESP_LOGD("cc2652_custom_url", "Custom URL set: %s", url_str.c_str());
       
 switch:
   - platform: gpio
@@ -140,6 +167,20 @@ mdns:
         name: "TubesZB"
         radio_type: "znp"
         serial_number: !lambda 'return esphome::get_mac_address();'
+
+text:
+  - platform: template
+    mode: text
+    name: "CC2652 Custom Firmware URL"
+    id: cc2652_custom_fw_url
+    icon: mdi:link-variant
+    entity_category: config
+    optimistic: true
+    restore_value: false
+    set_action:
+      - script.execute:
+          id: apply_cc2652_fw_url
+          url_str: !lambda 'return x;'
 
 cc2652_flasher:
   id: zigbee_flasher
