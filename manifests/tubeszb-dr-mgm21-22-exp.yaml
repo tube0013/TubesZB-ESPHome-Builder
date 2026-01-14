@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dr-mgm21-22-exp
   project: 
     name: tubezb.mgm21+zw
-    version:"2026.01.14_pre1"
+    version: "2026.01.14_pre1"
   min_version: 2025.12.0
   on_boot:
     - priority: 600
