@@ -129,6 +129,7 @@ script:
                 const uint32_t new_baud_rate = strtoul(baud_str.c_str(), nullptr, 10);
                 const uint32_t current_baud = bus->get_baud_rate();
                 ESP_LOGD("apply_uart_baud", "Changing baud rate from %u to %u", current_baud, new_baud_rate);
+                id(zigbee_flasher).set_restore_baud(new_baud_rate);
                 if (current_baud == new_baud_rate) {
                   ESP_LOGD("apply_uart_baud", "Requested baud already active; skipping reconfig");
                   return;
