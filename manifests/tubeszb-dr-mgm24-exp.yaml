@@ -42,6 +42,11 @@ esphome:
         - script.execute:
             id: apply_uart_baud
             baud_str: !lambda 'return id(change_baud_rate).state;'
+    - priority: 140   # apply custom firmware URL override (if set)
+      then:
+        - script.execute:
+            id: apply_efr32_fw_url
+            url_str: !lambda 'return id(efr32_custom_fw_url).state;'
     - priority: -10
       then:
         - delay: 20s
@@ -70,6 +75,10 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  - id: efr32_manifest_url_default
+    type: std::string
+    restore_value: no
+    initial_value: '"https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"'
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -196,6 +205,22 @@ script:
                 App.feed_wdt();
             - delay: 50ms
             - stream_server.resume: { id: zb }
+  - id: apply_efr32_fw_url
+    mode: queued
+    parameters:
+      url_str: string
+    then:
+      - if:
+          condition:
+            lambda: 'return url_str.empty();'
+          then:
+            - lambda: |-
+                id(zigbee_efr32).set_update_url(id(efr32_manifest_url_default));
+                ESP_LOGD("efr32_custom_url", "Custom URL cleared; using default manifest");
+          else:
+            - lambda: |-
+                id(zigbee_efr32).set_update_url(url_str);
+                ESP_LOGD("efr32_custom_url", "Custom URL set: %s", url_str.c_str());
 
 switch:
   - platform: gpio
@@ -290,6 +315,20 @@ select:
       - script.execute:
           id: apply_uart_baud
           baud_str: !lambda 'return x;'
+
+text:
+  - platform: template
+    mode: text
+    name: "EFR32 Custom Firmware URL"
+    id: efr32_custom_fw_url
+    icon: mdi:link-variant
+    entity_category: config
+    optimistic: true
+    restore_value: false
+    set_action:
+      - script.execute:
+          id: apply_efr32_fw_url
+          url_str: !lambda 'return x;'
 
 uart:
   - id: uart_bus_zb
