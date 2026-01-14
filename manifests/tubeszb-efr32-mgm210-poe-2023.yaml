@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-efr32-mgm210-poe-2023
   project:
     name: tubeszb.efr32_mgm210_poe_2023
-    version: "2025.12.25_pre3"
+    version:"2026.01.14_pre1"
   min_version: 2025.12.0
   on_boot:
     - priority: 150   # restore user-selected baud after core init/reset sequence
