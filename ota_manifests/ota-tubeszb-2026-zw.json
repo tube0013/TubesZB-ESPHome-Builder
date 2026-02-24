@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-2026-zw",
-  "version": "2026.02.23",
+  "version": "2025.10.27.2_redo4",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-2026-zw.ota.bin",
-        "md5": "f33edd0332edb06fcd3d462e6dedf970",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.02.23",
-        "summary": "Hello 2026! \r\n\r\nThis Release adds an update to that should reduce latency for all devices. see (https://github.com/esphome/esphome/pull/12135) \r\n\r\nConsider updating Z-Wave devices and Dual Radio to use the Experimental build which use the new Z-Wave Proxy component in ESPHome. It has been stable in my testing for several months now.  The last release's notes had directions on setting up:\r\nhttps://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.27.2_redo4\r\n\r\n\r\nNew in EFR32-MG24 Firmware - selectable Baud Rate and Custom URL entry for firmware - so you can now easily flash Nerivec's FW releases: https://github.com/Nerivec/silabs-firmware-builder/releases\r\n\r\n**Be sure to match your module version to the firmware version**\r\n\r\n_Silicon Labs MGM224 Module:_\r\n\r\n<img width=685 height=46 alt=image src=https://github.com/user-attachments/assets/f43a8cac-c104-43e3-977c-15e89163d117 />\r\n\r\n...\r\n_RF-STAR BM MGM24 Module:_\r\n\r\n<img width=737 height=36 alt=image src=https://github.com/user-attachments/assets/f566ed42-6dcb-4b53-8564-f90fa9484e6c />\r\n\r\n\r\nStopping ZHA or Z2M is recommended before flashing, the Serial Stream Server will pause during flashing but it's safer to just stop the host integration. Adjust the buadrate for the updated speed to match the new firmware, paste the URL for the GBL and push the Flash_EFR32 button. The MD5 check will fail but that is expected for custom url flashing. following the flash completion press the Probe_EFR32 button and it should update the Current FW sensor to the new version.\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.27.2_redo4...2026.02.23"
+        "md5": "1782a355986e71a85292f2bcc5e86d36",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.27.2_redo4",
+        "summary": "Add Dual Radio Experimental yaml/builds with zwave_proxy component.\r\n\r\nTo try the ESPHome zwave-proxy, you can get flash via the flasher page or pull the binary from https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/\r\n\r\nPlease note if you update to an Experimental Z-Wave kit or Dual Radio Kit ESPHome yaml/build you will need to update your Z-Wave JS UI configuration to change the serial adaptor from tcp://IP:PORT to esphome://IP\r\n\r\n<img width=456 height=438 alt=Settings src=https://github.com/user-attachments/assets/2d3c59f9-f862-46d9-bcf8-9a5f51686749 />\r\n"
       }
     }
   ]
