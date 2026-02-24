@@ -2,8 +2,8 @@ esphome:
   name: tubeszb-dual-radio-kit-mgm24
   project: 
     name: tubezb.mgm24+zw
-    version: "2026.02.23"
-  min_version: 2025.12.0
+    version: "2025.10.27.2"
+  min_version: 2025.8.0
   on_boot:
     - priority: 900
       then:
@@ -30,23 +30,6 @@ esphome:
         - delay: 1s
         - stream_server.resume: { id: zb }
         - script.execute: boot_probe_sequence
-    - priority: 150   # restore user-selected baud after core init/reset sequence
-      then:
-        - lambda: |-
-            const auto &saved = id(change_baud_rate).state;
-            if (saved.empty()) {
-              ESP_LOGD("apply_uart_baud", "No saved baud rate; skipping restore");
-              return;
-            }
-            ESP_LOGD("apply_uart_baud", "Restoring baud rate from saved state: %s", saved.c_str());
-        - script.execute:
-            id: apply_uart_baud
-            baud_str: !lambda 'return id(change_baud_rate).state;'
-    - priority: 140   # apply custom firmware URL override (if set)
-      then:
-        - script.execute:
-            id: apply_efr32_fw_url
-            url_str: !lambda 'return id(efr32_custom_fw_url).state;'
     - priority: -10
       then:
         - delay: 20s
@@ -56,10 +39,6 @@ esp32:
   board: esp32-poe
   framework:
     type: esp-idf
-    advanced:
-      include_builtin_idf_components:
-        - esp_http_client
-        - esp_crt_bundle
     sdkconfig_options:
       CONFIG_LWIP_MAX_SOCKETS: "16"
       CONFIG_PM_ENABLE: "n"
@@ -79,10 +58,6 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
-  - id: efr32_manifest_url_default
-    type: std::string
-    restore_value: no
-    initial_value: '"https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"'
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -169,62 +144,6 @@ script:
                       level: WARN
             - efr32_flasher.check_update: { id: zigbee_efr32 }
             - lambda: 'id(boot_probe_done) = true;'
-  - id: apply_uart_baud
-    mode: queued
-    parameters:
-      baud_str: string
-    then:
-      - if:
-          condition:
-            lambda: 'return baud_str.empty();'
-          then:
-            - logger.log:
-                format: "apply_uart_baud: empty baud_str; skipping"
-                level: DEBUG
-          else:
-            - stream_server.pause: { id: zb }
-            - delay: 50ms
-            - lambda: |-
-                auto *bus = id(uart_bus_zb);
-                const uint32_t new_baud_rate = strtoul(baud_str.c_str(), nullptr, 10);
-                const uint32_t current_baud = bus->get_baud_rate();
-                ESP_LOGD("apply_uart_baud", "Changing baud rate from %u to %u", current_baud, new_baud_rate);
-                id(zigbee_efr32).set_runtime_baud_rate(new_baud_rate);
-                if (current_baud == new_baud_rate) {
-                  ESP_LOGD("apply_uart_baud", "Requested baud already active; skipping reconfig");
-                  return;
-                }
-                // Best-effort drain TX without blocking indefinitely (avoid WDT).
-                #include "driver/uart.h"
-                const uart_port_t uart_num = static_cast<uart_port_t>(bus->get_hw_serial_number());
-                uart_wait_tx_done(uart_num, pdMS_TO_TICKS(50));
-                uart_flush_input(uart_num);
-                App.feed_wdt();
-                bus->set_baud_rate(new_baud_rate);
-                App.feed_wdt();
-                bus->load_settings();
-                App.feed_wdt();
-                uart_set_pin(uart_num, 4, 36, 2, 13);
-                uart_set_hw_flow_ctrl(uart_num, UART_HW_FLOWCTRL_CTS_RTS, 122);
-                App.feed_wdt();
-            - delay: 50ms
-            - stream_server.resume: { id: zb }
-  - id: apply_efr32_fw_url
-    mode: queued
-    parameters:
-      url_str: string
-    then:
-      - if:
-          condition:
-            lambda: 'return url_str.empty();'
-          then:
-            - lambda: |-
-                id(zigbee_efr32).set_update_url(id(efr32_manifest_url_default));
-                ESP_LOGD("efr32_custom_url", "Custom URL cleared; using default manifest");
-          else:
-            - lambda: |-
-                id(zigbee_efr32).set_update_url(url_str);
-                ESP_LOGD("efr32_custom_url", "Custom URL set: %s", url_str.c_str());
 
 switch:
   - platform: gpio
@@ -249,7 +168,7 @@ button:
   # Manual Stream Server controls
   - platform: template
     name: "Serial Server Pause"
-    internal: false
+    internal: true
     on_press:
       - stream_server.pause: { id: zb }
       - text_sensor.template.publish:
@@ -257,7 +176,7 @@ button:
           state: "Paused"
   - platform: template
     name: "Serial Server Resume"
-    internal: false
+    internal: true
     on_press:
       - stream_server.resume: { id: zb }
       - text_sensor.template.publish:
@@ -299,40 +218,6 @@ button:
     on_press:
       - efr32_info.probe: { id: zigbee_info }
       - logger.log: "BTN: EZSP info probe triggered"
-
-select:
-  - id: change_baud_rate
-    name: Baud rate
-    platform: template
-    options:
-      - "115200"
-      - "230400"
-      - "460800"
-      - "921600"
-    initial_option: "115200"
-    optimistic: true
-    restore_value: True
-    internal: false
-    entity_category: config
-    icon: mdi:swap-horizontal
-    set_action:
-      - script.execute:
-          id: apply_uart_baud
-          baud_str: !lambda 'return x;'
-
-text:
-  - platform: template
-    mode: text
-    name: "EFR32 Custom Firmware URL"
-    id: efr32_custom_fw_url
-    icon: mdi:link-variant
-    entity_category: config
-    optimistic: true
-    restore_value: false
-    set_action:
-      - script.execute:
-          id: apply_efr32_fw_url
-          url_str: !lambda 'return x;'
 
 uart:
   - id: uart_bus_zb

@@ -2,8 +2,8 @@ esphome:
   name: tubeszb-dual-radio-kit-cc2652
   project: 
     name: tubezb.cc2652+zw
-    version: "2026.02.23"
-  min_version: 2025.12.0
+    version: "2025.10.27.2"
+  min_version: 2025.8.0
   on_boot:
     - priority: 600
       then:
@@ -17,10 +17,6 @@ esp32:
   board: esp32-poe
   framework:
     type: esp-idf
-    advanced:
-      include_builtin_idf_components:
-        - esp_http_client
-        - esp_crt_bundle
     sdkconfig_options:
       CONFIG_LWIP_MAX_SOCKETS: "16"
       CONFIG_PM_ENABLE: "n"
@@ -31,7 +27,8 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
-    components: [cc2652_flasher, stream_server]
+    components: [cc2652_flasher]
+  - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 

@@ -2,8 +2,8 @@ esphome:
   name: tubeszb-dual-radio-kit-cc2652
   project: 
     name: tubezb.cc2652+zw
-    version: "2026.02.23"
-  min_version: 2025.12.0
+    version: "2025.10.27.2"
+  min_version: 2025.8.0
   on_boot:
     - priority: 600
       then:
@@ -12,18 +12,6 @@ esphome:
         - switch.turn_off: zRST_gpio
         - cc2652_flasher.detect_variant:
             id: zigbee_flasher
-    - priority: 550   # restore user-selected baud after early reset/detect
-      then:
-        - lambda: |-
-            const auto &saved = id(change_baud_rate).state;
-            if (saved.empty()) {
-              ESP_LOGD("apply_uart_baud", "No saved baud rate; skipping restore");
-              return;
-            }
-            ESP_LOGD("apply_uart_baud", "Restoring baud rate from saved state: %s", saved.c_str());
-        - script.execute:
-            id: apply_uart_baud
-            baud_str: !lambda 'return id(change_baud_rate).state;'
     - priority: -10
       then:
         - delay: 20s
@@ -33,10 +21,6 @@ esp32:
   board: esp32-poe
   framework:
     type: esp-idf
-    advanced:
-      include_builtin_idf_components:
-        - esp_http_client
-        - esp_crt_bundle
     sdkconfig_options:
       CONFIG_LWIP_MAX_SOCKETS: "16"
       CONFIG_PM_ENABLE: "n"
@@ -47,7 +31,8 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
-    components: [stream_server, cc2652_flasher]
+    components: [cc2652_flasher]
+  - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
@@ -113,43 +98,6 @@ script:
       - switch.turn_off: zBSL
       - logger.log: "Please try update with cc2538-bsl tool now"
       - logger.log: "cc-bsl usage: cc2538-bsl.py -p socket://ip-of-gw:6638 -evw firmware.hex"
-  - id: apply_uart_baud
-    mode: queued
-    parameters:
-      baud_str: string
-    then:
-      - if:
-          condition:
-            lambda: 'return baud_str.empty();'
-          then:
-            - logger.log:
-                format: "apply_uart_baud: empty baud_str; skipping"
-                level: DEBUG
-          else:
-            - stream_server.pause: { id: zb }
-            - delay: 50ms
-            - lambda: |-
-                auto *bus = id(uart_bus_zb);
-                const uint32_t new_baud_rate = strtoul(baud_str.c_str(), nullptr, 10);
-                const uint32_t current_baud = bus->get_baud_rate();
-                ESP_LOGD("apply_uart_baud", "Changing baud rate from %u to %u", current_baud, new_baud_rate);
-                id(zigbee_flasher).set_restore_baud(new_baud_rate);
-                if (current_baud == new_baud_rate) {
-                  ESP_LOGD("apply_uart_baud", "Requested baud already active; skipping reconfig");
-                  return;
-                }
-                // Best-effort drain TX without blocking indefinitely (avoid WDT).
-                #include "driver/uart.h"
-                const uart_port_t uart_num = static_cast<uart_port_t>(bus->get_hw_serial_number());
-                uart_wait_tx_done(uart_num, pdMS_TO_TICKS(50));
-                uart_flush_input(uart_num);
-                App.feed_wdt();
-                bus->set_baud_rate(new_baud_rate);
-                App.feed_wdt();
-                bus->load_settings();
-                App.feed_wdt();
-            - delay: 50ms
-            - stream_server.resume: { id: zb }
       
 switch:
   - platform: gpio
@@ -165,26 +113,6 @@ switch:
     inverted: yes
     restore_mode: ALWAYS_OFF
     disabled_by_default: true
-
-select:
-  - id: change_baud_rate
-    name: Baud rate
-    platform: template
-    options:
-      - "115200"
-      - "230400"
-      - "460800"
-      - "921600"
-    initial_option: "115200"
-    optimistic: true
-    restore_value: True
-    internal: false
-    entity_category: config
-    icon: mdi:swap-horizontal
-    set_action:
-      - script.execute:
-          id: apply_uart_baud
-          baud_str: !lambda 'return x;'
 
 uart:
   - id: uart_bus_zb
@@ -298,17 +226,6 @@ button:
     disabled_by_default: true
     on_press:
       - script.execute: fw_update_mode
-
-  - platform: template
-    name: "Pause Stream"
-    id: pause_stream
-    on_press:
-      - stream_server.pause: { id: zb }
-  - platform: template
-    name: "Resume Stream"
-    id: resume_stream
-    on_press:
-      - stream_server.resume: { id: zb }
 
 text_sensor:
   - platform: template
