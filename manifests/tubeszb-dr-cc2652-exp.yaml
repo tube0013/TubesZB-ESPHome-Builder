@@ -25,6 +25,10 @@ esp32:
       include_builtin_idf_components:
         - esp_http_client
         - esp_crt_bundle
+    advanced:
+      include_builtin_idf_components:
+        - esp_http_client
+        - esp_crt_bundle
     sdkconfig_options:
       CONFIG_LWIP_MAX_SOCKETS: "16"
       CONFIG_PM_ENABLE: "n"
