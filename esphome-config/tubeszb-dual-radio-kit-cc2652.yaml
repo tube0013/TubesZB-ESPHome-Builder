@@ -2,8 +2,8 @@ esphome:
   name: tubeszb-dual-radio-kit-cc2652
   project: 
     name: tubezb.cc2652+zw
-    version: "2026.02.23"
-  min_version: 2025.12.0
+    version: "2026.03.28-pre1"
+  min_version: 2026.3.0
   on_boot:
     - priority: 600
       then:
