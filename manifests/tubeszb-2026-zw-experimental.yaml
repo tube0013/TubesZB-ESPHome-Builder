@@ -2,8 +2,8 @@ esphome:
   name: tubeszb-2026-zw-experimental
   project: 
     name: tubezb.zw2026
-    version: "2026.03.28-pre1"
-  min_version: 2026.3.0
+    version: "2026.03.28"
+  min_version: 2026.3.2
   on_boot:
     - priority: -10
       then:
