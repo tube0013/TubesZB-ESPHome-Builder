@@ -62,6 +62,10 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  - id: efr32_manifest_url_default
+    type: std::string
+    restore_value: no
+    initial_value: '"https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"'
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -149,24 +153,60 @@ script:
             - efr32_flasher.check_update: { id: zigbee_efr32 }
             - lambda: 'id(boot_probe_done) = true;'
   - id: apply_uart_baud
+    mode: queued
     parameters:
       baud_str: string
     then:
-      - uart.set_baud_rate:
-          id: uart_bus_zb
-          baud_rate: !lambda 'return std::stoi(baud_str);'
-      - logger.log:
-          format: "UART baud rate changed to %s"
-          args: ['baud_str.c_str()']
-          level: INFO
+      - if:
+          condition:
+            lambda: 'return baud_str.empty();'
+          then:
+            - logger.log:
+                format: "apply_uart_baud: empty baud_str; skipping"
+                level: DEBUG
+          else:
+            - stream_server.pause: { id: zb }
+            - delay: 50ms
+            - lambda: |-
+                auto *bus = id(uart_bus_zb);
+                const uint32_t new_baud_rate = strtoul(baud_str.c_str(), nullptr, 10);
+                const uint32_t current_baud = bus->get_baud_rate();
+                ESP_LOGD("apply_uart_baud", "Changing baud rate from %u to %u", current_baud, new_baud_rate);
+                if (current_baud == new_baud_rate) {
+                  ESP_LOGD("apply_uart_baud", "Requested baud already active; skipping reconfig");
+                  return;
+                }
+                // Best-effort drain TX without blocking indefinitely (avoid WDT).
+                #include "driver/uart.h"
+                const uart_port_t uart_num = static_cast<uart_port_t>(bus->get_hw_serial_number());
+                uart_wait_tx_done(uart_num, pdMS_TO_TICKS(50));
+                uart_flush_input(uart_num);
+                App.feed_wdt();
+                bus->set_baud_rate(new_baud_rate);
+                App.feed_wdt();
+                bus->load_settings();
+                App.feed_wdt();
+                uart_set_pin(uart_num, 4, 36, 2, 13);
+                uart_set_hw_flow_ctrl(uart_num, UART_HW_FLOWCTRL_CTS_RTS, 122);
+                App.feed_wdt();
+            - delay: 50ms
+            - stream_server.resume: { id: zb }
   - id: apply_efr32_fw_url
+    mode: queued
     parameters:
       url_str: string
     then:
-      - logger.log:
-          format: "Custom firmware URL set to: %s"
-          args: ['url_str.c_str()']
-          level: INFO
+      - if:
+          condition:
+            lambda: 'return url_str.empty();'
+          then:
+            - lambda: |-
+                id(zigbee_efr32).set_update_url(id(efr32_manifest_url_default));
+                ESP_LOGD("efr32_custom_url", "Custom URL cleared; using default manifest");
+          else:
+            - lambda: |-
+                id(zigbee_efr32).set_update_url(url_str);
+                ESP_LOGD("efr32_custom_url", "Custom URL set: %s", url_str.c_str());
 
 switch:
   - platform: gpio
