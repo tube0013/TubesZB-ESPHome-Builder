@@ -223,11 +223,45 @@ button:
       - efr32_info.probe: { id: zigbee_info }
       - logger.log: "BTN: EZSP info probe triggered"
 
+select:
+  - id: change_baud_rate
+    name: Baud rate
+    platform: template
+    options:
+      - "115200"
+      - "230400"
+      - "460800"
+      - "921600"
+    initial_option: "460800"
+    optimistic: true
+    restore_value: True
+    internal: false
+    entity_category: config
+    icon: mdi:swap-horizontal
+    set_action:
+      - script.execute:
+          id: apply_uart_baud
+          baud_str: !lambda 'return x;'
+
+text:
+  - platform: template
+    mode: text
+    name: "EFR32 Custom Firmware URL"
+    id: efr32_custom_fw_url
+    icon: mdi:link-variant
+    entity_category: config
+    optimistic: true
+    restore_value: false
+    set_action:
+      - script.execute:
+          id: apply_efr32_fw_url
+          url_str: !lambda 'return x;'
+
 uart:
   - id: uart_bus_zb
     rx_pin: GPIO36
     tx_pin: GPIO4
-    baud_rate: 115200
+    baud_rate: 460800
     rx_buffer_size: 8192
 
   - id: uart_bus_zw

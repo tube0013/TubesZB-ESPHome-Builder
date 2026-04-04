@@ -2,8 +2,8 @@ esphome:
   name: tubeszb-zw-experimental
   project: 
     name: tubezb.zwexp
-    version: "2025.10.27.2"
-  min_version: 2025.10.0
+    version: "2026.03.28"
+  min_version: 2026.3.2
 
   on_boot:
     - priority: -10
@@ -27,7 +27,6 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-  - source: github://oxan/esphome-stream-server
   - source: github://tjhorner/esphome-custom-components
     components: [ project_version ]
 
@@ -80,21 +79,13 @@ uart:
   baud_rate: 115200
   rx_buffer_size: 1024
 
-stream_server:
-  buffer_size: 1024
+zwave_proxy:
   uart_id: uart_bus
-#  id: ss
-  port: 6638 # optional, default is 6638
-
-binary_sensor:
-  - platform: stream_server
-    connected:
-      name: "TubesZB ZW Serial Connected"
 
 mdns:
   services:
     - service: "_zwave"
-      protocol: "_tcp"
+      protocol: "_esphome"
       port: 6638
       txt:
         version: 1
