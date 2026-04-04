@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dr-mgm24-exp",
-  "version": "2025.10.27.2_redo4",
+  "version": "2026.03.28_Release",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dr-mgm24-exp.ota.bin",
-        "md5": "1326a5f5f9c979ebb8e38f9eeffa7b99",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2025.10.27.2_redo4",
-        "summary": "Add Dual Radio Experimental yaml/builds with zwave_proxy component.\r\n\r\nTo try the ESPHome zwave-proxy, you can get flash via the flasher page or pull the binary from https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/\r\n\r\nPlease note if you update to an Experimental Z-Wave kit or Dual Radio Kit ESPHome yaml/build you will need to update your Z-Wave JS UI configuration to change the serial adaptor from tcp://IP:PORT to esphome://IP\r\n\r\n<img width=456 height=438 alt=Settings src=https://github.com/user-attachments/assets/2d3c59f9-f862-46d9-bcf8-9a5f51686749 />\r\n"
+        "md5": "889068b2a27ed4d6b3ae6f8fea4983e9",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.03.28_Release",
+        "summary": "## What's Changed\r\n\r\nUpdates ESPHome build to 2026.03.2 for some memory leak and UART fixes. \r\n\r\nhttps://github.com/esphome/esphome/releases/tag/2026.3.2\r\nhttps://github.com/esphome/esphome/releases/tag/2026.3.1\r\n\r\nIncludes custom URL option for a link to GBL firmware for efr32 MG24 coordinators. \r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.27.2_redo4...2026.03.28_Release"
       }
     }
   ]
