@@ -148,6 +148,25 @@ script:
                       level: WARN
             - efr32_flasher.check_update: { id: zigbee_efr32 }
             - lambda: 'id(boot_probe_done) = true;'
+  - id: apply_uart_baud
+    parameters:
+      baud_str: string
+    then:
+      - uart.set_baud_rate:
+          id: uart_bus_zb
+          baud_rate: !lambda 'return std::stoi(baud_str);'
+      - logger.log:
+          format: "UART baud rate changed to %s"
+          args: ['baud_str.c_str()']
+          level: INFO
+  - id: apply_efr32_fw_url
+    parameters:
+      url_str: string
+    then:
+      - logger.log:
+          format: "Custom firmware URL set to: %s"
+          args: ['url_str.c_str()']
+          level: INFO
 
 switch:
   - platform: gpio
