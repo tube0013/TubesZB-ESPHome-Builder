@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dr-mgm24-exp",
-  "version": "2026.03.28_Release",
+  "version": "2026.03.28.1",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dr-mgm24-exp.ota.bin",
-        "md5": "889068b2a27ed4d6b3ae6f8fea4983e9",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.03.28_Release",
-        "summary": "## What's Changed\r\n\r\nUpdates ESPHome build to 2026.03.2 for some memory leak and UART fixes. \r\n\r\nhttps://github.com/esphome/esphome/releases/tag/2026.3.2\r\nhttps://github.com/esphome/esphome/releases/tag/2026.3.1\r\n\r\nIncludes custom URL option for a link to GBL firmware for efr32 MG24 coordinators. \r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.27.2_redo4...2026.03.28_Release"
+        "md5": "31d96d1b3a694704297ac71edbd81ff1",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.03.28.1",
+        "summary": "## What's Changed\r\n* Revert Baudrate change by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/154\r\n\r\nNote if using Neveric's SiLabs Firmware 8.2.2 update the buadrate in the esphome webfront end to 460800. \r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.27.2_redo4..2026.03.28.1"
       }
     }
   ]
