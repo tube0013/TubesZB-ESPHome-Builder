@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dr-cc2652-exp
   project: 
     name: tubezb.cc2652+zw
-    version: "2026.03.28"
+    version: "2026.03.28.1"
   min_version: 2026.3.2
   on_boot:
     - priority: 600

@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dual-radio-kit-mgm24
   project: 
     name: tubezb.mgm24+zw
-    version: "2026.03.28"
+    version: "2026.03.28.1"
   min_version: 2026.3.2
   on_boot:
     - priority: 900
@@ -295,7 +295,7 @@ select:
       - "230400"
       - "460800"
       - "921600"
-    initial_option: "460800"
+    initial_option: "115200"
     optimistic: true
     restore_value: True
     internal: false
@@ -324,7 +324,7 @@ uart:
   - id: uart_bus_zb
     rx_pin: GPIO36
     tx_pin: GPIO4
-    baud_rate: 460800
+    baud_rate: 115200
     rx_buffer_size: 8192
 
   - id: uart_bus_zw
