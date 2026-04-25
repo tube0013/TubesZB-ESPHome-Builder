@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-cc2652p7-poe-2023
   project: 
     name: tubezb.cc2652p7-poe-2023
-    version: "2026.03.28.1"
+    version: "2026.04.25.0"
   min_version: 2026.3.2
   on_boot:
     - priority: 600
@@ -10,12 +10,6 @@ esphome:
         - switch.turn_on: zRST_gpio
         - delay: 15ms
         - switch.turn_off: zRST_gpio
-        - cc2652_flasher.detect_variant:
-            id: zigbee_flasher
-    - priority: -10
-      then:
-        - delay: 20s
-        - component.update: fw_updater
 
 esp32:
   board: esp32-poe
@@ -35,15 +29,15 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
+    refresh: 1s # Forces a check for new code on every compile
     components: [cc2652_flasher, stream_server]
-  - source: github://tjhorner/esphome-custom-components
-    components: [ project_version ]
 
 # dashboard_import:
 #   package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-P7-poe-2023/firmware/esphome/tubeszb-cc2652p7-poe-2023.yaml
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
+  id: ethernet0
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
@@ -52,6 +46,15 @@ ethernet:
     mode: CLK_OUT
   phy_addr: 0
   power_pin: GPIO12
+  on_connect:
+    then:
+      - logger.log: "Ethernet Link Detected. Waiting for IP assignment..."
+      - wait_until:
+          lambda: |-
+            auto addresses = id(ethernet0).get_ip_addresses();
+            return addresses[0] != esphome::network::IPAddress(0,0,0,0);
+      - logger.log: "IP Assigned. Starting connectivity check..."
+      - script.execute: check_connectivity
   
     # Optional manual IP
   #manual_ip:
@@ -76,19 +79,104 @@ http_request:
   
 update:
   - platform: http_request
-    id: fw_updater
+    id: esphome_fw_updater
     name: TubesZB Firmware Update
     source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p7-poe-2023.json
-    update_interval: 12h
-    
+    update_interval: never
+
+interval:
+  - interval: 7d
+    startup_delay: 7d 
+    then:
+      - script.execute: check_connectivity
+      - delay: 5s
+      - if:
+          condition:
+            lambda: 'return id(has_internet);'
+          then:
+            - update.check: esphome_fw_updater
+          else:
+            - logger.log: "Skipping ESPHome FW update check: No Internet."
+
+  - interval: 7d
+    startup_delay: 7d 
+    then:
+      - script.execute: check_connectivity
+      - delay: 5s
+      - if:
+          condition:
+            lambda: 'return id(has_internet);'
+          then:
+            - cc2652_flasher.check_update: { id: zigbee_flasher }
+          else:
+            - logger.log: "Skipping Zigbee FW update check: No Internet."
 
 web_server:
   port: 80
-  version: 2
-  js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
+  version: 3
+  js_url: "https://oi.esphome.io/v3/www.js"
+  sorting_groups:
+    - id: zigbee_info_group
+      name: "Zigbee Information"
+      sorting_weight: 10
+    - id: info_group
+      name: "Device Information"
+      sorting_weight: 20
+    - id: zigbee_control_group
+      name: "Zigbee Controls"
+      sorting_weight: 30
+    - id: device_control_group
+      name: "Device Controls"
+      sorting_weight: 40
 
+globals:
+  - id: has_internet
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  - id: detected_variant
+    type: std::string
+    restore_value: no
+    initial_value: '""'
 
 script:
+  - id: check_connectivity
+    then:
+      # Only proceed if Ethernet actually has an IP address assigned
+      - if:
+          condition:
+            lambda: 'return id(ethernet0).is_connected();' # Replace 'eth' with your ethernet ID
+          then:
+            - http_request.get:
+                url: https://www.google.com/generate_204
+                on_response:
+                  then:
+                    - lambda: 'id(has_internet) = (response->status_code == 204);'
+                    - if:
+                        condition:
+                          lambda: 'return id(has_internet);'
+                        then:
+                          - script.execute: run_update_checks
+          else:
+            - logger.log: "Ethernet not ready yet. Skipping connectivity check."
+
+  # 2. This script runs the actual updates (isolated from the HTTP response scope)
+  - id: run_update_checks
+    then:
+      - logger.log: "Internet confirmed. Triggering firmware checks."
+      - if:
+          condition:
+            lambda: 'return id(detected_variant) == "";'
+          then:
+            - cc2652_flasher.detect_variant:
+                id: zigbee_flasher
+            - lambda: 'id(detected_variant) = id(zb_variant).state;'
+
+      - update.check: esphome_fw_updater
+      - delay: 1s
+      - cc2652_flasher.check_update: { id: zigbee_flasher }
+
   - id: fw_update_mode
     then:
       - switch.turn_on: zBSL
@@ -108,6 +196,10 @@ switch:
     id: zRST_gpio
     inverted: yes
     restore_mode: ALWAYS_OFF
+    icon: mdi:toggle-switch-outline
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 50
       
   - platform: gpio
     pin: 16
@@ -115,7 +207,11 @@ switch:
     id: zBSL
     inverted: yes
     restore_mode: ALWAYS_OFF
+    icon: mdi:toggle-switch-outline
     disabled_by_default: true
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 60
 
 uart:
   id: uart_bus
@@ -133,7 +229,12 @@ stream_server:
 binary_sensor:
   - platform: stream_server
     connected:
-      name: "TubesZB Serial Connected"
+      name: "Serial Connection Status"
+      device_class: connectivity
+      icon: mdi:serial-port
+      web_server:
+        sorting_group_id: zigbee_info_group
+        sorting_weight: 5
 
 mdns:
   services:
@@ -163,8 +264,8 @@ cc2652_flasher:
   latest_fw_version_text: zb_latest_fw
   variant_text: zb_variant
   check_on_boot: false
-  check_interval_days: 7
-  detect_on_boot: true
+  check_interval_days: 0
+  detect_on_boot: false
   detect_on_boot_delay_ms: 0
 
 
@@ -172,6 +273,10 @@ button:
   - platform: template
     name: "Flash CC2652"
     id: flash_cc2652
+    icon: mdi:flash
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 30
     on_press:
       then:
         - cc2652_flasher.update_firmware:
@@ -180,6 +285,10 @@ button:
   - platform: template
     name: "Check CC2652 Update"
     id: check_cc2652_update
+    icon: mdi:cloud-search
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 20
     on_press:
       then:
         - cc2652_flasher.check_update:
@@ -188,6 +297,10 @@ button:
   - platform: template
     name: "Detect CC2652 Variant"
     id: detect_cc2652_variant
+    icon: mdi:magnify-scan
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 10
     on_press:
       then:
         - cc2652_flasher.detect_variant:
@@ -195,11 +308,19 @@ button:
 
   - platform: restart
     name: "Restart the Device"
+    icon: mdi:restart
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 10
 
   - platform: template
     name: "Zigbee Module Reset"
     disabled_by_default: true
     id: zRST
+    icon: mdi:restart-alert
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 40
     on_press:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
@@ -208,6 +329,10 @@ button:
   - platform: template
     name: "Trigger Zigbee Module Bootloader"
     disabled_by_default: true
+    icon: mdi:application-import
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 50
     on_press:
       - script.execute: fw_update_mode
 
@@ -216,25 +341,62 @@ text_sensor:
     name: "Zigbee FW Version"
     id: zb_fw_version
     icon: mdi:chip
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 10
   - platform: template
     name: "Zigbee IEEE"
     id: zb_ieee
     icon: mdi:identifier
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 20
   - platform: template
     name: "Zigbee Latest FW"
     id: zb_latest_fw
     icon: mdi:update
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 30
   - platform: template
     name: "Zigbee Variant"
     id: zb_variant
     icon: mdi:chip
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 40
 
-  - platform: project_version
-    name: "TubesZB Device Firmware Version"
-    internal: true
+  - platform: template
+    name: "TubesZB ESPHome FW Version"
+    id: project_version
+    entity_category: "diagnostic"
+    icon: mdi:information-box
+    update_interval: 24h 
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 10
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
 
   - platform: ethernet_info
     ip_address:
       name: ESP IP Address
+      icon: mdi:ip-network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 20
     mac_address:
       name: ESP MAC Address
+      icon: mdi:network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 30
+
+  - platform: template
+    name: "Documentation"
+    icon: mdi:file-document-outline
+    lambda: 'return {"https://tubeszb.com/documentation"};'
+    entity_category: "diagnostic"
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 40
