@@ -1,8 +1,8 @@
 esphome:
   name: tubeszb-dual-radio-kit-cc2652
-  project: 
+  project:
     name: tubezb.cc2652+zw
-    version: "2026.03.28.1"
+    version: "2026.04.25.0"
   min_version: 2026.3.2
   on_boot:
     - priority: 600
@@ -10,8 +10,18 @@ esphome:
         - switch.turn_on: zRST_gpio
         - delay: 15ms
         - switch.turn_off: zRST_gpio
-        - cc2652_flasher.detect_variant:
-            id: zigbee_flasher
+    - priority: 550   # restore user-selected baud after early reset
+      then:
+        - lambda: |-
+            const auto &saved = id(change_baud_rate).state;
+            if (saved.empty()) {
+              ESP_LOGD("apply_uart_baud", "No saved baud rate; skipping restore");
+              return;
+            }
+            ESP_LOGD("apply_uart_baud", "Restoring baud rate from saved state: %s", saved.c_str());
+        - script.execute:
+            id: apply_uart_baud
+            baud_str: !lambda 'return id(change_baud_rate).state;'
 
 esp32:
   board: esp32-poe
@@ -31,13 +41,11 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
-    components: [cc2652_flasher, stream_server]
-  - source: github://tjhorner/esphome-custom-components
-    components: [ project_version ]
-
+    components: [stream_server, cc2652_flasher]
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
+  id: ethernet0
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
@@ -46,18 +54,26 @@ ethernet:
     mode: CLK_OUT
   phy_addr: 0
   power_pin: GPIO12
-  
+  on_connect:
+    then:
+      - logger.log: "Ethernet Link Detected. Waiting for IP assignment..."
+      - wait_until:
+          lambda: |-
+            auto addresses = id(ethernet0).get_ip_addresses();
+            return !addresses.empty() && addresses[0].is_set();
+      - logger.log: "IP Assigned. Starting connectivity check..."
+      - script.execute: check_connectivity
+
     # Optional manual IP
   manual_ip:
     static_ip: STATIC_IP
     gateway: GATEWAY
     subnet: SUBNET
 
-
 # Enable logging
 logger:
   level: DEBUG
-  
+
 # Enable Home Assistant API
 api:
   reboot_timeout: 0s
@@ -66,14 +82,76 @@ ota:
   - platform: esphome
   - platform: web_server
 
+http_request:
+
+
+interval:
+  - interval: 7d
+    startup_delay: 7d
+    then:
+      - script.execute: check_connectivity
+
 web_server:
   port: 80
-  version: 2
-  js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
-#  local: true
+  version: 3
+  js_url: ""
+  js_include: ../www3TZB.js
+  sorting_groups:
+    - id: zigbee_info_group
+      name: "Zigbee Information"
+      sorting_weight: 10
+    - id: info_group
+      name: "Device Information"
+      sorting_weight: 20
+    - id: zigbee_control_group
+      name: "Zigbee Controls"
+      sorting_weight: 30
+    - id: device_control_group
+      name: "Device Controls"
+      sorting_weight: 40
 
+globals:
+  - id: has_internet
+    type: bool
+    restore_value: no
+    initial_value: 'false'
 
 script:
+  - id: check_connectivity
+    then:
+      - if:
+          condition:
+            lambda: 'return id(ethernet0).is_connected();'
+          then:
+            - http_request.get:
+                url: https://www.google.com/generate_204
+                on_response:
+                  then:
+                    - lambda: 'id(has_internet) = (response->status_code == 204);'
+                    - if:
+                        condition:
+                          lambda: 'return id(has_internet);'
+                        then:
+                          - script.execute: run_update_checks
+          else:
+            - logger.log: "Ethernet not ready yet. Skipping connectivity check."
+
+  - id: run_update_checks
+    then:
+      - logger.log: "Internet confirmed. Triggering firmware checks."
+      - if:
+          condition:
+            lambda: 'return id(zb_variant).state.empty() || id(zb_variant).state == "unknown";'
+          then:
+            - cc2652_flasher.detect_variant:
+                id: zigbee_flasher
+            - wait_until:
+                condition:
+                  lambda: 'return !id(zb_variant).state.empty() && id(zb_variant).state != "unknown";'
+                timeout: 10s
+
+      - cc2652_flasher.check_update: { id: zigbee_flasher }
+
   - id: fw_update_mode
     then:
       - switch.turn_on: zBSL
@@ -86,28 +164,96 @@ script:
       - switch.turn_off: zBSL
       - logger.log: "Please try update with cc2538-bsl tool now"
       - logger.log: "cc-bsl usage: cc2538-bsl.py -p socket://ip-of-gw:6638 -evw firmware.hex"
-      
+
+  - id: apply_uart_baud
+    mode: queued
+    parameters:
+      baud_str: string
+    then:
+      - if:
+          condition:
+            lambda: 'return baud_str.empty();'
+          then:
+            - logger.log:
+                format: "apply_uart_baud: empty baud_str; skipping"
+                level: DEBUG
+          else:
+            - stream_server.pause: { id: zb }
+            - delay: 50ms
+            - lambda: |-
+                auto *bus = id(uart_bus_zb);
+                const uint32_t new_baud_rate = strtoul(baud_str.c_str(), nullptr, 10);
+                const uint32_t current_baud = bus->get_baud_rate();
+                ESP_LOGD("apply_uart_baud", "Changing baud rate from %u to %u", current_baud, new_baud_rate);
+                id(zigbee_flasher).set_restore_baud(new_baud_rate);
+                if (current_baud == new_baud_rate) {
+                  ESP_LOGD("apply_uart_baud", "Requested baud already active; skipping reconfig");
+                  return;
+                }
+                // Best-effort drain TX without blocking indefinitely (avoid WDT).
+                #include "driver/uart.h"
+                const uart_port_t uart_num = static_cast<uart_port_t>(bus->get_hw_serial_number());
+                uart_wait_tx_done(uart_num, pdMS_TO_TICKS(50));
+                uart_flush_input(uart_num);
+                App.feed_wdt();
+                bus->set_baud_rate(new_baud_rate);
+                App.feed_wdt();
+                bus->load_settings();
+                App.feed_wdt();
+            - delay: 50ms
+            - stream_server.resume: { id: zb }
+
 switch:
   - platform: gpio
     pin: 5
     id: zRST_gpio
     inverted: yes
     restore_mode: ALWAYS_OFF
-      
+    icon: mdi:toggle-switch-outline
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 50
+
   - platform: gpio
     pin: 16
     name: "Zigbee Module Bootloader Pin"
     id: zBSL
     inverted: yes
     restore_mode: ALWAYS_OFF
+    icon: mdi:toggle-switch-outline
     disabled_by_default: true
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 60
+
+select:
+  - id: change_baud_rate
+    name: Baud rate
+    platform: template
+    options:
+      - "115200"
+      - "230400"
+      - "460800"
+      - "921600"
+    initial_option: "115200"
+    optimistic: true
+    restore_value: True
+    internal: false
+    entity_category: config
+    icon: mdi:swap-horizontal
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 5
+    set_action:
+      - script.execute:
+          id: apply_uart_baud
+          baud_str: !lambda 'return x;'
 
 uart:
   - id: uart_bus_zb
     rx_pin: GPIO36
     tx_pin: GPIO4
     baud_rate: 115200
-  #  rx_buffer_size: 1024
   - id: uart_bus_zw
     rx_pin: GPIO15
     tx_pin: GPIO14
@@ -117,7 +263,6 @@ stream_server:
   - id: zb
     uart_id: uart_bus_zb
     port: 6638 # optional, default is 6638
-  #  buffer_size: 1024
   - id: zw
     uart_id: uart_bus_zw
     port: 6639
@@ -126,11 +271,21 @@ binary_sensor:
   - platform: stream_server
     stream_server: zb
     connected:
-      name: "TubesZB Zigbee Serial Connected"
+      name: "Zigbee Serial Connection Status"
+      device_class: connectivity
+      icon: mdi:serial-port
+      web_server:
+        sorting_group_id: zigbee_info_group
+        sorting_weight: 5
   - platform: stream_server
     stream_server: zw
     connected:
-      name: "TubesZB Z-Wave Serial Connected"
+      name: "Z-Wave Serial Connection Status"
+      device_class: connectivity
+      icon: mdi:serial-port
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 5
 
 mdns:
   services:
@@ -167,15 +322,18 @@ cc2652_flasher:
   latest_fw_version_text: zb_latest_fw
   variant_text: zb_variant
   check_on_boot: false
-  check_interval_days: 7
-  detect_on_boot: true
+  check_interval_days: 0
+  detect_on_boot: false
   detect_on_boot_delay_ms: 0
-
 
 button:
   - platform: template
     name: "Flash CC2652"
     id: flash_cc2652
+    icon: mdi:flash
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 30
     on_press:
       then:
         - cc2652_flasher.update_firmware:
@@ -184,6 +342,10 @@ button:
   - platform: template
     name: "Check CC2652 Update"
     id: check_cc2652_update
+    icon: mdi:cloud-search
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 20
     on_press:
       then:
         - cc2652_flasher.check_update:
@@ -192,6 +354,10 @@ button:
   - platform: template
     name: "Detect CC2652 Variant"
     id: detect_cc2652_variant
+    icon: mdi:magnify-scan
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 10
     on_press:
       then:
         - cc2652_flasher.detect_variant:
@@ -199,11 +365,19 @@ button:
 
   - platform: restart
     name: "Restart the Device"
+    icon: mdi:restart
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 10
 
   - platform: template
     name: "Zigbee Module Reset"
     disabled_by_default: true
     id: zRST
+    icon: mdi:restart-alert
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 40
     on_press:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
@@ -212,33 +386,93 @@ button:
   - platform: template
     name: "Trigger Zigbee Module Bootloader"
     disabled_by_default: true
+    icon: mdi:application-import
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 50
     on_press:
       - script.execute: fw_update_mode
+
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 60
+    on_press:
+      - stream_server.pause: { id: zb }
+
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 70
+    on_press:
+      - stream_server.resume: { id: zb }
 
 text_sensor:
   - platform: template
     name: "Zigbee FW Version"
     id: zb_fw_version
     icon: mdi:chip
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 10
   - platform: template
     name: "Zigbee IEEE"
     id: zb_ieee
     icon: mdi:identifier
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 20
   - platform: template
     name: "Zigbee Latest FW"
     id: zb_latest_fw
     icon: mdi:update
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 30
   - platform: template
     name: "Zigbee Variant"
     id: zb_variant
     icon: mdi:chip
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 40
 
-  - platform: project_version
-    name: "TubesZB Device Firmware Version"
-    internal: true
+  - platform: template
+    name: "TubesZB ESPHome FW Version"
+    id: project_version
+    entity_category: "diagnostic"
+    icon: mdi:information-box
+    update_interval: 24h
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 10
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
 
   - platform: ethernet_info
     ip_address:
       name: ESP IP Address
+      icon: mdi:ip-network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 20
     mac_address:
       name: ESP MAC Address
+      icon: mdi:network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 30
+
+  - platform: template
+    name: "Documentation"
+    update_interval: 24h
+    icon: mdi:file-document-outline
+    lambda: 'return {"https://tubeszb.com/documentation"};'
+    entity_category: "diagnostic"
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 40

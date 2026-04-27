@@ -52,7 +52,7 @@ ethernet:
       - wait_until:
           lambda: |-
             auto addresses = id(ethernet0).get_ip_addresses();
-            return addresses[0] != esphome::network::IPAddress(0,0,0,0);
+            return !addresses.empty() && addresses[0].is_set();
       - logger.log: "IP Assigned. Starting connectivity check..."
       - script.execute: check_connectivity
   
@@ -95,26 +95,16 @@ interval:
             lambda: 'return id(has_internet);'
           then:
             - update.check: esphome_fw_updater
-          else:
-            - logger.log: "Skipping ESPHome FW update check: No Internet."
-
-  - interval: 7d
-    startup_delay: 7d 
-    then:
-      - script.execute: check_connectivity
-      - delay: 5s
-      - if:
-          condition:
-            lambda: 'return id(has_internet);'
-          then:
+            - delay: 1s
             - cc2652_flasher.check_update: { id: zigbee_flasher }
           else:
-            - logger.log: "Skipping Zigbee FW update check: No Internet."
+            - logger.log: "Skipping update checks: No Internet."
 
 web_server:
   port: 80
   version: 3
-  js_url: "https://oi.esphome.io/v3/www.js"
+  js_url: ""
+  js_include: ../www3TZB.js
   sorting_groups:
     - id: zigbee_info_group
       name: "Zigbee Information"
@@ -135,18 +125,13 @@ globals:
     restore_value: no
     initial_value: 'false'
 
-  - id: detected_variant
-    type: std::string
-    restore_value: no
-    initial_value: '""'
-
 script:
   - id: check_connectivity
     then:
       # Only proceed if Ethernet actually has an IP address assigned
       - if:
           condition:
-            lambda: 'return id(ethernet0).is_connected();' # Replace 'eth' with your ethernet ID
+            lambda: 'return id(ethernet0).is_connected();'
           then:
             - http_request.get:
                 url: https://www.google.com/generate_204
@@ -167,11 +152,14 @@ script:
       - logger.log: "Internet confirmed. Triggering firmware checks."
       - if:
           condition:
-            lambda: 'return id(detected_variant) == "";'
+            lambda: 'return id(zb_variant).state.empty() || id(zb_variant).state == "unknown";'
           then:
             - cc2652_flasher.detect_variant:
                 id: zigbee_flasher
-            - lambda: 'id(detected_variant) = id(zb_variant).state;'
+            - wait_until:
+                condition:
+                  lambda: 'return !id(zb_variant).state.empty() && id(zb_variant).state != "unknown";'
+                timeout: 10s
 
       - update.check: esphome_fw_updater
       - delay: 1s
@@ -394,6 +382,7 @@ text_sensor:
 
   - platform: template
     name: "Documentation"
+    update_interval: 24h
     icon: mdi:file-document-outline
     lambda: 'return {"https://tubeszb.com/documentation"};'
     entity_category: "diagnostic"

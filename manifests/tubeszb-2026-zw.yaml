@@ -1,14 +1,9 @@
 esphome:
   name: tubeszb-2026-zw
-  project: 
+  project:
     name: tubezb.zw2026
-    version: "2026.03.28.1"
+    version: "2026.04.25.0"
   min_version: 2026.3.2
-  on_boot:
-    - priority: -10
-      then:
-        - delay: 20s
-        - component.update: fw_updater
 
 esp32:
   board: esp32-poe
@@ -28,15 +23,11 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
-    components: [ stream_server ] 
-  - source: github://tjhorner/esphome-custom-components
-    components: [ project_version ]
-
-#dashboard_import:
-#  package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-zw-kit/tubeszb-zw.yaml
+    components: [stream_server]
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
+  id: ethernet0
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
@@ -45,17 +36,26 @@ ethernet:
     mode: CLK_OUT
   phy_addr: 0
   power_pin: GPIO12
+  on_connect:
+    then:
+      - logger.log: "Ethernet Link Detected. Waiting for IP assignment..."
+      - wait_until:
+          lambda: |-
+            auto addresses = id(ethernet0).get_ip_addresses();
+            return !addresses.empty() && addresses[0].is_set();
+      - logger.log: "IP Assigned. Starting connectivity check..."
+      - script.execute: check_connectivity
 
     # Optional manual IP
   #manual_ip:
   #  static_ip: STATIC_IP
   #  gateway: GATEWAY
-  #  subnet: SUBNET 
+  #  subnet: SUBNET
 
 # Enable logging
 logger:
   level: DEBUG
-  
+
 # Enable Home Assistant API
 api:
   reboot_timeout: 0s
@@ -66,24 +66,103 @@ ota:
   - platform: http_request
 
 http_request:
-  
+
 update:
   - platform: http_request
-    id: fw_updater
+    id: esphome_fw_updater
     name: TubesZB Firmware Update
     source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-2026-zw.json
-    update_interval: 12h
-    
+    update_interval: never
+
+interval:
+  - interval: 7d
+    startup_delay: 7d
+    then:
+      - script.execute: check_connectivity
+      - delay: 5s
+      - if:
+          condition:
+            lambda: 'return id(has_internet);'
+          then:
+            - update.check: esphome_fw_updater
+          else:
+            - logger.log: "Skipping update checks: No Internet."
 
 web_server:
   port: 80
-  version: 2
-  js_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/common/www.js"
+  version: 3
+  js_url: ""
+  js_include: ../www3TZB.js
+  sorting_groups:
+    - id: zwave_info_group
+      name: "Z-Wave Information"
+      sorting_weight: 10
+    - id: info_group
+      name: "Device Information"
+      sorting_weight: 20
+    - id: zwave_control_group
+      name: "Z-Wave Controls"
+      sorting_weight: 30
+    - id: device_control_group
+      name: "Device Controls"
+      sorting_weight: 40
 
+globals:
+  - id: has_internet
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+script:
+  - id: check_connectivity
+    then:
+      - if:
+          condition:
+            lambda: 'return id(ethernet0).is_connected();'
+          then:
+            - http_request.get:
+                url: https://www.google.com/generate_204
+                on_response:
+                  then:
+                    - lambda: 'id(has_internet) = (response->status_code == 204);'
+                    - if:
+                        condition:
+                          lambda: 'return id(has_internet);'
+                        then:
+                          - script.execute: run_update_checks
+          else:
+            - logger.log: "Ethernet not ready yet. Skipping connectivity check."
+
+  - id: run_update_checks
+    then:
+      - logger.log: "Internet confirmed. Triggering firmware checks."
+      - update.check: esphome_fw_updater
 
 button:
   - platform: restart
-    name: "Restart the ESP32 Device"
+    name: "Restart the Device"
+    icon: mdi:restart
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 10
+
+  - platform: template
+    name: "Pause Stream"
+    id: pause_stream
+    web_server:
+      sorting_group_id: zwave_control_group
+      sorting_weight: 10
+    on_press:
+      - stream_server.pause: { id: stream_srv }
+
+  - platform: template
+    name: "Resume Stream"
+    id: resume_stream
+    web_server:
+      sorting_group_id: zwave_control_group
+      sorting_weight: 20
+    on_press:
+      - stream_server.resume: { id: stream_srv }
 
 uart:
   id: uart_bus
@@ -93,15 +172,21 @@ uart:
   rx_buffer_size: 1024
 
 stream_server:
+  id: stream_srv
   buffer_size: 1024
   uart_id: uart_bus
-#  id: ss
   port: 6638 # optional, default is 6638
 
 binary_sensor:
   - platform: stream_server
+    stream_server: stream_srv
     connected:
-      name: "TubesZB ZW Serial Connected"
+      name: "Z-Wave Serial Connection Status"
+      device_class: connectivity
+      icon: mdi:serial-port
+      web_server:
+        sorting_group_id: zwave_info_group
+        sorting_weight: 5
 
 mdns:
   services:
@@ -114,13 +199,38 @@ mdns:
         serial_number: !lambda 'return esphome::get_mac_address();'
 
 text_sensor:
-  - platform: project_version
-    name: "TubesZB Device Firmware Version"
-    internal: true
+  - platform: template
+    name: "TubesZB ESPHome FW Version"
+    id: project_version
+    entity_category: "diagnostic"
+    icon: mdi:information-box
+    update_interval: 24h
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 10
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
 
   - platform: ethernet_info
     ip_address:
       name: ESP IP Address
+      icon: mdi:ip-network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 20
     mac_address:
       name: ESP MAC Address
+      icon: mdi:network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 30
 
+  - platform: template
+    name: "Documentation"
+    update_interval: 24h
+    icon: mdi:file-document-outline
+    lambda: 'return {"https://tubeszb.com/documentation"};'
+    entity_category: "diagnostic"
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 40
