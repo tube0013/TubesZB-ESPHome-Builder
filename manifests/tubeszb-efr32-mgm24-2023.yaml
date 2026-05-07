@@ -477,14 +477,6 @@ binary_sensor:
           id: ss_status
           state: "Running"
 
-sensor:
-  - platform: stream_server
-    connection_count:
-      name: "Connection Count"
-      web_server:
-        sorting_group_id: zigbee_info_group
-        sorting_weight: 10
-
 mdns:
   services:
     - service: "_zigbee-coordinator"
