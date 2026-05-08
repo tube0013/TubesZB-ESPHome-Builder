@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-cc2652p2-ethusb-2022
   project:
     name: tubeszb.cc2652p2-ethusb-2022
-    version: "2026.04.25.0"
+    version: ${project_version}
   min_version: 2026.3.2
   on_boot:
     - priority: 600
@@ -11,139 +11,27 @@ esphome:
         - delay: 15ms
         - switch.turn_off: zRST_gpio
 
-esp32:
-  board: esp-wrover-kit
-  framework:
-    type: esp-idf
-    advanced:
-      include_builtin_idf_components:
-        - esp_http_client
-        - esp_crt_bundle
-    sdkconfig_options:
-      CONFIG_LWIP_MAX_SOCKETS: "16"
-      CONFIG_PM_ENABLE: "n"
-      # Prevent IDF from trying to power-down UART in light sleep, which causes
-      # uart_param_config to return ESP_ERR_NOT_SUPPORTED on some targets
-      CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP: "n"
-      CONFIG_UART_ISR_IN_IRAM: "y"
+packages:
+  version: !include ../common/version.yaml
+  esp_idf: !include
+    file: ../common/esp_idf.yaml
+    vars:
+      board: esp-wrover-kit
+  ethernet: !include ../common/ethernet_wt32.yaml
+  base: !include ../common/base.yaml
+  device_info: !include ../common/device_info.yaml
+  web_server: !include ../common/web_server_zigbee.yaml
+  fw_update: !include
+    file: ../common/fw_update.yaml
+    vars:
+      stable_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json"
+      beta_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json"
 
 external_components:
   - source: github://tube0013/esphome-components
     components: [cc2652_flasher, stream_server]
 
-# dashboard_import:
-#   package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-eth_usb/firmware/esphome/tubezb-cc2652p2-ethusb-2022.yaml
-
-#WT32-ETH01 Ethernet
-ethernet:
-  id: ethernet0
-  type: LAN8720
-  mdc_pin: GPIO23
-  mdio_pin: GPIO18
-  clk:
-    pin: GPIO0
-    mode: CLK_EXT_IN
-  phy_addr: 1
-  power_pin: GPIO16
-  on_connect:
-    then:
-      - logger.log: "Ethernet Link Detected. Waiting for IP assignment..."
-      - wait_until:
-          lambda: |-
-            auto addresses = id(ethernet0).get_ip_addresses();
-            return !addresses.empty() && addresses[0].is_set();
-      - logger.log: "IP Assigned. Starting connectivity check..."
-      - script.execute: check_connectivity
-
-    # Optional manual IP
-  #manual_ip:
-  #  static_ip: STATIC_IP
-  #  gateway: GATEWAY
-  #  subnet: SUBNET
-
-# Enable logging
-logger:
-  level: DEBUG
-
-# Enable Home Assistant API
-api:
-  reboot_timeout: 0s
-
-ota:
-  - platform: esphome
-  - platform: web_server
-  - platform: http_request
-
-http_request:
-
-update:
-  - platform: http_request
-    id: esphome_fw_updater
-    name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json
-    update_interval: never
-
-interval:
-  - interval: 7d
-    startup_delay: 7d
-    then:
-      - script.execute: check_connectivity
-      - delay: 5s
-      - if:
-          condition:
-            lambda: 'return id(has_internet);'
-          then:
-            - update.check: esphome_fw_updater
-            - delay: 1s
-            - cc2652_flasher.check_update: { id: zigbee_flasher }
-          else:
-            - logger.log: "Skipping update checks: No Internet."
-
-web_server:
-  port: 80
-  version: 3
-  js_url: ""
-  js_include: ../www3TZB.js
-  sorting_groups:
-    - id: zigbee_info_group
-      name: "Zigbee Information"
-      sorting_weight: 10
-    - id: info_group
-      name: "Device Information"
-      sorting_weight: 20
-    - id: zigbee_control_group
-      name: "Zigbee Controls"
-      sorting_weight: 30
-    - id: device_control_group
-      name: "Device Controls"
-      sorting_weight: 40
-
-globals:
-  - id: has_internet
-    type: bool
-    restore_value: no
-    initial_value: 'false'
-
 script:
-  - id: check_connectivity
-    then:
-      - if:
-          condition:
-            lambda: 'return id(ethernet0).is_connected();'
-          then:
-            - http_request.get:
-                url: https://www.google.com/generate_204
-                on_response:
-                  then:
-                    - lambda: 'id(has_internet) = (response->status_code == 204);'
-                    - if:
-                        condition:
-                          lambda: 'return id(has_internet);'
-                        then:
-                          - script.execute: run_update_checks
-          else:
-            - logger.log: "Ethernet not ready yet. Skipping connectivity check."
-
   - id: run_update_checks
     then:
       - logger.log: "Internet confirmed. Triggering firmware checks."
@@ -157,7 +45,6 @@ script:
                 condition:
                   lambda: 'return !id(zb_variant).state.empty() && id(zb_variant).state != "unknown";'
                 timeout: 10s
-
       - update.check: esphome_fw_updater
       - delay: 1s
       - cc2652_flasher.check_update: { id: zigbee_flasher }
@@ -174,6 +61,22 @@ script:
       - switch.turn_off: zBSL
       - logger.log: "Please try update with cc2538-bsl tool now"
       - logger.log: "cc-bsl usage: cc2538-bsl.py -p socket://ip-of-gw:6638 -evw firmware.hex"
+
+interval:
+  - interval: 7d
+    startup_delay: 7d
+    then:
+      - script.execute: check_connectivity
+      - delay: 5s
+      - if:
+          condition:
+            lambda: 'return id(has_internet);'
+          then:
+            - update.check: esphome_fw_updater
+            - delay: 1s
+            - cc2652_flasher.check_update: { id: zigbee_flasher }
+          else:
+            - logger.log: "Skipping update checks: No Internet."
 
 switch:
   - platform: gpio
@@ -207,9 +110,8 @@ uart:
 
 stream_server:
   uart_id: uart_bus
-  port: 6638 # optional, default is 6638
+  port: 6638
   buffer_size: 1024
-
 
 binary_sensor:
   - platform: stream_server
@@ -253,7 +155,6 @@ cc2652_flasher:
   detect_on_boot: false
   detect_on_boot_delay_ms: 0
 
-
 button:
   - platform: template
     name: "Flash CC2652"
@@ -263,9 +164,8 @@ button:
       sorting_group_id: zigbee_control_group
       sorting_weight: 30
     on_press:
-      then:
-        - cc2652_flasher.update_firmware:
-            id: zigbee_flasher
+      - cc2652_flasher.update_firmware:
+          id: zigbee_flasher
 
   - platform: template
     name: "Check CC2652 Update"
@@ -275,9 +175,8 @@ button:
       sorting_group_id: zigbee_control_group
       sorting_weight: 20
     on_press:
-      then:
-        - cc2652_flasher.check_update:
-            id: zigbee_flasher
+      - cc2652_flasher.check_update:
+          id: zigbee_flasher
 
   - platform: template
     name: "Detect CC2652 Variant"
@@ -287,9 +186,8 @@ button:
       sorting_group_id: zigbee_control_group
       sorting_weight: 10
     on_press:
-      then:
-        - cc2652_flasher.detect_variant:
-            id: zigbee_flasher
+      - cc2652_flasher.detect_variant:
+          id: zigbee_flasher
 
   - platform: restart
     name: "Restart the Device"
@@ -349,40 +247,4 @@ text_sensor:
     icon: mdi:chip
     web_server:
       sorting_group_id: zigbee_info_group
-      sorting_weight: 40
-
-  - platform: template
-    name: "TubesZB ESPHome FW Version"
-    id: project_version
-    entity_category: "diagnostic"
-    icon: mdi:information-box
-    update_interval: 24h
-    web_server:
-      sorting_group_id: info_group
-      sorting_weight: 10
-    lambda: |-
-      return { ESPHOME_PROJECT_VERSION };
-
-  - platform: ethernet_info
-    ip_address:
-      name: ESP IP Address
-      icon: mdi:ip-network-outline
-      web_server:
-        sorting_group_id: info_group
-        sorting_weight: 20
-    mac_address:
-      name: ESP MAC Address
-      icon: mdi:network-outline
-      web_server:
-        sorting_group_id: info_group
-        sorting_weight: 30
-
-  - platform: template
-    name: "Documentation"
-    update_interval: 24h
-    icon: mdi:file-document-outline
-    lambda: 'return {"https://tubeszb.com/documentation"};'
-    entity_category: "diagnostic"
-    web_server:
-      sorting_group_id: info_group
       sorting_weight: 40

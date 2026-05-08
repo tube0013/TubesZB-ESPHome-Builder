@@ -1,0 +1,36 @@
+text_sensor:
+  - platform: template
+    name: "TubesZB ESPHome FW Version"
+    id: project_version
+    entity_category: "diagnostic"
+    icon: mdi:information-box
+    update_interval: 24h
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 10
+    lambda: |-
+      return { ESPHOME_PROJECT_VERSION };
+
+  - platform: ethernet_info
+    ip_address:
+      name: ESP IP Address
+      icon: mdi:ip-network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 20
+    mac_address:
+      name: ESP MAC Address
+      icon: mdi:network-outline
+      web_server:
+        sorting_group_id: info_group
+        sorting_weight: 30
+
+  - platform: template
+    name: "Documentation"
+    update_interval: 24h
+    icon: mdi:file-document-outline
+    lambda: 'return {"https://tubeszb.com/documentation"};'
+    entity_category: "diagnostic"
+    web_server:
+      sorting_group_id: info_group
+      sorting_weight: 40

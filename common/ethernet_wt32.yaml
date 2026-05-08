@@ -1,0 +1,24 @@
+# WT32-ETH01 — LAN8720, CLK_EXT_IN on GPIO0
+ethernet:
+  id: ethernet0
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    pin: GPIO0
+    mode: CLK_EXT_IN
+  phy_addr: 1
+  power_pin: GPIO16
+  on_connect:
+    then:
+      - logger.log: "Ethernet Link Detected. Waiting for IP assignment..."
+      - wait_until:
+          lambda: |-
+            auto addresses = id(ethernet0).get_ip_addresses();
+            return !addresses.empty() && addresses[0].is_set();
+      - logger.log: "IP Assigned. Starting connectivity check..."
+      - script.execute: check_connectivity
+  #manual_ip:
+  #  static_ip: STATIC_IP
+  #  gateway: GATEWAY
+  #  subnet: SUBNET

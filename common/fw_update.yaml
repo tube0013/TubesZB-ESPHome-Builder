@@ -1,0 +1,39 @@
+update:
+  - platform: http_request
+    id: esphome_fw_updater
+    name: TubesZB Firmware Update
+    source: ${stable_url}
+    update_interval: never
+
+switch:
+  - platform: template
+    name: "Beta Firmware Channel"
+    id: beta_channel_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: id(esphome_fw_updater).set_source_url("${beta_url}");
+      - logger.log:
+          format: "Firmware channel set to BETA — use Check ESP Firmware Update to fetch status"
+          level: INFO
+    turn_off_action:
+      - lambda: id(esphome_fw_updater).set_source_url("${stable_url}");
+      - logger.log:
+          format: "Firmware channel set to STABLE — use Check ESP Firmware Update to fetch status"
+          level: INFO
+
+button:
+  - platform: template
+    name: "Check ESP Firmware Update"
+    id: check_esp_fw
+    icon: mdi:cloud-search-outline
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 75
+    on_press:
+      - component.update: esphome_fw_updater
