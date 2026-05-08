@@ -16,3 +16,4 @@ __pycache__/
 /*.factory.bin
 /*.ota.bin
 /*.bin
+manifests/tubeszb-mgm24-bp.yaml
