@@ -44,26 +44,25 @@ jobs:
       - name: Compile ESPHome Firmware
         id: compile-firmware
         run: |
-          # Compile the firmware using the manifest file
           esphome compile ${{ matrix.manifest }}
 
-          # Extract the device name from the manifest path
           device_name=$(basename ${{ matrix.manifest }} .yaml)
 
-          # Move the compiled binaries to the root and rename them
-          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.factory.bin" "$device_name.factory.bin"
-          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.ota.bin" "$device_name.ota.bin"
+          # Extract version from the YAML project block
+          version=$(python3 -c "import yaml; data=yaml.safe_load(open('${{ matrix.manifest }}')); print(data['esphome']['project']['version'])")
 
-          # Pass the device name to subsequent steps/jobs
+          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.factory.bin" "${device_name}_${version}.factory.bin"
+          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.ota.bin" "${device_name}_${version}.ota.bin"
+
           echo "device_name=$device_name" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
 
-      # Upload the compiled binaries as artifacts to be used in the release job
       - uses: actions/upload-artifact@v4
         with:
           name: firmware-build-${{ steps.compile-firmware.outputs.device_name }}
           path: |
-            ${{ steps.compile-firmware.outputs.device_name }}.factory.bin
-            ${{ steps.compile-firmware.outputs.device_name }}.ota.bin
+            ${{ steps.compile-firmware.outputs.device_name }}_${{ steps.compile-firmware.outputs.version }}.factory.bin
+            ${{ steps.compile-firmware.outputs.device_name }}_${{ steps.compile-firmware.outputs.version }}.ota.bin
           if-no-files-found: error
 
   # This job handles releasing the assets and generating the OTA manifests
@@ -89,12 +88,11 @@ jobs:
         with:
           files: artifacts/*.bin
 
-      - name: Skip gh-pages updates for prereleases
-        if: ${{ github.event.release.prerelease }}
-        run: echo "Release is marked as prerelease; skipping gh-pages sync."
+      # -----------------------------------------------------------------------
+      # STABLE RELEASE path  (prerelease == false)
+      # -----------------------------------------------------------------------
 
-      # --- FIX: Checkout gh-pages into a subdirectory to preserve artifacts ---
-      - name: Checkout gh-pages branch into a subdirectory
+      - name: Checkout gh-pages branch into a subdirectory (stable)
         if: ${{ !github.event.release.prerelease }}
         uses: actions/checkout@v4
         with:
@@ -110,31 +108,29 @@ jobs:
 
       - name: Generate directory listing for Latest_Release
         if: ${{ !github.event.release.prerelease }}
-        uses: jayanta525/github-pages-directory-listing@main
+        uses: jayanta525/github-pages-directory-listing@624ac8c4e56893256d3772f61a88e3b14d54314e # v4.0.0
         with:
           FOLDER: gh-pages/Latest_Release
 
-      - name: Generate OTA Manifests
+      - name: Generate OTA Manifests (stable)
         id: generate-manifests
         if: ${{ !github.event.release.prerelease }}
         run: |
-          # Create the directory for the manifests inside the gh-pages checkout
           mkdir -p gh-pages/ota_manifests
 
           REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
 
-          # Loop through each .ota.bin file in the artifacts directory
           for ota_file in artifacts/*.ota.bin; do
-            device_name=$(basename "$ota_file" .ota.bin)
-            
-            echo "Generating manifest for $device_name..."
+            versioned_name=$(basename "$ota_file" .ota.bin)
+            device_name="${versioned_name%_*}"
+
+            echo "Generating manifest for $device_name (${versioned_name})..."
 
             md5_checksum=$(md5sum "$ota_file" | cut -d' ' -f1)
-            
-            ota_url="https://${REPO_OWNER}.github.io/${REPO_NAME}/Latest_Release/${device_name}.ota.bin"
-            
-            # Use jq to create the JSON manifest file inside the gh-pages checkout
+
+            ota_url="https://${REPO_OWNER}.github.io/${REPO_NAME}/Latest_Release/${versioned_name}.ota.bin"
+
             jq -n \
               --arg name "$device_name" \
               --arg version "${{ github.event.release.tag_name }}" \
@@ -149,12 +145,7 @@ jobs:
                 "builds": [
                   {
                     "chipFamily": $chipFamily,
-                    "parts": [
-                      {
-                        "path": $path,
-                        "offset": 0
-                      }
-                    ],
+                    "parts": [{"path": $path, "offset": 0}],
                     "ota": {
                       "path": $path,
                       "md5": $md5,
@@ -165,22 +156,104 @@ jobs:
                 ]
               }' > "gh-pages/ota_manifests/ota-${device_name}.json"
 
-              echo "Manifest for $device_name created."
+            echo "Manifest for $device_name created."
           done
 
-      - name: Commit and Push Changes to gh-pages
+      - name: Commit and Push Changes to gh-pages (stable)
         if: ${{ !github.event.release.prerelease }}
         run: |
-          # Change directory to the gh-pages checkout
           cd gh-pages
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          # Add both the new firmware and the new manifests to git
           git add -A Latest_Release/ ota_manifests/
           git add -A latest-release/ 2>/dev/null || true
-          # Check if there are any changes to commit
           if ! git diff --staged --quiet; then
-            git commit -m "Update release binaries and OTA manifests for ${{ github.event.release.tag_name }}"
+            git commit -m "Update stable release binaries and OTA manifests for ${{ github.event.release.tag_name }}"
+            git push
+          else
+            echo "No changes to commit in gh-pages."
+          fi
+
+      # -----------------------------------------------------------------------
+      # PRERELEASE / BETA path  (prerelease == true)
+      # -----------------------------------------------------------------------
+
+      - name: Checkout gh-pages branch into a subdirectory (beta)
+        if: ${{ github.event.release.prerelease }}
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copy Assets to Beta_Release folder in gh-pages checkout
+        if: ${{ github.event.release.prerelease }}
+        run: |
+          rm -rf gh-pages/Beta_Release
+          mkdir -p gh-pages/Beta_Release
+          cp artifacts/*.bin gh-pages/Beta_Release/
+
+      - name: Generate directory listing for Beta_Release
+        if: ${{ github.event.release.prerelease }}
+        uses: jayanta525/github-pages-directory-listing@624ac8c4e56893256d3772f61a88e3b14d54314e # v4.0.0
+        with:
+          FOLDER: gh-pages/Beta_Release
+
+      - name: Generate OTA Manifests (beta)
+        id: generate-beta-manifests
+        if: ${{ github.event.release.prerelease }}
+        run: |
+          mkdir -p gh-pages/beta_ota_manifests
+
+          REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+          for ota_file in artifacts/*.ota.bin; do
+            versioned_name=$(basename "$ota_file" .ota.bin)
+            device_name="${versioned_name%_*}"
+
+            echo "Generating beta manifest for $device_name (${versioned_name})..."
+
+            md5_checksum=$(md5sum "$ota_file" | cut -d' ' -f1)
+
+            ota_url="https://${REPO_OWNER}.github.io/${REPO_NAME}/Beta_Release/${versioned_name}.ota.bin"
+
+            jq -n \
+              --arg name "$device_name" \
+              --arg version "${{ github.event.release.tag_name }}" \
+              --arg chipFamily "ESP32" \
+              --arg path "$ota_url" \
+              --arg md5 "$md5_checksum" \
+              --arg release_url "${{ github.event.release.html_url }}" \
+              --arg summary "${{ github.event.release.body }}" \
+              '{
+                "name": $name,
+                "version": $version,
+                "builds": [
+                  {
+                    "chipFamily": $chipFamily,
+                    "parts": [{"path": $path, "offset": 0}],
+                    "ota": {
+                      "path": $path,
+                      "md5": $md5,
+                      "release_url": $release_url,
+                      "summary": $summary
+                    }
+                  }
+                ]
+              }' > "gh-pages/beta_ota_manifests/ota-${device_name}.json"
+
+            echo "Beta manifest for $device_name created."
+          done
+
+      - name: Commit and Push Changes to gh-pages (beta)
+        if: ${{ github.event.release.prerelease }}
+        run: |
+          cd gh-pages
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add -A Beta_Release/ beta_ota_manifests/
+          if ! git diff --staged --quiet; then
+            git commit -m "Update beta release binaries and OTA manifests for ${{ github.event.release.tag_name }}"
             git push
           else
             echo "No changes to commit in gh-pages."
