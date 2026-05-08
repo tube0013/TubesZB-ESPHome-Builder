@@ -1,0 +1,18 @@
+{
+    "name": "tubeszb-dr-cc2652-exp",
+    "version": "v0.0.1",
+    "builds": [
+        {
+            "chipFamily": "ESP32",
+            "ota": {
+                "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dr-cc2652-exp.ota.bin"
+            },
+            "parts": [
+                {
+                    "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dr-cc2652-exp.factory.bin",
+                    "offset": 0
+                }
+            ]
+        }
+    ]
+}
