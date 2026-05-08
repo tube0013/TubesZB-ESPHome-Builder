@@ -1,0 +1,43 @@
+logger:
+  level: DEBUG
+
+api:
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+  - platform: web_server
+
+http_request:
+
+globals:
+  - id: has_internet
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+script:
+  - id: check_connectivity
+    then:
+      - if:
+          condition:
+            lambda: 'return id(ethernet0).is_connected();'
+          then:
+            - http_request.get:
+                url: https://www.google.com/generate_204
+                on_response:
+                  then:
+                    - lambda: 'id(has_internet) = (response->status_code == 204);'
+                    - if:
+                        condition:
+                          lambda: 'return id(has_internet);'
+                        then:
+                          - script.execute: run_update_checks
+          else:
+            - logger.log: "Ethernet not ready yet. Skipping connectivity check."
+
+interval:
+  - interval: 7d
+    startup_delay: 7d
+    then:
+      - script.execute: check_connectivity
