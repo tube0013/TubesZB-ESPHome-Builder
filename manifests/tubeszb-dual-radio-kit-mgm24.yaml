@@ -63,6 +63,11 @@ packages:
     vars:
       stable_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-kit-mgm24.json"
       beta_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-dual-radio-kit-mgm24.json"
+  zigbee_beta: !include
+    file: ../common/zigbee_fw_beta_efr32.yaml
+    vars:
+      zigbee_stable_manifest_url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"
+      zigbee_beta_manifest_url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest_beta.json"
 
 external_components:
   - source: github://tube0013/esphome-components

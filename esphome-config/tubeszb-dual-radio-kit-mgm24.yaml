@@ -63,6 +63,11 @@ packages:
   base: !include ../common/base_static.yaml
   device_info: !include ../common/device_info.yaml
   web_server: !include ../common/web_server_zigbee.yaml
+  zigbee_beta: !include
+    file: ../common/zigbee_fw_beta_efr32.yaml
+    vars:
+      zigbee_stable_manifest_url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"
+      zigbee_beta_manifest_url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest_beta.json"
 
 external_components:
   - source: github://tube0013/esphome-components

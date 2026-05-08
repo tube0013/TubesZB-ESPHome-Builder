@@ -26,6 +26,11 @@ packages:
     vars:
       stable_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json"
       beta_url: "https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json"
+  zigbee_beta: !include
+    file: ../common/zigbee_fw_beta_cc2652.yaml
+    vars:
+      zigbee_stable_manifest_url: "https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json"
+      zigbee_beta_manifest_url: "https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest_beta.json"
 
 external_components:
   - source: github://tube0013/esphome-components
