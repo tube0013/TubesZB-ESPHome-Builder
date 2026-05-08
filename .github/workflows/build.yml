@@ -22,8 +22,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: set-matrix
+        env:
+          MANIFEST_GLOB: ${{ github.event.inputs.manifest_glob }}
         run: |
-          echo "matrix=$(find manifests -type f -name "${{ inputs.manifest_glob || '*' }}.yaml" -print | sort | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          pattern="${MANIFEST_GLOB:-*.yaml}"
+          pattern="${pattern#manifests/}"
+
+          case "$pattern" in
+            *.yaml) ;;
+            *) pattern="${pattern}.yaml" ;;
+          esac
+
+          matrix=$(find manifests -maxdepth 1 -type f -name "$pattern" -print | sort | jq -R -s -c 'split("\n")[:-1]')
+
+          if [ "$matrix" = "[]" ]; then
+            echo "::error::No manifests matched: manifests/$pattern"
+            exit 1
+          fi
+
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   # This job builds the firmware for each device found in the previous job
   build-firmwares:
@@ -44,12 +61,16 @@ jobs:
       - name: Compile ESPHome Firmware
         id: compile-firmware
         run: |
-          esphome compile ${{ matrix.manifest }}
+          esphome compile "${{ matrix.manifest }}"
 
-          device_name=$(basename ${{ matrix.manifest }} .yaml)
+          device_name=$(basename "${{ matrix.manifest }}" .yaml)
 
-          # Extract version from the YAML project block
-          version=$(python3 -c "import yaml; data=yaml.safe_load(open('${{ matrix.manifest }}')); print(data['esphome']['project']['version'])")
+          version=$(sed -n 's/^[[:space:]]*project_version:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' common/version.yaml)
+
+          if [ -z "$version" ]; then
+            echo "::error::Unable to read project_version from common/version.yaml"
+            exit 1
+          fi
 
           mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.factory.bin" "${device_name}_${version}.factory.bin"
           mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.ota.bin" "${device_name}_${version}.ota.bin"

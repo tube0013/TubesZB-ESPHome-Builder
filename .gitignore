@@ -1,4 +1,18 @@
 
 .DS_Store
-/manifests/.esphome
-/esphome-config/.esphome
+
+# Python/local tooling
+.venv/
+__pycache__/
+
+# ESPHome/PlatformIO local build output
+.esphome/
+**/.esphome/
+.pioenvs/
+.piolibdeps/
+.platformio/
+
+# Firmware binaries copied to the repository root during local workflow testing
+/*.factory.bin
+/*.ota.bin
+/*.bin
