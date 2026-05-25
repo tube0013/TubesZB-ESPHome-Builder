@@ -1,7 +1,8 @@
 esphome:
-  name: tubeszb-cc2652p2-ethusb-2022
+  name: tubeszb-cc2652p2-ethusb-2021
+  friendly_name: tubeszb-cc2652p2-ethusb-2021  
   project:
-    name: tubeszb.cc2652p2-ethusb-2022
+    name: tubeszb.cc2652p2-ethusb-2021
     version: "2026.04.25.0"
   min_version: 2026.3.2
   on_boot:
