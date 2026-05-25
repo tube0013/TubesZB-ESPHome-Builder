@@ -234,6 +234,7 @@ cc2652_flasher:
   check_interval_days: 0
   detect_on_boot: false
   detect_on_boot_delay_ms: 0
+  variant: p2
 
 
 button:
