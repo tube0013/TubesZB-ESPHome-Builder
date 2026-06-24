@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-zw-experimental",
-  "version": "2026.06.24_Release",
+  "version": "2026.06.24.1_Release",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-zw-experimental.ota.bin",
-        "md5": "68f32f19aaecb75467cd0251ee47d839",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.06.24_Release",
-        "summary": "Based on 2026.05.07 Pre-Release\r\n\r\n## What's Changed\r\n* Webserver v3 by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/168\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.03.28.1...2026.06.24_Release"
+        "md5": "531ebb1140f264a012811bc2fac64dbc",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.06.24.1_Release",
+        "summary": "Version and naming fixes\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.06.24_Release...2026.06.24.1_Release"
       }
     }
   ]

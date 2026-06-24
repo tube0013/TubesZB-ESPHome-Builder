@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dr-mgm21-22-exp",
-  "version": "2026.06.24_Release",
+  "version": "2026.06.24.1_Release",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dr-mgm21-22-exp.ota.bin",
-        "md5": "a17f9f4a0fdfd746093c9e4cdd70b32b",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.06.24_Release",
-        "summary": "Based on 2026.05.07 Pre-Release\r\n\r\n## What's Changed\r\n* Webserver v3 by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/168\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.03.28.1...2026.06.24_Release"
+        "md5": "6e23eb6b0b105d3cb64f80e2072b32ec",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.06.24.1_Release",
+        "summary": "Version and naming fixes\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.06.24_Release...2026.06.24.1_Release"
       }
     }
   ]
