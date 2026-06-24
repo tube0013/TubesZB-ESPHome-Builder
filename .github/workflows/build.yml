@@ -114,6 +114,18 @@ jobs:
         with:
           FOLDER: gh-pages/Latest_Release
 
+      - name: Stamp Latest_Release index.html with build timestamp
+        if: ${{ !github.event.release.prerelease }}
+        run: |
+          INDEX_FILE="gh-pages/Latest_Release/index.html"
+          BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          # Drop any previous timestamp banner so re-runs don't stack up duplicates
+          sed -i '/id="build-timestamp"/d' "$INDEX_FILE"
+
+          # Insert a fresh banner right after <body> with this run's build date/time
+          sed -i "s#<body>#<body>\n    <div id=\"build-timestamp\" class=\"m-2 lg:m-4 text-sm text-gray-600\">Builds last updated: ${BUILD_DATE} (release ${{ github.event.release.tag_name }})</div>#" "$INDEX_FILE"
+
       - name: Generate OTA Manifests
         id: generate-manifests
         if: ${{ !github.event.release.prerelease }}
