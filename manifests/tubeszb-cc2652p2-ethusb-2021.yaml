@@ -81,7 +81,7 @@ update:
   - platform: http_request
     id: esphome_fw_updater
     name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-ethusb-2021.json
     update_interval: never
 
 interval:
