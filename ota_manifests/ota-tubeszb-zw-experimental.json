@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-zw-experimental",
-  "version": "2026.03.28.1",
+  "version": "2026.06.24_Release",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-zw-experimental.ota.bin",
-        "md5": "a8db9f1de1904a2d66f10dcbcd111858",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.03.28.1",
-        "summary": "## What's Changed\r\n* Revert Baudrate change by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/154\r\n\r\nNote if using Neveric's SiLabs Firmware 8.2.2 update the buadrate in the esphome webfront end to 460800. \r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2025.10.27.2_redo4..2026.03.28.1"
+        "md5": "68f32f19aaecb75467cd0251ee47d839",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.06.24_Release",
+        "summary": "Based on 2026.05.07 Pre-Release\r\n\r\n## What's Changed\r\n* Webserver v3 by @tube0013 in https://github.com/tube0013/TubesZB-ESPHome-Builder/pull/168\r\n\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.03.28.1...2026.06.24_Release"
       }
     }
   ]
