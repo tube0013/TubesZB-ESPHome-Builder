@@ -2,3 +2,4 @@
 .DS_Store
 /manifests/.esphome
 /esphome-config/.esphome
+manifests/tubeszb-mgm24-bp.yaml
