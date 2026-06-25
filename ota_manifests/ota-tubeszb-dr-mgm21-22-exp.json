@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dr-mgm21-22-exp",
-  "version": "2026.06.24.1_Release",
+  "version": "2026.06.24.1",
   "builds": [
     {
       "chipFamily": "ESP32",

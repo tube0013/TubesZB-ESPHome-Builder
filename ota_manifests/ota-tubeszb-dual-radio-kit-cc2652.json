@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dual-radio-kit-cc2652",
-  "version": "2026.06.24.1_Release",
+  "version": "2026.06.24.1",
   "builds": [
     {
       "chipFamily": "ESP32",

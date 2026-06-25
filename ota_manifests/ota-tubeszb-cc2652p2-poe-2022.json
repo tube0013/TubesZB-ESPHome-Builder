@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-cc2652p2-poe-2022",
-  "version": "2026.06.24.1_Release",
+  "version": "2026.06.24.1",
   "builds": [
     {
       "chipFamily": "ESP32",
