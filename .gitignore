@@ -3,5 +3,5 @@
 /manifests/.esphome
 /esphome-config/.esphome
 manifests/tubeszb-mgm24-bp.yaml
-# Personal bench-test scripts stay local; keep the CI validation hook tracked
+# Personal bench-test scripts stay local
 scripts/*
