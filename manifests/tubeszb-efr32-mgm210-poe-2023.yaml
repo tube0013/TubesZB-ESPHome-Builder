@@ -8,7 +8,7 @@ esphome:
     - priority: 150   # restore user-selected baud after core init/reset sequence
       then:
         - lambda: |-
-            const auto &saved = id(change_baud_rate).state;
+            const auto &saved = id(change_baud_rate).current_option();
             if (saved.empty()) {
               ESP_LOGD("apply_uart_baud", "No saved baud rate; skipping restore");
               return;
@@ -16,7 +16,7 @@ esphome:
             ESP_LOGD("apply_uart_baud", "Restoring baud rate from saved state: %s", saved.c_str());
         - script.execute:
             id: apply_uart_baud
-            baud_str: !lambda 'return id(change_baud_rate).state;'
+            baud_str: !lambda 'return id(change_baud_rate).current_option();'
 
 esp32:
   board: esp-wrover-kit
