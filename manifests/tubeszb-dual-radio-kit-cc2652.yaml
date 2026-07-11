@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dual-radio-kit-cc2652
   project:
     name: tubezb.cc2652+zw
-    version: "2026.06.24.1"
+    version: "2026.07.11.0"
   min_version: 2026.3.2
   on_boot:
     - priority: 600
@@ -41,7 +41,7 @@ esp32:
 
 external_components:
   - source: github://tube0013/esphome-components
-    components: [stream_server, cc2652_flasher]
+    components: [cc2652_flasher, stream_server]
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -273,18 +273,19 @@ uart:
     rx_pin: GPIO36
     tx_pin: GPIO4
     baud_rate: 115200
+    rx_buffer_size: 1024
   - id: uart_bus_zw
     rx_pin: GPIO15
     tx_pin: GPIO14
     baud_rate: 115200
 
+zwave_proxy:
+  uart_id: uart_bus_zw
+
 stream_server:
   - id: zb
     uart_id: uart_bus_zb
     port: 6638 # optional, default is 6638
-  - id: zw
-    uart_id: uart_bus_zw
-    port: 6639
 
 binary_sensor:
   - platform: stream_server
@@ -295,15 +296,6 @@ binary_sensor:
       icon: mdi:serial-port
       web_server:
         sorting_group_id: zigbee_info_group
-        sorting_weight: 5
-  - platform: stream_server
-    stream_server: zw
-    connected:
-      name: "Z-Wave Serial Connection Status"
-      device_class: connectivity
-      icon: mdi:serial-port
-      web_server:
-        sorting_group_id: info_group
         sorting_weight: 5
 
 mdns:
@@ -317,8 +309,7 @@ mdns:
         radio_type: "znp"
         serial_number: !lambda 'return esphome::get_mac_address();'
     - service: "_zwave"
-      protocol: "_tcp"
-      port: 6639
+      protocol: "_esphome"
       txt:
         version: 1
         name: "TubesZB"

@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       manifest_glob:
-        description: 'Manifest glob for selective builds'
+        description: 'Manifest glob(s) for selective builds, comma-separated (e.g. *zw*,tubeszb-d*)'
         required: false
   # Triggers the workflow when a new release is published
   release:
@@ -21,9 +21,35 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
+      # Glob resolution order: workflow_dispatch input, then a
+      # "manifest_glob: <patterns>" line in the release body, then all manifests.
+      # Patterns are comma-separated, e.g. "*zw*,tubeszb-d*" for a Z-Wave-only release.
       - id: set-matrix
+        env:
+          INPUT_GLOB: ${{ inputs.manifest_glob }}
+          RELEASE_BODY: ${{ github.event.release.body }}
         run: |
-          echo "matrix=$(find manifests -type f -name "${{ inputs.manifest_glob || '*' }}.yaml" -print | sort | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          GLOBS="$INPUT_GLOB"
+          if [ -z "$GLOBS" ] && [ -n "$RELEASE_BODY" ]; then
+            GLOBS=$(printf '%s\n' "$RELEASE_BODY" | tr -d '\r' | sed -n 's/^manifest_glob:[[:space:]]*//p' | head -n1)
+          fi
+          GLOBS="${GLOBS:-*}"
+
+          FIND_ARGS=()
+          IFS=',' read -ra PATTERNS <<< "$GLOBS"
+          for p in "${PATTERNS[@]}"; do
+            # trim surrounding whitespace
+            p="${p#"${p%%[![:space:]]*}"}"; p="${p%"${p##*[![:space:]]}"}"
+            [ -n "$p" ] && FIND_ARGS+=(-o -name "$p.yaml")
+          done
+          if [ ${#FIND_ARGS[@]} -eq 0 ]; then
+            FIND_ARGS=(-o -name '*.yaml')
+          fi
+
+          echo "Building manifests matching: $GLOBS"
+          matrix=$(find manifests -type f \( "${FIND_ARGS[@]:1}" \) -print | sort | jq -R -s -c 'split("\n")[:-1]')
+          echo "Matrix: $matrix"
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   # This job builds the firmware for each device found in the previous job
   build-firmwares:

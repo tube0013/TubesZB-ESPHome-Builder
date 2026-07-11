@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-zw
   project:
     name: tubezb.zw
-    version: "2026.06.24.1"
+    version: "2026.07.11.0"
   min_version: 2026.3.2
 
 esp32:
@@ -20,10 +20,6 @@ esp32:
       # uart_param_config to return ESP_ERR_NOT_SUPPORTED on some targets
       CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP: "n"
       CONFIG_UART_ISR_IN_IRAM: "y"
-
-external_components:
-  - source: github://tube0013/esphome-components
-    components: [stream_server]
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -94,18 +90,12 @@ web_server:
   js_url: ""
   js_include: ../www3TZB.js
   sorting_groups:
-    - id: zwave_info_group
-      name: "Z-Wave Information"
-      sorting_weight: 10
     - id: info_group
       name: "Device Information"
-      sorting_weight: 20
-    - id: zwave_control_group
-      name: "Z-Wave Controls"
-      sorting_weight: 30
+      sorting_weight: 10
     - id: device_control_group
       name: "Device Controls"
-      sorting_weight: 40
+      sorting_weight: 20
 
 globals:
   - id: has_internet
@@ -146,24 +136,6 @@ button:
       sorting_group_id: device_control_group
       sorting_weight: 10
 
-  - platform: template
-    name: "Pause Stream"
-    id: pause_stream
-    web_server:
-      sorting_group_id: zwave_control_group
-      sorting_weight: 10
-    on_press:
-      - stream_server.pause: { id: stream_srv }
-
-  - platform: template
-    name: "Resume Stream"
-    id: resume_stream
-    web_server:
-      sorting_group_id: zwave_control_group
-      sorting_weight: 20
-    on_press:
-      - stream_server.resume: { id: stream_srv }
-
 uart:
   id: uart_bus
   rx_pin: GPIO16
@@ -171,28 +143,13 @@ uart:
   baud_rate: 115200
   rx_buffer_size: 1024
 
-stream_server:
-  id: stream_srv
-  buffer_size: 1024
+zwave_proxy:
   uart_id: uart_bus
-  port: 6638 # optional, default is 6638
-
-binary_sensor:
-  - platform: stream_server
-    stream_server: stream_srv
-    connected:
-      name: "Z-Wave Serial Connection Status"
-      device_class: connectivity
-      icon: mdi:serial-port
-      web_server:
-        sorting_group_id: zwave_info_group
-        sorting_weight: 5
 
 mdns:
   services:
     - service: "_zwave"
-      protocol: "_tcp"
-      port: 6638
+      protocol: "_esphome"
       txt:
         version: 1
         name: "TubesZB"

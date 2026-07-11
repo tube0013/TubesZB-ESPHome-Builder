@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dr-cc2652-exp
   project:
     name: tubezb.cc2652+zw
-    version: "2026.06.24.1"
+    version: "2026.07.11.0"
   min_version: 2026.3.2
   on_boot:
     - priority: 600
@@ -254,6 +254,7 @@ uart:
     rx_pin: GPIO36
     tx_pin: GPIO4
     baud_rate: 115200
+    rx_buffer_size: 1024
   - id: uart_bus_zw
     rx_pin: GPIO15
     tx_pin: GPIO14

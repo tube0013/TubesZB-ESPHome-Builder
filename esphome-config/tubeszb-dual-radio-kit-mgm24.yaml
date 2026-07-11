@@ -2,7 +2,7 @@ esphome:
   name: tubeszb-dual-radio-kit-mgm24
   project:
     name: tubezb.mgm24+zw
-    version: "2026.06.24.1"
+    version: "2026.07.11.0"
   min_version: 2026.3.2
   on_boot:
     - priority: 900
@@ -69,6 +69,10 @@ external_components:
     components: [stream_server, efr32_flasher, efr32_info]
 
 globals:
+  - id: has_internet
+    type: bool
+    restore_value: no
+    initial_value: 'false'
   - id: boot_probe_done
     type: bool
     restore_value: no
@@ -77,10 +81,6 @@ globals:
     type: std::string
     restore_value: no
     initial_value: '"https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"'
-  - id: has_internet
-    type: bool
-    restore_value: no
-    initial_value: 'false'
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -287,14 +287,15 @@ switch:
     inverted: yes
     restore_mode: ALWAYS_OFF
     disabled_by_default: true
+    icon: mdi:toggle-switch-outline
     web_server:
-      sorting_group_id: zigbee_control_group
+      sorting_group_id: device_control_group
       sorting_weight: 60
 
 button:
   - platform: restart
-    name: "Restart the Gateway"
-    disabled_by_default: true
+    name: "Restart the Device"
+    icon: mdi:restart
     web_server:
       sorting_group_id: device_control_group
       sorting_weight: 10
@@ -321,6 +322,7 @@ button:
     name: "EFR32 Reset"
     id: zRST
     disabled_by_default: true
+    icon: mdi:restart-alert
     web_server:
       sorting_group_id: zigbee_control_group
       sorting_weight: 40
@@ -332,6 +334,7 @@ button:
   - platform: template
     name: "Trigger MGM24 Module Bootloader"
     disabled_by_default: true
+    icon: mdi:application-import
     web_server:
       sorting_group_id: zigbee_control_group
       sorting_weight: 50
@@ -341,6 +344,7 @@ button:
   - platform: template
     name: "Flash EFR32"
     id: flash_efr32
+    icon: mdi:flash
     web_server:
       sorting_group_id: zigbee_control_group
       sorting_weight: 30
@@ -350,6 +354,7 @@ button:
   - platform: template
     name: "Check EFR32 Update"
     id: check_efr32_update
+    icon: mdi:cloud-search
     web_server:
       sorting_group_id: zigbee_control_group
       sorting_weight: 20
@@ -360,6 +365,7 @@ button:
     name: "Probe EZSP Info"
     id: ezsp_replay_identity
     disabled_by_default: true
+    icon: mdi:magnify-scan
     web_server:
       sorting_group_id: zigbee_control_group
       sorting_weight: 10
@@ -401,7 +407,7 @@ text:
     restore_value: false
     web_server:
       sorting_group_id: zigbee_control_group
-      sorting_weight: 3
+      sorting_weight: 60
     set_action:
       - script.execute:
           id: apply_efr32_fw_url
@@ -419,15 +425,14 @@ uart:
     tx_pin: GPIO14
     baud_rate: 115200
 
+zwave_proxy:
+  uart_id: uart_bus_zw
+
 stream_server:
   - id: zb
     uart_id: uart_bus_zb
     port: 6638 # optional, default is 6638
     buffer_size: 8192
-    trace: false
-  - id: zw
-    uart_id: uart_bus_zw
-    port: 6639
     trace: false
 
 binary_sensor:
@@ -440,22 +445,14 @@ binary_sensor:
       web_server:
         sorting_group_id: zigbee_info_group
         sorting_weight: 5
-  - platform: stream_server
-    stream_server: zw
-    connected:
-      name: "Z-Wave Serial Connection Status"
-      device_class: connectivity
-      icon: mdi:serial-port
-      web_server:
-        sorting_group_id: info_group
-        sorting_weight: 5
+
   - platform: template
     id: ncp_busy
     name: NCP Busy
     device_class: running
     web_server:
       sorting_group_id: zigbee_info_group
-      sorting_weight: 15
+      sorting_weight: 50
     on_press:
       - stream_server.pause: { id: zb }
       - text_sensor.template.publish:
@@ -478,12 +475,39 @@ mdns:
         radio_type: "ezsp"
         serial_number: !lambda 'return esphome::get_mac_address();'
     - service: "_zwave"
-      protocol: "_tcp"
-      port: 6639
+      protocol: "_esphome"
       txt:
         version: 1
         name: "TubesZB"
         serial_number: !lambda 'return esphome::get_mac_address();'
+
+efr32_flasher:
+  id: zigbee_efr32
+  uart_id: uart_bus_zb
+  url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"
+  boot_switch: zBSL
+  rst_switch: zRST_gpio
+  # pause_switch intentionally not used; we coordinate via ncp_busy + YAML automations
+  busy_binary_sensor: ncp_busy
+  show_progress: true
+  progress_step: 5
+  variant: auto
+  board_name_text: board_name
+  mfg_string_text: mfg_string
+  latest_fw_version_text: zb_latest_fw
+  bootloader_baud_rate: 115200
+
+efr32_info:
+  id: zigbee_info
+  uart_id: uart_bus_zb
+  stream_server_id: zb
+  busy_binary_sensor: ncp_busy
+  status_text: ezsp_info_status
+  manufacturer_text: mfg_string
+  board_name_text: board_name
+  firmware_text: ezsp_firmware
+  ieee_text: ezsp_ieee
+  raw_capture: true
 
 text_sensor:
   - platform: template
@@ -525,71 +549,55 @@ text_sensor:
   - platform: template
     id: zb_latest_fw
     name: Zigbee Latest FW
-    web_server:
-      sorting_group_id: zigbee_info_group
-      sorting_weight: 50
-  - platform: template
-    id: mfg_string
-    name: Zigbee MFG String
-    web_server:
-      sorting_group_id: zigbee_info_group
-      sorting_weight: 40
-  - platform: template
-    id: board_name
-    name: Zigbee Board Name
+    icon: mdi:update
     web_server:
       sorting_group_id: zigbee_info_group
       sorting_weight: 30
+
   - platform: template
-    id: ss_status
-    name: Serial Server Status
-    web_server:
-      sorting_group_id: zigbee_info_group
-      sorting_weight: 60
-  - platform: template
-    id: ezsp_info_status
-    name: EZSP Info Status
-    web_server:
-      sorting_group_id: zigbee_info_group
-      sorting_weight: 70
-  - platform: template
-    id: ezsp_ieee
-    name: Zigbee IEEE Address
+    id: mfg_string
+    name: Zigbee MFG String
+    icon: mdi:chip
     web_server:
       sorting_group_id: zigbee_info_group
       sorting_weight: 20
+
   - platform: template
-    id: ezsp_firmware
-    name: "Zigbee - Current FW Version"
+    id: board_name
+    name: Zigbee Board Name
+    icon: mdi:chip
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 10
+
+  - platform: template
+    id: ss_status
+    name: Serial Server Status
+    icon: mdi:serial-port
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 40
+
+  - platform: template
+    id: ezsp_info_status
+    name: EZSP Info Status
+    icon: mdi:information
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 45
+
+  - platform: template
+    id: ezsp_ieee
+    name: Zigbee IEEE Address
+    icon: mdi:identifier
     web_server:
       sorting_group_id: zigbee_info_group
       sorting_weight: 25
 
-# EFR32 flasher integration
-efr32_flasher:
-  id: zigbee_efr32
-  uart_id: uart_bus_zb
-  url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"
-  boot_switch: zBSL
-  rst_switch: zRST_gpio
-  # pause_switch intentionally not used; we coordinate via ncp_busy + YAML automations
-  busy_binary_sensor: ncp_busy
-  show_progress: true
-  progress_step: 5
-  variant: auto
-  board_name_text: board_name
-  mfg_string_text: mfg_string
-  latest_fw_version_text: zb_latest_fw
-  bootloader_baud_rate: 115200
-
-efr32_info:
-  id: zigbee_info
-  uart_id: uart_bus_zb
-  stream_server_id: zb
-  busy_binary_sensor: ncp_busy
-  status_text: ezsp_info_status
-  manufacturer_text: mfg_string
-  board_name_text: board_name
-  firmware_text: ezsp_firmware
-  ieee_text: ezsp_ieee
-  raw_capture: true
+  - platform: template
+    id: ezsp_firmware
+    name: "Zigbee - Current FW Version"
+    icon: mdi:chip
+    web_server:
+      sorting_group_id: zigbee_info_group
+      sorting_weight: 15
