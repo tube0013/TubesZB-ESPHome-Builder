@@ -6,7 +6,10 @@ on:
 
 jobs:
   build:
-#   if: contains(github.event.issue.labels.*.name, 'ESPHome')
+    # Only run for issues created from the "ESPHome Static IP Configuration"
+    # form (title is fixed by the template); the form's auto-label has
+    # historically not attached reliably, so gate on title instead.
+    if: startsWith(github.event.issue.title, '[ESPHome] New Configuration Request')
     runs-on: ubuntu-latest
 
     steps:
