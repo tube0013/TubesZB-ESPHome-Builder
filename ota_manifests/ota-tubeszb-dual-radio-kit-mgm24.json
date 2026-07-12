@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-dual-radio-kit-mgm24",
-  "version": "2026.06.24.1",
+  "version": "2026.07.11.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-dual-radio-kit-mgm24.ota.bin",
-        "md5": "38f5e6321d15a8ae01a9e68d83f630ff",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.06.24.1_Release",
-        "summary": "Version and naming fixes\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.06.24_Release...2026.06.24.1_Release"
+        "md5": "a6e57fe931650c19cfd629d6a0cb9316",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.07.11.0",
+        "summary": "## ⚠️ BREAKING CHANGE: Z-Wave connection method has changed — action required after updating.\r\n\r\nThis release moves all devices with a Z-Wave radio from the raw TCP serial stream to the native **ESPHome Z-Wave Proxy**. A recent zwave-js change breaks reconnection over serial-over-TCP streams (https://github.com/zwave-js/zwave-js/pull/8861)  I encountered this when attempting to update firmware on some new devices. \r\n\r\nThe [Z-Wave Proxy component](https://esphome.io/components/zwave_proxy/) has been out since the 2025.10.0 ESPHome Release. I have been using it on a dual radio configuration - alongside a MG24 radio flashed with RCP firmware for my Thread network - with no issues since that release.\r\n\r\n**After installing this update, the Z-Wave TCP serial port is removed** ( on Z-Wave-only devices,  on dual-radio devices). Z-Wave JS will not reconnect until you update its connection settings.\r\n\r\n### What you need to do after updating\r\n\r\n- **Z-Wave JS UI (standalone / Docker):** Settings → Z-Wave → Serial Port — replace  (or  on dual-radio) with the ESPHome connection: .\r\n- **Home Assistant Z-Wave JS add-on:** the device is now advertised as an ESPHome Z-Wave adapter and will be offered via discovery; select it in place of the old TCP path.\r\n\r\n📖 Step-by-step instructions with screenshots: https://tube0013.github.io/tube_gateways/getting-started/z-wave-proxy-update/\r\n\r\n**Zigbee is unaffected** — the Zigbee serial stream on dual-radio devices (port 6638) is unchanged, and no Zigbee2MQTT/ZHA changes are needed.\r\n\r\n### Devices in this release (firmware 2026.07.11.0)\r\n\r\n- tubeszb-zw\r\n- tubeszb-2026-zw\r\n- tubeszb-dual-radio-kit-cc2652\r\n- tubeszb-dual-radio-kit-mgm24\r\n- tubeszb-dual-radio-mgm21-2022\r\n\r\nDevices running  firmware (already on the Z-Wave proxy) receive this update as well; it moves them onto the standard release track, and they will follow regular releases from the next version onward.\r\n\r\n### Other changes\r\n\r\n- Dual-radio cc2652 kit: Zigbee UART  raised to 1024 to match the standalone cc2652 devices.\r\n- Dual-radio mgm24 kit: adopts the boot-probe and UI refinements from the experimental build.\r\n- All other (non-Z-Wave) devices are **not** rebuilt by this release and will not see an update.\r\n\r\n---\r\nmanifest_glob: *zw*,tubeszb-d*\r\n"
       }
     }
   ]
