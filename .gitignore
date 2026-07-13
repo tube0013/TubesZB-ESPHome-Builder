@@ -5,3 +5,4 @@
 manifests/tubeszb-mgm24-bp.yaml
 # Personal bench-test scripts stay local
 scripts/*
+manifests/tubeszb-zigguart.yaml
