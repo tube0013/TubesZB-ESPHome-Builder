@@ -1,0 +1,21 @@
+{
+  "name": "tubeszb-cc2652p2-poe-2021",
+  "version": "2026.06.24.2",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-cc2652p2-poe-2021.ota.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-cc2652p2-poe-2021.ota.bin",
+        "md5": "f85cbce1e7dce2326c21f2f3156935f9",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.06.24.2",
+        "summary": "This release is only to add new configs and has no other changes.\r\n\r\nAdd tubeszb-cc2652p2-poe-2021 configs\r\n\r\n---\r\n\r\nmanifest_glob: tubeszb-cc2652p2-poe-2021"
+      }
+    }
+  ]
+}
