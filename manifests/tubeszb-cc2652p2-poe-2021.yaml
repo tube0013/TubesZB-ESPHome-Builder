@@ -31,9 +31,6 @@ external_components:
   - source: github://tube0013/esphome-components
     components: [cc2652_flasher, stream_server]
 
-# dashboard_import:
-#   package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-poe-2022/firmware/esphome/tubeszb-cc2652-poe-2022.yaml
-
 #Olimex ESP32-PoE Ethernet
 ethernet:
   id: ethernet0
@@ -80,7 +77,7 @@ update:
   - platform: http_request
     id: esphome_fw_updater
     name: TubesZB Firmware Update
-    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-poe-2022.json
+    source: https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-poe-2021.json
     update_interval: never
 
 interval:
