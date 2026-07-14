@@ -15,6 +15,7 @@ body:
       options: 
         - tubeszb-cc2652p2-poe-2023
         - tubeszb-cc2652p7-poe-2023
+        - tubeszb-cc2652p2-poe-2021
         - tubeszb-cc2652p2-poe-2022
         - tubeszb-cc2652p2-ethusb-2023
         - tubeszb-cc2652p2-ethusb-2022
