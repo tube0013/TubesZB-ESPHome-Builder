@@ -55,9 +55,11 @@ jobs:
   build-firmwares:
     name: Firmware builder
     runs-on: ubuntu-latest
-    # Using the official ESPHome container for consistency
+    # Using the official ESPHome container, pinned via the ESPHOME_VERSION repo
+    # variable so every build (and main.yml's static-IP builder) stays in lockstep.
+    # Bump with: gh variable set ESPHOME_VERSION --body <new version>
     container:
-      image: ghcr.io/esphome/esphome
+      image: ghcr.io/esphome/esphome:${{ vars.ESPHOME_VERSION }}
     needs: [list-manifests]
     strategy:
       matrix:

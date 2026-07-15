@@ -22,9 +22,10 @@ jobs:
         python-version: '3.13'
 
     - name: Install ESPHome
+      # Pinned via the ESPHOME_VERSION repo variable so this stays in lockstep
+      # with build.yml. Bump with: gh variable set ESPHOME_VERSION --body <new version>
       run: |
-        python -m pip install setuptools esphome 
-# ==2025.10.5
+        python -m pip install setuptools "esphome==${{ vars.ESPHOME_VERSION }}"
 
     - name: Parse issue form
       id: parse_form

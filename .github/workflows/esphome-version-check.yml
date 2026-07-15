@@ -1,0 +1,68 @@
+name: Check for newer ESPHome release
+
+# Passive nudge only: compares the pinned ESPHOME_VERSION repo variable
+# (used by build.yml and main.yml) against ESPHome's latest stable release,
+# and opens/updates a single tracking issue when a newer one exists.
+# Never bumps the pin or triggers a build itself.
+
+on:
+  schedule:
+    - cron: '0 13 * * 1' # Every Monday 13:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare pinned version to latest ESPHome release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_VERSION: ${{ vars.ESPHOME_VERSION }}
+        run: |
+          if [ -z "$CURRENT_VERSION" ]; then
+            echo "::error::ESPHOME_VERSION repo variable is not set."
+            exit 1
+          fi
+
+          latest_version=$(gh api repos/esphome/esphome/releases/latest --jq .tag_name)
+          latest_url=$(gh api repos/esphome/esphome/releases/latest --jq .html_url)
+
+          echo "Pinned version: $CURRENT_VERSION"
+          echo "Latest stable release: $latest_version"
+
+          issue_title="ESPHome update available: $latest_version"
+          existing=$(gh issue list --repo "${{ github.repository }}" \
+            --label esphome-update --state open \
+            --json number,title --jq '.[0].number' 2>/dev/null || true)
+
+          if [ "$latest_version" == "$CURRENT_VERSION" ]; then
+            echo "Already on the latest stable release."
+            if [ -n "$existing" ]; then
+              gh issue close "$existing" --repo "${{ github.repository }}" \
+                --comment "Pin was updated to $CURRENT_VERSION, which matches the latest stable release. Closing."
+            fi
+            exit 0
+          fi
+
+          body="A newer ESPHome stable release is available.
+
+          - **Pinned version** (\`ESPHOME_VERSION\` repo variable, used by \`build.yml\` and \`main.yml\`): \`$CURRENT_VERSION\`
+          - **Latest stable release:** [\`$latest_version\`]($latest_url)
+
+          This is informational only — nothing was changed automatically. Review the [ESPHome changelog]($latest_url) and, when ready, bump the pin with:
+
+          \`\`\`
+          gh variable set ESPHOME_VERSION --repo ${{ github.repository }} --body $latest_version
+          \`\`\`"
+
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --repo "${{ github.repository }}" --title "$issue_title" --body "$body"
+            echo "Updated existing issue #$existing."
+          else
+            gh issue create --repo "${{ github.repository }}" \
+              --title "$issue_title" --body "$body" --label esphome-update
+            echo "Opened new tracking issue."
+          fi
