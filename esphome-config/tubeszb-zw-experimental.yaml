@@ -34,13 +34,7 @@ ethernet:
   power_pin: GPIO12
   on_connect:
     then:
-      - logger.log: "Ethernet Link Detected. Waiting for IP assignment..."
-      - wait_until:
-          lambda: |-
-            auto addresses = id(ethernet0).get_ip_addresses();
-            return !addresses.empty() && addresses[0].is_set();
-      - logger.log: "IP Assigned. Starting connectivity check..."
-      - script.execute: check_connectivity
+      - script.execute: on_ethernet_connect
 
     # Optional manual IP
   manual_ip:
@@ -89,6 +83,19 @@ globals:
     initial_value: 'false'
 
 script:
+  - id: on_ethernet_connect
+    mode: single
+    then:
+      - logger.log: "Ethernet Link Detected. Waiting for IP assignment..."
+      - wait_until:
+          condition:
+            lambda: |-
+              auto addresses = id(ethernet0).get_ip_addresses();
+              return !addresses.empty() && addresses[0].is_set();
+          timeout: 30s
+      - logger.log: "IP Assigned. Starting connectivity check..."
+      - script.execute: check_connectivity
+
   - id: check_connectivity
     then:
       - if:
