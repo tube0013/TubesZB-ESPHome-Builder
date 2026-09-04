@@ -1,0 +1,21 @@
+{
+  "name": "tubeszb-dr-cc2652-exp",
+  "version": "2026.09.04.0",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Beta_Release/tubeszb-dr-cc2652-exp.ota.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Beta_Release/tubeszb-dr-cc2652-exp.ota.bin",
+        "md5": "a62fe6f7de08db55673459165a1dab1b",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.09.04.0",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.06.24.3...2026.09.04.0"
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "tubeszb-cc2652p2-ethusb-2023",
+  "version": "2026.09.04.0",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Beta_Release/tubeszb-cc2652p2-ethusb-2023.ota.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Beta_Release/tubeszb-cc2652p2-ethusb-2023.ota.bin",
+        "md5": "88aea7039fed149cbe9fcb58537a1abd",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.09.04.0",
+        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.06.24.3...2026.09.04.0"
+      }
+    }
+  ]
+}
