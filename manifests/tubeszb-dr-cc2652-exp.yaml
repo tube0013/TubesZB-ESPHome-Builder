@@ -2,8 +2,10 @@ esphome:
   name: tubeszb-dr-cc2652-exp
   project:
     name: tubezb.cc2652+zw
-    version: "2026.07.11.0"
+    version: "2026.09.04.0"
   min_version: 2026.3.2
+  includes:
+    - <freertos/task.h>
   on_boot:
     - priority: 600
       then:
@@ -78,6 +80,8 @@ ota:
   - platform: http_request
 
 http_request:
+  id: http_request_id
+  watchdog_timeout: 10s
 
 update:
   - platform: http_request
@@ -147,16 +151,32 @@ script:
           condition:
             lambda: 'return id(ethernet0).is_connected();'
           then:
-            - http_request.get:
-                url: https://www.google.com/generate_204
-                on_response:
-                  then:
-                    - lambda: 'id(has_internet) = (response->status_code == 204);'
-                    - if:
-                        condition:
-                          lambda: 'return id(has_internet);'
-                        then:
-                          - script.execute: run_update_checks
+            # The generate_204 probe used to run inline via http_request.get, which blocks
+            # the main loop for its full timeout (~4.5s) whenever there's no internet route
+            # (DNS/connect hangs rather than failing fast). That was surviving the hardware
+            # watchdog (see watchdog_timeout above) but still stalling the loop long enough
+            # to corrupt in-flight API connections (BAD_INDICATOR). Run the probe on a
+            # background FreeRTOS task instead -- that task is never registered with the
+            # ESP-IDF task watchdog, so it can block as long as it needs to without
+            # affecting the main loop at all. Results are handed back via defer(), which
+            # is safe to call from another task and runs on the next loop() iteration.
+            - lambda: |-
+                struct ConnCheckCtx { esphome::http_request::HttpRequestComponent *req; };
+                auto *ctx = new ConnCheckCtx{ id(http_request_id) };
+
+                xTaskCreate([](void *param) {
+                  auto *ctx = static_cast<ConnCheckCtx *>(param);
+                  auto container = ctx->req->get("https://www.google.com/generate_204");
+                  bool ok = container && container->status_code == 204;
+                  if (container) container->end();
+
+                  ctx->req->defer([ok]() {
+                    id(has_internet) = ok;
+                    if (ok) id(run_update_checks)->execute();
+                  });
+                  delete ctx;
+                  vTaskDelete(nullptr);
+                }, "conn_check", 8192, ctx, 1, nullptr);
           else:
             - logger.log: "Ethernet not ready yet. Skipping connectivity check."
 
