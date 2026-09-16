@@ -7,6 +7,9 @@ on:
       manifest_glob:
         description: 'Manifest glob(s) for selective builds, comma-separated (e.g. *zw*,tubeszb-d*)'
         required: false
+      esphome_version:
+        description: 'ESPHome version to build with (blank = pinned ESPHOME_VERSION repo variable)'
+        required: false
   # Triggers the workflow when a new release is published
   release:
     types:
@@ -58,8 +61,13 @@ jobs:
     # Using the official ESPHome container, pinned via the ESPHOME_VERSION repo
     # variable so every build (and main.yml's static-IP builder) stays in lockstep.
     # Bump with: gh variable set ESPHOME_VERSION --body <new version>
+    #
+    # A manual run may override the pin for that run only by setting the
+    # esphome_version input -- useful for smoke-testing a new ESPHome release on
+    # a branch without moving the pin for everyone. Release builds always use
+    # the pin, since the input is empty for anything but workflow_dispatch.
     container:
-      image: ghcr.io/esphome/esphome:${{ vars.ESPHOME_VERSION }}
+      image: ghcr.io/esphome/esphome:${{ github.event.inputs.esphome_version || vars.ESPHOME_VERSION }}
     needs: [list-manifests]
     strategy:
       matrix:
