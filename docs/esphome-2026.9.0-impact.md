@@ -67,7 +67,7 @@ backs up.
 The mgm24 build is the most exposed: `rx_buffer_size: 8192` and stream_server
 `buffer_size: 8192`. The p7 build runs 1024/1024 at 115200.
 
-### Suggested change (not applied — needs bench testing)
+### Applied on this branch (commit 76389a7) — still needs bench testing
 
 **Changed from the earlier pass:** this branch has no `common/` packages, so the
 block goes at top level in each manifest that uses `stream_server`
@@ -79,8 +79,11 @@ network:
   tcp_send_buffer: 16kB   # 16000 bytes; ESP-IDF default is 5744
 ```
 
-Validated against `tubeszb-efr32-mgm24-2023` — config is valid and the option
-coexists with the existing `esp32: framework: advanced: sdkconfig_options`.
+Applied to all 32 files (manifests + esphome-config) that declare
+`stream_server`. Verified with esphome 2026.9.0: all 20 manifests validate, the
+16 changed ones report `tcp_send_buffer: 16000`, and the generated sdkconfig for
+`tubeszb-efr32-mgm24-2023` carries `CONFIG_LWIP_TCP_SND_BUF_DEFAULT=16000`. The
+option coexists with the existing `esp32: framework: advanced: sdkconfig_options`.
 
 Heap cost scales with the value only while a connection has data in flight, and
 these devices carry a single client on one socket, so 16k is a modest ask.
@@ -89,9 +92,13 @@ network-map/backup load, and only go higher if it still appears. There is no
 reason to reach for `enable_high_performance` — that also inflates TCP windows
 and mailboxes.
 
-**Does not apply to `tubeszb-2026-zw`.** That build now uses ESPHome's native
-`zwave_proxy:`, which tunnels frames over the API connection rather than a raw
-TCP listener, so there is no `stream_server` socket to widen.
+**Not applied to the four Z-Wave builds.** `tubeszb-2026-zw`,
+`tubeszb-2026-zw-experimental`, `tubeszb-zw` and `tubeszb-zw-experimental` all
+use ESPHome's native `zwave_proxy:`, which tunnels frames over the API
+connection rather than a raw TCP listener, so there is no `stream_server` socket
+to widen. (The setting is global per-socket, so adding it there would still
+enlarge the API socket's buffer — but at heap cost, for no stream_server
+benefit.)
 
 ## 2. `zwave_proxy` now reports why a subscribe failed
 
@@ -155,7 +162,16 @@ Audited every non-ESPHome include in `tube0013/esphome-components`:
 - `esp_wifi` / `wpa_supplicant` excluded is a straight flash/RAM saving — no
   manifest in this tree declares `wifi:`.
 
-Only a real link would surface a miss here. See "Compile status".
+One thing the audit could **not** settle, and it is the reason a real link still
+matters: the generated `CMakeLists.txt` passes `tcp_transport` in
+`EXCLUDE_COMPONENTS` while keeping `esp_http_client`, whose IDF manifest declares
+`PRIV_REQUIRES tcp_transport http_parser`. ESPHome's own comment on that entry
+says esp_http_client pulls it back, and `http_request` is common enough that
+2026.9.0 would not have shipped otherwise — but `__build_resolve_and_add_req()`
+in IDF 5.5.5 raises a fatal error on an unregistered requirement, so this is
+worth watching for in the first real build. `esp-tls`, `esp_http_client`,
+`esp_crt_bundle`, `esp_driver_uart` and `esp_driver_gpio` are all correctly kept
+out of the exclusion list.
 
 ## 5. Custom eFuse MAC now applies system-wide — check before mass rollout
 
