@@ -66,6 +66,14 @@ ethernet:
   #  gateway: GATEWAY
   #  subnet: SUBNET
 
+# lwIP per-socket TCP send buffer. The ESP-IDF default of 5744 bytes stalls
+# stream_server's writev() during EZSP/ZNP bursts, which backs up the ring
+# buffer and can drop frames ("outgoing buffer is full: stream will be
+# corrupted!"). 16kB widens that window; heap cost applies only while a
+# connection has data in flight.
+network:
+  tcp_send_buffer: 16kB
+
 # Enable logging
 logger:
   level: DEBUG
