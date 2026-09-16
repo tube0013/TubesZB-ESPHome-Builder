@@ -98,13 +98,39 @@ jobs:
         device_yaml="esphome-config/${{ env.device_name }}.yaml"
         esphome compile $device_yaml
 
+    # Same layout change as build.yml: ESPHome 2026.9.0 builds ESP-IDF targets
+    # natively rather than through PlatformIO, so the binaries moved from
+    # <build>/.pioenvs/<device_name>/ to <build>/build/, and the plain
+    # firmware.bin is now named after the device. Collect whatever is there into
+    # a flat folder so the artifact contents stay the same on either layout.
+    - name: Stage firmware artifacts
+      run: |
+        build_root="esphome-config/.esphome/build/${{ env.device_name }}"
+        mkdir -p artifacts
+
+        copy_first() {
+          src=$(find "$build_root" -type f -name "$1" -print -quit)
+          if [ -n "$src" ]; then cp "$src" "artifacts/$2"; fi
+          return 0
+        }
+
+        copy_first firmware.factory.bin firmware.factory.bin
+        copy_first firmware.ota.bin firmware.ota.bin
+        copy_first firmware.bin firmware.bin
+        [ -f artifacts/firmware.bin ] || copy_first "${{ env.device_name }}.bin" firmware.bin
+
+        if [ -z "$(ls -A artifacts)" ]; then
+          echo "::error::No firmware binaries found under $build_root"
+          find "$build_root" -type f -name '*.bin' -print
+          exit 1
+        fi
+        ls -l artifacts
+
     - name: Upload Firmware
       uses: actions/upload-artifact@v4
       with:
         name: firmware-${{ env.device_name }}-${{ github.run_id }}
-        path: |
-          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.factory.bin
-          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.bin
+        path: artifacts
 
     - name: Create comment with firmware link
       uses: actions/github-script@v6
