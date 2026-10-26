@@ -337,3 +337,40 @@ esphome compile manifests/tubeszb-2026-zw.yaml
 
 Or dispatch the existing workflow, which uses the pinned container:
 `gh workflow run build.yml -f manifest_glob='tubeszb-efr32-mgm24-2023.yaml'`
+
+
+## 2026.10.25.1 pre-release preparation (2026-10-26)
+
+The `2026.10.25.1` branch retains the tested background connectivity check,
+Ethernet connection debounce, 16 kB TCP send buffer, device-name correction,
+manual ESPHome version override, and native-IDF/PlatformIO artifact discovery.
+All 20 factory manifests and 20 static-IP templates declare project version
+`2026.10.25.1`; the build pin remains the existing `ESPHOME_VERSION` repository
+variable (2026.10.0 at validation time).
+
+The beta-channel features were ported from `beta_channel_switch` inline. The
+shared `common/` package architecture is intentionally deferred. Factory images
+have an independently restored ESPHome stable/beta channel and an explicit
+Check ESP Firmware Update button. CC2652 and MGM24 configs with a radio flasher
+also have an independently restored Zigbee stable/beta channel. MGM21 configs
+that have only a stream server do not gain a nonfunctional radio control.
+EFR32 custom firmware URLs retain priority over the selected channel, including
+after reboot. Static-IP templates retain their existing ESPHome OTA policy;
+they do not offer factory images which would overwrite their network settings.
+Channel switches select update sources; they do not flash firmware automatically.
+
+All 40 configurations passed `esphome config` using ESPHome 2026.10.0. Static-IP
+validation used temporary copies with documentation-only 192.0.2.x addresses;
+source placeholders remain intact. Full ESPHome 2026.10.0 / ESP-IDF builds
+passed for `tubeszb-dual-radio-kit-mgm24` (Olimex/MGM24) and
+`tubeszb-cc2652p2-ethusb-2021` (WT32/CC2652). Hardware behavior of the new
+switches still needs testing. Both switches default to stable and retain their
+selection across restarts.
+
+Before publishing: `misc/manifest_beta.json` in `tube0013/tube_gateways` is not
+present (404), so the planned CC2652 beta feed must be populated. The existing
+`misc/efr32manifest_beta.json` still serves 8.2.2.0, rather than the newer SDK
+builds prepared in the firmware-builder repository. These feeds have not been
+changed here. There is already a tag named `2026.10.25.1` pointing at the old
+main commit; no GitHub release exists for it at review time. That tag was left
+untouched and must be addressed explicitly before publishing the new source.

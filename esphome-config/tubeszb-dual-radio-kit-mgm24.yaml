@@ -49,6 +49,13 @@ esphome:
         - script.execute:
             id: apply_efr32_fw_url
             url_str: !lambda 'return id(efr32_custom_fw_url).state;'
+    - priority: 145
+      then:
+        - if:
+            condition:
+              switch.is_on: zigbee_fw_beta_switch
+            then:
+              - lambda: 'id(efr32_manifest_url_default) = "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest_beta.json";'
 
 esp32:
   board: esp32-poe
@@ -305,6 +312,29 @@ script:
                 ESP_LOGD("efr32_custom_url", "Custom URL set: %s", url_str.c_str());
 
 switch:
+  - platform: template
+    name: "Beta Zigbee Firmware Channel"
+    id: zigbee_fw_beta_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(efr32_manifest_url_default) = "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest_beta.json";'
+      - script.execute:
+          id: apply_efr32_fw_url
+          url_str: !lambda 'return id(efr32_custom_fw_url).state;'
+      - logger.log: "Zigbee firmware channel: BETA"
+    turn_off_action:
+      - lambda: 'id(efr32_manifest_url_default) = "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json";'
+      - script.execute:
+          id: apply_efr32_fw_url
+          url_str: !lambda 'return id(efr32_custom_fw_url).state;'
+      - logger.log: "Zigbee firmware channel: STABLE"
+
   - platform: gpio
     pin: 5
     id: zRST_gpio

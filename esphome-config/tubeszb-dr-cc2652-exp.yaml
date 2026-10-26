@@ -24,6 +24,13 @@ esphome:
         - script.execute:
             id: apply_uart_baud
             baud_str: !lambda 'return id(change_baud_rate).current_option();'
+    - priority: 100
+      then:
+        - if:
+            condition:
+              switch.is_on: zigbee_fw_beta_switch
+            then:
+              - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest_beta.json");'
 
 esp32:
   board: esp32-poe
@@ -239,6 +246,23 @@ script:
             - stream_server.resume: { id: zb }
 
 switch:
+  - platform: template
+    name: "Beta Zigbee Firmware Channel"
+    id: zigbee_fw_beta_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest_beta.json");'
+      - logger.log: "Zigbee firmware channel: BETA"
+    turn_off_action:
+      - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json");'
+      - logger.log: "Zigbee firmware channel: STABLE"
+
   - platform: gpio
     pin: 5
     id: zRST_gpio

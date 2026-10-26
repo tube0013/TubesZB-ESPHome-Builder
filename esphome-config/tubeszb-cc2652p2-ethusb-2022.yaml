@@ -12,6 +12,13 @@ esphome:
         - switch.turn_on: zRST_gpio
         - delay: 15ms
         - switch.turn_off: zRST_gpio
+    - priority: 100
+      then:
+        - if:
+            condition:
+              switch.is_on: zigbee_fw_beta_switch
+            then:
+              - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest_beta.json");'
 
 esp32:
   board: esp-wrover-kit
@@ -192,6 +199,23 @@ script:
       - logger.log: "cc-bsl usage: cc2538-bsl.py -p socket://ip-of-gw:6638 -evw firmware.hex"
 
 switch:
+  - platform: template
+    name: "Beta Zigbee Firmware Channel"
+    id: zigbee_fw_beta_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest_beta.json");'
+      - logger.log: "Zigbee firmware channel: BETA"
+    turn_off_action:
+      - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json");'
+      - logger.log: "Zigbee firmware channel: STABLE"
+
   - platform: gpio
     pin: 33
     id: zRST_gpio

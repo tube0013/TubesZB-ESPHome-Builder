@@ -19,6 +19,13 @@ esphome:
         - script.execute:
             id: apply_uart_baud
             baud_str: !lambda 'return id(change_baud_rate).current_option();'
+    - priority: 145
+      then:
+        - if:
+            condition:
+              switch.is_on: beta_channel_switch
+            then:
+              - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-efr32-mgm210-poe-2023.json");'
 
 esp32:
   board: esp-wrover-kit
@@ -224,6 +231,23 @@ script:
             - stream_server.resume: { id: stream_srv }
 
 switch:
+  - platform: template
+    name: "Beta Firmware Channel"
+    id: beta_channel_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-efr32-mgm210-poe-2023.json");'
+      - logger.log: "ESP firmware channel: BETA; use Check ESP Firmware Update to check"
+    turn_off_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-efr32-mgm210-poe-2023.json");'
+      - logger.log: "ESP firmware channel: STABLE; use Check ESP Firmware Update to check"
+
   - platform: gpio
     pin: 5
     id: zRST_gpio
@@ -246,6 +270,16 @@ switch:
       sorting_weight: 60
 
 button:
+  - platform: template
+    name: "Check ESP Firmware Update"
+    id: check_esp_fw
+    icon: mdi:cloud-search-outline
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 75
+    on_press:
+      - component.update: esphome_fw_updater
+
   - platform: restart
     name: "Restart the Gateway"
     disabled_by_default: true
