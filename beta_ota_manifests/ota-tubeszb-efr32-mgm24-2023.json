@@ -1,6 +1,6 @@
 {
   "name": "tubeszb-efr32-mgm24-2023",
-  "version": "2026.09.04.0",
+  "version": "2026.10.25.0",
   "builds": [
     {
       "chipFamily": "ESP32",
@@ -12,9 +12,9 @@
       ],
       "ota": {
         "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Beta_Release/tubeszb-efr32-mgm24-2023.ota.bin",
-        "md5": "92cd9259c65f247b0561e02f6dbf4c67",
-        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.09.04.0",
-        "summary": "**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.06.24.3...2026.09.04.0"
+        "md5": "aff55dc0f6b52e27d2eb486e029d7248",
+        "release_url": "https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.10.25.0",
+        "summary": "## What's Changed\r\n\r\n**Full Changelog**: https://github.com/tube0013/TubesZB-ESPHome-Builder/compare/2026.06.24.3...2026.10.25.0"
       }
     }
   ]
