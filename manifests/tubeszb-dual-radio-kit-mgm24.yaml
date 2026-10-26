@@ -62,7 +62,7 @@ esphome:
             condition:
               switch.is_on: zigbee_fw_beta_switch
             then:
-              - lambda: 'id(efr32_manifest_url_default) = "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest_beta.json";'
+              - lambda: 'id(efr32_manifest_url_default) = "https://tube0013.github.io/tube_gateways/firmware/efr32manifest_beta.json";'
 
 esp32:
   board: esp32-poe
@@ -96,7 +96,7 @@ globals:
   - id: efr32_manifest_url_default
     type: std::string
     restore_value: no
-    initial_value: '"https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"'
+    initial_value: '"https://tube0013.github.io/tube_gateways/firmware/efr32manifest.json"'
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -358,13 +358,13 @@ switch:
       sorting_group_id: zigbee_control_group
       sorting_weight: 70
     turn_on_action:
-      - lambda: 'id(efr32_manifest_url_default) = "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest_beta.json";'
+      - lambda: 'id(efr32_manifest_url_default) = "https://tube0013.github.io/tube_gateways/firmware/efr32manifest_beta.json";'
       - script.execute:
           id: apply_efr32_fw_url
           url_str: !lambda 'return id(efr32_custom_fw_url).state;'
       - logger.log: "Zigbee firmware channel: BETA"
     turn_off_action:
-      - lambda: 'id(efr32_manifest_url_default) = "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json";'
+      - lambda: 'id(efr32_manifest_url_default) = "https://tube0013.github.io/tube_gateways/firmware/efr32manifest.json";'
       - script.execute:
           id: apply_efr32_fw_url
           url_str: !lambda 'return id(efr32_custom_fw_url).state;'
@@ -611,7 +611,7 @@ mdns:
 efr32_flasher:
   id: zigbee_efr32
   uart_id: uart_bus_zb
-  url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"
+  url: "https://tube0013.github.io/tube_gateways/firmware/efr32manifest.json"
   boot_switch: zBSL
   rst_switch: zRST_gpio
   # pause_switch intentionally not used; we coordinate via ncp_busy + YAML automations

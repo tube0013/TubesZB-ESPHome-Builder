@@ -374,3 +374,36 @@ builds prepared in the firmware-builder repository. These feeds have not been
 changed here. There is already a tag named `2026.10.25.1` pointing at the old
 main commit; no GitHub release exists for it at review time. That tag was left
 untouched and must be addressed explicitly before publishing the new source.
+
+
+### Zigbee update-feed relocation (2026-10-26)
+
+The pre-release configurations now use GitHub Pages feeds under
+`https://tube0013.github.io/tube_gateways/firmware/`:
+
+- CC2652 stable: `cc2652manifest.json`
+- CC2652 beta: `cc2652manifest-beta.json` (hyphen)
+- EFR32 stable: `efr32manifest.json`
+- EFR32 beta: `efr32manifest_beta.json` (underscore, existing filename)
+
+This replaces default, boot-restored, and switch-selected radio-feed URLs in
+both factory manifests and static-IP templates. ESPHome OTA feed URLs and
+custom radio URL overrides are unchanged. Existing deployed devices may
+continue using the old `misc` URLs; those feeds have not been edited.
+
+With no active Z-Stack beta, make the CC2652 beta manifest identical to stable,
+including version, variant URLs, MD5 values, and sizes. Do not invent a newer
+version for the same binaries. The local beta placeholder was empty and named
+`cc2652manifest_beta.json` when reviewed; it must be populated and use the
+hyphenated filename above before deployment.
+
+The documentation repository uses MkDocs Material. GitHub Pages publishes the
+root of its `gh-pages` branch, not `main/docs` directly. From the `tube_gateways`
+repository, commit/push the source changes, then run `mkdocs gh-deploy` (or
+`uvx --with mkdocs-material mkdocs gh-deploy`) to build `docs` and publish to
+`gh-pages`. That deployment step has not been run as part of changing configs.
+
+After relocation, all 40 configurations again passed ESPHome 2026.10.0
+validation. A temporary MkDocs build confirmed `/firmware/` routing, and all
+six existing firmware entries across the populated CC2652/EFR32 manifests
+matched their local binary MD5 values and sizes. No Pages deployment was run.

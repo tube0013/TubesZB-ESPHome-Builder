@@ -18,7 +18,7 @@ esphome:
             condition:
               switch.is_on: zigbee_fw_beta_switch
             then:
-              - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest_beta.json");'
+              - lambda: 'id(zigbee_flasher).set_update_url("https://tube0013.github.io/tube_gateways/firmware/cc2652manifest-beta.json");'
 
 esp32:
   board: esp32-poe
@@ -213,10 +213,10 @@ switch:
       sorting_group_id: zigbee_control_group
       sorting_weight: 70
     turn_on_action:
-      - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest_beta.json");'
+      - lambda: 'id(zigbee_flasher).set_update_url("https://tube0013.github.io/tube_gateways/firmware/cc2652manifest-beta.json");'
       - logger.log: "Zigbee firmware channel: BETA"
     turn_off_action:
-      - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json");'
+      - lambda: 'id(zigbee_flasher).set_update_url("https://tube0013.github.io/tube_gateways/firmware/cc2652manifest.json");'
       - logger.log: "Zigbee firmware channel: STABLE"
 
   - platform: gpio
@@ -278,7 +278,7 @@ mdns:
 cc2652_flasher:
   id: zigbee_flasher
   uart_id: uart_bus
-  url: "https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json"
+  url: "https://tube0013.github.io/tube_gateways/firmware/cc2652manifest.json"
   bsl_switch: zBSL
   rst_switch: zRST_gpio
   boot_baud_rate: 500000
