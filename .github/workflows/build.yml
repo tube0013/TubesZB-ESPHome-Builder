@@ -86,9 +86,26 @@ jobs:
           # Extract the device name from the manifest path
           device_name=$(basename ${{ matrix.manifest }} .yaml)
 
-          # Move the compiled binaries to the root and rename them
-          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.factory.bin" "$device_name.factory.bin"
-          mv "manifests/.esphome/build/$device_name/.pioenvs/$device_name/firmware.ota.bin" "$device_name.ota.bin"
+          # Move the compiled binaries to the root and rename them.
+          #
+          # ESPHome 2026.9.0 builds ESP-IDF targets with its own native toolchain
+          # instead of PlatformIO, so the binaries now land in
+          #   manifests/.esphome/build/$device_name/build/
+          # rather than
+          #   manifests/.esphome/build/$device_name/.pioenvs/$device_name/
+          # Searching the build tree keeps this working on either layout, so the
+          # job survives a rollback of the ESPHOME_VERSION pin.
+          build_root="manifests/.esphome/build/$device_name"
+
+          for kind in factory ota; do
+            src=$(find "$build_root" -type f -name "firmware.$kind.bin" -print -quit)
+            if [ -z "$src" ]; then
+              echo "::error::Could not find firmware.$kind.bin under $build_root"
+              find "$build_root" -type f -name '*.bin' -print
+              exit 1
+            fi
+            mv "$src" "$device_name.$kind.bin"
+          done
 
           # Pass the device name to subsequent steps/jobs
           echo "device_name=$device_name" >> $GITHUB_OUTPUT
