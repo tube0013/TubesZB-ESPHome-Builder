@@ -22,8 +22,9 @@ jobs:
         python-version: '3.13'
 
     - name: Install ESPHome
-      # Pinned via the ESPHOME_VERSION repo variable so this stays in lockstep
-      # with build.yml. Bump with: gh variable set ESPHOME_VERSION --body <new version>
+      # Static-IP builds always use the stable pin, as do stable releases in
+      # build.yml. Prerelease builds have a separate ESPHOME_PRERELEASE_VERSION pin.
+      # Bump with: gh variable set ESPHOME_VERSION --body <new version>
       run: |
         python -m pip install setuptools "esphome==${{ vars.ESPHOME_VERSION }}"
 
@@ -98,36 +99,60 @@ jobs:
         device_yaml="esphome-config/${{ env.device_name }}.yaml"
         esphome compile $device_yaml
 
+    # Same layout change as build.yml: ESPHome 2026.9.0 builds ESP-IDF targets
+    # natively rather than through PlatformIO, so the binaries moved from
+    # <build>/.pioenvs/<device_name>/ to <build>/build/, and the plain
+    # firmware.bin is now named after the device. Stage factory and OTA images
+    # in a flat folder, retaining firmware.bin when available for compatibility.
+    - name: Stage firmware artifacts
+      run: |
+        build_root="esphome-config/.esphome/build/${{ env.device_name }}"
+        mkdir -p artifacts
+
+        copy_first() {
+          src=$(find "$build_root" -type f -name "$1" -print -quit)
+          if [ -n "$src" ]; then cp "$src" "artifacts/$2"; fi
+          return 0
+        }
+
+        # Both supported flashing methods must be present in the download.
+        for kind in factory ota; do
+          src=$(find "$build_root" -type f -name "firmware.$kind.bin" -print -quit)
+          if [ -z "$src" ]; then
+            echo "::error::Could not find firmware.$kind.bin under $build_root"
+            find "$build_root" -type f -name '*.bin' -print
+            exit 1
+          fi
+          cp "$src" "artifacts/firmware.$kind.bin"
+        done
+
+        copy_first firmware.bin firmware.bin
+        [ -f artifacts/firmware.bin ] || copy_first "${{ env.device_name }}.bin" firmware.bin
+
+        ls -l artifacts
+
     - name: Upload Firmware
+      id: upload_firmware
       uses: actions/upload-artifact@v4
       with:
         name: firmware-${{ env.device_name }}-${{ github.run_id }}
-        path: |
-          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.factory.bin
-          esphome-config/.esphome/build/${{ env.device_name }}/.pioenvs/${{ env.device_name }}/firmware.bin
+        path: artifacts
+        if-no-files-found: error
 
     - name: Create comment with firmware link
       uses: actions/github-script@v6
+      env:
+        FIRMWARE_ARTIFACT_URL: ${{ steps.upload_firmware.outputs.artifact-url }}
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const issue_number = ${{ github.event.issue.number }};
-          const artifact_name = 'firmware-${{ env.device_name }}-${{ github.run_id }}';
-          
-          const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            run_id: ${{ github.run_id }},
-          });
-
-          const artifact = artifacts.data.artifacts.find(art => art.name === artifact_name);
-
-          if (!artifact) {
-            throw new Error(`Artifact with name ${artifact_name} not found.`);
+          // Use the URL returned by the upload instead of looking it up again.
+          const firmwareArtifactUrl = process.env.FIRMWARE_ARTIFACT_URL;
+          if (!firmwareArtifactUrl) {
+            throw new Error('Firmware upload did not return an artifact URL.');
           }
-          
-          const firmwareArtifactUrl = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}/artifacts/${artifact.id}`;
-          
+
           const commentBody = `
           ## Firmware Build Complete
 
