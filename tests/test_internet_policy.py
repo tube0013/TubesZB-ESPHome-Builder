@@ -1,3 +1,4 @@
+from component_paths import COMPONENTS_ROOT
 from pathlib import Path
 import subprocess
 import yaml
@@ -6,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_policy_restore_and_commit(tmp_path):
     exe = tmp_path / 'internet-policy'
-    subprocess.run(['c++', '-std=c++17', '-Wall', '-Wextra', '-Werror', '-I', str(ROOT),
+    subprocess.run(['c++', '-std=c++17', '-Wall', '-Wextra', '-Werror', '-I', str(COMPONENTS_ROOT.parent),
                     str(ROOT / 'tests/internet_policy_test.cpp'), '-o', str(exe)], check=True)
     subprocess.run([str(exe)], check=True)
 
@@ -49,11 +50,11 @@ def test_every_manifest_gates_online_actions():
     assert len(checked) >= 22
     # Shared CC flash script gates before pausing or queuing a manifest request.
     assert 'internet_allowed() && id(cc2652_flash_session).begin' in (ROOT/'packages/cc2652-flash.yaml').read_text()
-    source = (ROOT/'components/network_settings/network_settings.cpp').read_text()
+    source = (COMPONENTS_ROOT / 'network_settings/network_settings.cpp').read_text()
     assert 'nvs_get_u8(handle, "offline_v1"' in source
     assert 'nvs_commit(handle)' in source
     assert 'update_->set_request_parent(&guarded_http_)' in source
-    assert 'setup_priority::ETHERNET + 1.0f' in (ROOT/'components/network_settings/network_settings.h').read_text()
+    assert 'setup_priority::ETHERNET + 1.0f' in (COMPONENTS_ROOT / 'network_settings/network_settings.h').read_text()
 
 
 def test_native_manifest_transport_cannot_bypass_policy(tmp_path):
@@ -111,7 +112,7 @@ int main() {
 ''')
     exe = tmp_path/'transport'
     subprocess.run(['c++', '-std=c++17', '-Wall', '-Wextra', '-Werror', '-I', str(include),
-                    '-I', str(ROOT), str(source), '-o', str(exe)], check=True)
+                    '-I', str(COMPONENTS_ROOT.parent), str(source), '-o', str(exe)], check=True)
     subprocess.run([str(exe)], check=True)
 
 
@@ -145,5 +146,5 @@ def test_cc2652_startup_identity_is_local_and_unconditional():
         assert 'request_cc2652_probe' not in str(updates)
         checked.append(path.name)
     assert len(checked) == 9
-    frontend = (ROOT/'components/tubeszb_web/cc2652_support.cpp').read_text()
+    frontend = (COMPONENTS_ROOT / 'tubeszb_web/cc2652_support.cpp').read_text()
     assert 'cc_boot_probe_script_->is_running()' in frontend

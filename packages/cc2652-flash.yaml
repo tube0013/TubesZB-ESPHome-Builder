@@ -1,10 +1,9 @@
 # Every CC2652 model includes this package. The stream ID is the Zigbee bridge,
 # so dual-radio devices leave the Z-Wave path alone.
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [cc2652_flash_guard]
+    refresh: 2min
 
 cc2652_flash_guard: {}
 

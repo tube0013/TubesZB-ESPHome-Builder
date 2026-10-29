@@ -65,13 +65,14 @@ be reachable by deployed devices; no release was published by this change.
 
 ## Component source
 
-The patched `cc2652_flasher` and `efr32_flasher` components are bundled locally,
-alongside the shared `zigbee_firmware_baud` helper, for reproducible builds.
-Their baseline is `tube0013/esphome-components` commit
-`0e35b4afe1ad12b17418626d3bd75b7bcad52de6`. Existing licenses are retained.
-Upstream stream-server and identity-reader dependencies remain separate. The
-user's separate `esphome-components` checkout and its uncommitted work are not
-modified.
+All custom component code and frontend assets live in
+[tube0013/esphome-components](https://github.com/tube0013/esphome-components/pull/7).
+The builder YAMLs use a GitHub source with the shared `tubeszb_components_ref`
+substitution in `packages/network-settings.yaml`. It currently selects
+`refs/pull/7/head`; change the default to `main` after the component PR merges.
+No component source directory or local component paths are needed in the builder.
+CI checks out that same external reference for host/browser tests; local tests
+can use `TZB_COMPONENTS_ROOT` or the source cache populated by manifest validation.
 
 Tests cover JSON types and selected-image precedence, preference restore and
 selector migration, persistence errors, actual firmware builds, and frontend baud

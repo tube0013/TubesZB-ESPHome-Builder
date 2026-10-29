@@ -57,8 +57,9 @@ never appears, it closes the image connection, restores application UART/reset
 state, reports failure and releases its serial ownership without programming.
 
 `efr32_flasher` keeps the existing GPIO path as the default. Its new code is
-bundled locally with this builder; the separate user-owned esphome-components
-checkout and its uncommitted work are unchanged.
+maintained in [esphome-components PR #7](https://github.com/tube0013/esphome-components/pull/7)
+and imported from GitHub through the shared `tubeszb_components_ref`. The separate
+user-owned component checkout and its uncommitted work are unchanged.
 
 ## Shared controls and radio separation
 

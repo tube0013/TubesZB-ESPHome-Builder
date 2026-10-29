@@ -1,4 +1,6 @@
 """Verify the actual page assembly, branding, and offline asset packaging."""
+from component_paths import COMPONENTS_ROOT
+
 
 import gzip
 import importlib.util
@@ -9,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_embedded_frontend_assets():
-    spec = importlib.util.spec_from_file_location("tubeszb_assets", ROOT / "components/tubeszb_web/assets.py")
+    spec = importlib.util.spec_from_file_location("tubeszb_assets", COMPONENTS_ROOT / "tubeszb_web/assets.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     page = module.embedded_page()
@@ -42,7 +44,7 @@ def test_http_statuses_supported_by_esphome_idf():
     source = source.split("httpd_resp_set_status(*this, status);", 1)[0]
     supported = {int(code) for code in re.findall(r"case (\d+):", source)} | {500}
     for relative in ("tubeszb_web/tubeszb_web.cpp", "network_settings/network_settings.cpp"):
-        handlers = (ROOT / "components" / relative).read_text()
+        handlers = (COMPONENTS_ROOT / relative).read_text()
         emitted = {int(code) for code in re.findall(
             r"(?:send_json_|send_error_|error_|reject)\((?:request,\s*)?(\d+),", handlers
         )}
@@ -53,7 +55,7 @@ def test_custom_radio_url_validation(tmp_path):
     """Exercise the same URL policy the device uses before saving or flashing."""
     import subprocess
     target = tmp_path / "gbl-url-test"
-    subprocess.run(["c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(ROOT),
+    subprocess.run(["c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(COMPONENTS_ROOT.parent),
                     str(ROOT / "tests/gbl_url_test.cpp"), "-o", str(target)], check=True)
     subprocess.run([str(target)], check=True)
 
@@ -62,7 +64,7 @@ def test_cc2652_native_log_events(tmp_path):
     """Percentages and transfer messages cannot stand in for a native flash result."""
     import subprocess
     target = tmp_path / "cc2652-log-test"
-    subprocess.run(["c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(ROOT),
+    subprocess.run(["c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(COMPONENTS_ROOT.parent),
                     str(ROOT / "tests/cc2652_log_test.cpp"), "-o", str(target)], check=True)
     subprocess.run([str(target)], check=True)
 
@@ -71,7 +73,7 @@ def test_cc2652_flash_session(tmp_path):
     """Restore the original bridge state after success, failure and retry."""
     import subprocess
     target = tmp_path / "cc2652-flash-session-test"
-    subprocess.run(["c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(ROOT),
+    subprocess.run(["c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(COMPONENTS_ROOT.parent),
                     str(ROOT / "tests/cc2652_flash_session_test.cpp"), "-o", str(target)], check=True)
     subprocess.run([str(target)], check=True)
 

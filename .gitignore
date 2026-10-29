@@ -9,3 +9,6 @@ manifests/tubeszb-zigguart.yaml
 /build-artifacts/
 __pycache__/
 .pytest_cache/
+
+# External component checkout used only by integration tests
+/.ci/

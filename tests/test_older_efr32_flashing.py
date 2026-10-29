@@ -1,4 +1,6 @@
 """Older board routing, software-flow UART, pause ownership and local probes."""
+from component_paths import COMPONENTS_ROOT
+
 from pathlib import Path
 from test_frontend_rollout import load, frontend
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,7 +50,7 @@ def test_probe_and_flash_bridge_ownership_and_offline_guards():
         assert 'internet_allowed()' in buttons[key]['on_press'][0]['if']['condition']['lambda']
     assert 'is_applying_manifest_baud()' in str(scripts['apply_uart_baud']['then'][0])
     # Reconfiguring older UARTs must never claim MG24's RTS/CTS or TX/RX pins.
-    source=(ROOT/'components/efr32_flasher/efr32_flasher.cpp').read_text()
+    source=(COMPONENTS_ROOT / 'efr32_flasher/efr32_flasher.cpp').read_text()
     assert 'uart_set_pin(port, 4, 36' not in source
     assert 'if (hardware_flow_control_) uart_set_pin(port, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, 2, 13)' in source
     assert 'variant_force_ == 3 && !doc["variants"].isNull()' in source

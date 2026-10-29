@@ -7,7 +7,7 @@ this feature from its implementation branch or a new release commit.
 ## Firmware and web UI
 
 Every release manifest includes `packages/network-settings.yaml`. This adds the
-local `network_settings` external component. The old `esphome-config/` paths
+`network_settings` external component from the shared GitHub repository. The old `esphome-config/` paths
 include these same manifests. There is no separately compiled static-IP firmware.
 The old static-IP issue form and workflow are removed.
 

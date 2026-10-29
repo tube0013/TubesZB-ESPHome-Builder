@@ -1,3 +1,4 @@
+const {componentsRoot}=require('./component_paths.cjs');
 /* Real embedded-page logging lifecycle across all supported frontend types. */
 const assert=require('node:assert/strict');
 const http=require('node:http');
@@ -6,7 +7,7 @@ const path=require('node:path');
 const {execFileSync}=require('node:child_process');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
-const html=execFileSync(process.env.TZB_PYTHON_BIN||'python3',['components/tubeszb_web/assets.py'],{cwd:root,encoding:'utf8'});
+const html=execFileSync(process.env.TZB_PYTHON_BIN||'python3',[path.join(componentsRoot,'tubeszb_web/assets.py')],{cwd:root,encoding:'utf8'});
 let device={};let actions=[];let connections=0;const streams=new Set();
 const network={nonce:'network-token',mode:'dhcp',ip:'192.168.1.55',gateway:'192.168.1.1',subnet:'255.255.255.0',
  dns1:'192.168.1.1',dns2:'0.0.0.0',hostname:'tubeszb.local',storage_ok:true,testing:false,restarting:false};
@@ -42,6 +43,15 @@ const server=http.createServer((req,res)=>{
  res.setHeader('Content-Type','text/html');res.end(html);
 });
 function emit(text){for(const stream of streams)stream.write('event: log\ndata: '+text+'\n\n');}
+async function assertNoOverflow(page,context){
+ const bounds=await page.locator('#tzb-app').evaluate(root=>{
+  const box=root.getBoundingClientRect();
+  return {client:root.clientWidth,scroll:root.scrollWidth,
+   outside:[...root.querySelectorAll('*')].filter(el=>el.getBoundingClientRect().right>box.right+.5)
+    .slice(0,6).map(el=>({tag:el.tagName,className:el.className,text:el.textContent.slice(0,60)}))};
+ });
+ assert.equal(bounds.scroll>bounds.client,false,context+': '+JSON.stringify(bounds));
+}
 async function until(condition){for(let i=0;i<500;i++){if(condition())return;await new Promise(r=>setTimeout(r,20));}assert.ok(condition());}
 (async()=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -63,6 +73,13 @@ async function until(condition){for(let i=0;i<500;i++){if(condition())return;awa
    const page=await browser.newPage({viewport:{width:1240,height:1000},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.goto('http://127.0.0.1:'+server.address().port+'/?view=overview');await page.getByText('Device online',{exact:true}).waitFor();
    assert.equal(await page.getByRole('heading',{name:'Dual-radio gateway',exact:true}).isVisible(),true);
+   // Different system-font metrics exposed a six-button overflow on Linux CI.
+   // Exercise wider text directly so macOS cannot silently miss that constraint.
+   await page.setViewportSize({width:390,height:900});
+   const widerText=await page.addStyleTag({content:'#tzb-app .tzb-nav{letter-spacing:.5px}'});
+   await assertNoOverflow(page,profile+' wide navigation at 390');
+   await widerText.evaluate(el=>el.remove());
+   await page.setViewportSize({width:1240,height:1000});
    assert.equal(await page.getByText('Zigbee client connected',{exact:true}).isVisible(),true);
    assert.equal(await page.getByText('Waiting for a Z-Wave client',{exact:true}).first().isVisible(),true);
    assert.equal(await page.locator('[data-ui="log-panel"]').isVisible(),false);assert.equal(streams.size,0);
@@ -141,10 +158,10 @@ async function until(condition){for(let i=0;i<500;i++){if(condition())return;awa
    await page.getByRole('button',{name:'Diagnostics',exact:true}).click();await page.getByRole('button',{name:'Prepare support details',exact:true}).click();
    assert.match(await page.locator('[data-ui="support"]').textContent(),/Z-Wave client: connected/);
    assert.match(await page.locator('[data-ui="logs"]').textContent(),/dual radio retained log/);assert.equal(connections,logConnections);
-   for(const width of [390,320]){
+   for(const width of [440,390,375,320]){
     await page.setViewportSize({width,height:900});
     for(const view of ['Overview','Zigbee','Z-Wave','Network','Firmware','Diagnostics']){
-     await page.getByRole('button',{name:view,exact:true}).click();assert.equal(await page.locator('#tzb-app').evaluate(el=>el.scrollWidth>el.clientWidth),false,type+' '+view+' overflow at '+width);
+     await page.getByRole('button',{name:view,exact:true}).click();await assertNoOverflow(page,profile+' '+view+' at '+width);
     }
    }
    if(process.env.TZB_SCREENSHOT_DIR&&type==='efr32'){

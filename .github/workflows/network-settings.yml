@@ -12,6 +12,8 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      TZB_COMPONENTS_ROOT: ${{ github.workspace }}/.ci/esphome-components/components
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,6 +23,24 @@ jobs:
         with:
           node-version: '22'
       - run: python -m pip install esphome==2026.10.1 pytest
+      - name: Read the shared component source reference
+        id: components
+        run: |
+          python - <<'PYREF'
+          import os
+          import re
+          from pathlib import Path
+          source = Path("packages/network-settings.yaml").read_text()
+          ref = re.search(r"(?m)^  tubeszb_components_ref: (.+)$", source).group(1).strip()
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("ref=" + ref + "\n")
+          PYREF
+      - name: Check out external component source for host and browser tests
+        uses: actions/checkout@v4
+        with:
+          repository: tube0013/esphome-components
+          ref: ${{ steps.components.outputs.ref }}
+          path: .ci/esphome-components
       - name: Test validation and network trial transactions
         run: python -m pytest -q tests/test_network_settings.py tests/test_tubeszb_web_assets.py tests/test_internet_policy.py tests/test_dual_radio_configs.py tests/test_frontend_rollout.py tests/test_manifest_baud.py tests/test_older_efr32_flashing.py tests/test_ezsp_bootloader.py
       - name: Install browser test tools

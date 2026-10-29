@@ -85,11 +85,10 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [efr32_flasher, zigbee_firmware_baud]
-  - source: github://tube0013/esphome-components
+    refresh: 2min
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [stream_server, efr32_info]
     refresh: 2min
 

@@ -1,9 +1,10 @@
-# Included by every hardware manifest. Paths are relative to the main YAML file.
+# Included by every hardware manifest. Change this ref to main after component PR #7 merges.
+substitutions:
+  tubeszb_components_ref: refs/pull/7/head
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [network_settings]
+    refresh: 2min
 
 network_settings:
   id: device_network_settings

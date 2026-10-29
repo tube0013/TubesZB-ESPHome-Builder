@@ -1,9 +1,8 @@
 # Existing MGM210 serial controls; radio identity/flashing additions await assessment.
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [tubeszb_web]
+    refresh: 2min
 
 tubeszb_web:
   id: tubeszb_frontend

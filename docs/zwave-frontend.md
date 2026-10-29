@@ -4,7 +4,7 @@ The four Z-Wave manifests include `packages/zwave-web.yaml`. All hardware
 manifests now include the branded frontend with their own radio-capability
 bindings; see [rollout coverage](frontend-feature-parity.md). The frontend uses the approved mockup's layout and palette,
 and the flask/radio symbol from the user-supplied `tubeszb_new.svg`. The original
-artwork is preserved as `components/tubeszb_web/tubeszb-logo-original.svg`; the
+artwork is preserved in [the component repository](https://github.com/tube0013/esphome-components/blob/codex/radio-flasher-baudrate-ezsp/components/tubeszb_web/tubeszb-logo-original.svg); the
 header symbol contains its original two paths, cropped and set to inherit color.
 
 ## Routes and integration

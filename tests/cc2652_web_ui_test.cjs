@@ -1,3 +1,4 @@
+const {componentsRoot}=require('./component_paths.cjs');
 const assert=require('node:assert/strict');
 const http=require('node:http');
 const fs=require('node:fs');
@@ -5,7 +6,7 @@ const path=require('node:path');
 const {execFileSync}=require('node:child_process');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
-const html=execFileSync(process.env.TZB_PYTHON_BIN||'python3',['components/tubeszb_web/assets.py'],{cwd:root,encoding:'utf8'});
+const html=execFileSync(process.env.TZB_PYTHON_BIN||'python3',[path.join(componentsRoot,'tubeszb_web/assets.py')],{cwd:root,encoding:'utf8'});
 const device={nonce:'cc-token',name:'tubeszb-cc2652p2-poe-2021',model:'TubesZB CC2652P2 POE 2021',board:'esp-wrover-kit',radio_type:'cc2652',
  project_version:'2026.10.25.1',esphome_version:'2026.10.1',mac:'24:6F:28:A1:7C:52',ethernet_connected:true,api_connected:true,
  proxy_connected:true,baud_rate:115200,home_id:0,uptime:5000,free_heap:140000,update_state:2,latest_version:'old-source',

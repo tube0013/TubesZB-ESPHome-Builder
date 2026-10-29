@@ -1,9 +1,8 @@
 # Shared frontend bindings; CC2652 retains its existing flasher and GPIO actions.
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [tubeszb_web]
+    refresh: 2min
 
 tubeszb_web:
   id: tubeszb_frontend

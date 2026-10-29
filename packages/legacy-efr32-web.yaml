@@ -1,9 +1,8 @@
 # Fixed-baud retired EFR32 gateways. Physical mappings live in each manifest.
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [tubeszb_web]
+    refresh: 2min
 
 tubeszb_web:
   id: tubeszb_frontend

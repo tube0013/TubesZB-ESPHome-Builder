@@ -1,3 +1,4 @@
+const {componentsRoot}=require('./component_paths.cjs');
 /* Browser checks against a mock device; hardware behavior is tested separately. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -6,7 +7,7 @@ const path = require('node:path');
 const {chromium} = require('playwright');
 
 const root = path.resolve(__dirname, '..');
-const component = path.join(root, 'components/network_settings');
+const component = path.join(componentsRoot, 'network_settings');
 const html = fs.readFileSync(path.join(component, 'network_settings.html'), 'utf8')
   .replace('/* NETWORK_VALIDATION */', fs.readFileSync(path.join(component, 'network_validation.js'), 'utf8'));
 const initial = () => ({mode:'dhcp', testing:false, remaining:120, restarting:false, storage_ok:true,

@@ -1,4 +1,6 @@
 """Run the actual firmware state machine and compare browser/firmware validation."""
+from component_paths import COMPONENTS_ROOT
+
 
 import json
 from pathlib import Path
@@ -13,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def executable(tmp_path_factory):
     target = tmp_path_factory.mktemp("cpp") / "network-test"
     subprocess.run([
-        "c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(ROOT),
+        "c++", "-std=c++17", "-Wall", "-Wextra", "-Werror", "-I", str(COMPONENTS_ROOT.parent),
         str(ROOT / "tests/network_state_test.cpp"), "-o", str(target),
     ], check=True)
     return target

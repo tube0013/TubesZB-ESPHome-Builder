@@ -1,3 +1,4 @@
+const {componentsRoot}=require('./component_paths.cjs');
 /* Real embedded-page logging lifecycle across all supported frontend types. */
 const assert=require('node:assert/strict');
 const http=require('node:http');
@@ -6,7 +7,7 @@ const path=require('node:path');
 const {execFileSync}=require('node:child_process');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..');
-const html=execFileSync(process.env.TZB_PYTHON_BIN||'python3',['components/tubeszb_web/assets.py'],{cwd:root,encoding:'utf8'});
+const html=execFileSync(process.env.TZB_PYTHON_BIN||'python3',[path.join(componentsRoot,'tubeszb_web/assets.py')],{cwd:root,encoding:'utf8'});
 let device={};let actions=[];let connections=0;const streams=new Set();
 const network={nonce:'network-token',mode:'dhcp',ip:'192.168.1.55',gateway:'192.168.1.1',subnet:'255.255.255.0',
  dns1:'192.168.1.1',dns2:'0.0.0.0',hostname:'tubeszb.local',storage_ok:true,testing:false,restarting:false};

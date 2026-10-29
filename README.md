@@ -3,6 +3,13 @@
 Build ESPHome firmware for TubesZB devices. Each hardware model has one firmware
 image that supports both DHCP and a user-configured static IPv4 address.
 
+All custom components and embedded frontend assets are maintained in
+[esphome-components](https://github.com/tube0013/esphome-components/pull/7).
+The YAMLs import them from GitHub; there is no local component-source dependency.
+During review, `tubeszb_components_ref` in `packages/network-settings.yaml` points
+to `refs/pull/7/head`. Change that single default to `main` after the component PR
+merges; CI checks out the same reference for host/browser integration tests.
+
 [Open the web flasher](https://tube0013.github.io/TubesZB-ESPHome-Builder).
 
 Every hardware manifest now opens the TubesZB frontend at the device's main
@@ -65,3 +72,8 @@ Publishing a prerelease builds with the prerelease pin and publishes its firmwar
 to `Beta_Release` and `beta_ota_manifests`. Publishing a stable release uses the
 stable pin and publishes to `Latest_Release` and `ota_manifests`. Manual builds
 upload workflow artifacts only.
+
+For local source/browser tests, validate a hardware manifest first to populate
+the GitHub component cache, or set `TZB_COMPONENTS_ROOT` to the `components`
+directory of an esphome-components checkout. Firmware builds always use their
+GitHub source; this variable only selects source for host/browser tests.
