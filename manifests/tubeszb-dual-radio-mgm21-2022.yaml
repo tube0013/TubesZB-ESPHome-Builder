@@ -13,7 +13,7 @@ esphome:
   name: tubeszb-dual-radio-mgm21-2022
   project:
     name: tubezb.mgm21+zw
-    version: "2026.10.29.0"
+    version: "2026.10.29.1"
   min_version: 2026.10.1
   on_boot:
     - priority: 350

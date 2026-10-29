@@ -17,8 +17,9 @@ settings, background connectivity probes where already enabled, beta channels,
 and GitHub Pages feeds remain included. The static-IP issue form/workflow stays available on the frozen `2026.10.25.0`
 source, ESPHome `2026.6.5` and pinned legacy components during testing.
 
-The project version and prerelease tag are `2026.10.29.0`. Stage this as a draft
-prerelease; publishing it later triggers only the beta asset/feed path. Keep
+The project version and prerelease tag are `2026.10.29.1`. This replaces the failed `2026.10.29.0` release build; the release version
+guard now uses the ESPHome CLI without requiring Python `packaging`. Publishing
+this prerelease triggers only the beta asset/feed path. Keep
 `refs/pull/7/head` until component PR #7 is merged, then switch the shared default
 to `main`. ESPHome `2026.10.1` is the minimum for the new firmware; the legacy
 issue action has its own immutable source and compiler pins.

@@ -10,7 +10,7 @@ esphome:
   name: tubeszb-cc2652p7-poe-2023
   project: 
     name: tubezb.cc2652p7-poe-2023
-    version: "2026.10.29.0"
+    version: "2026.10.29.1"
   min_version: 2026.10.1
   includes:
     - <freertos/task.h>

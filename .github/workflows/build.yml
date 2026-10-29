@@ -76,10 +76,19 @@ jobs:
       - name: Require the supported ESPHome API version
         run: |
           python - <<'PYVERSION'
-          from importlib.metadata import version
-          from packaging.version import Version
-          installed = version("esphome")
-          if Version(installed) < Version("2026.10.1"):
+          import re
+          import subprocess
+          # Ask the CLI used by the compile step; the container's Python does
+          # not necessarily have the CLI's dependencies (including packaging).
+          output = subprocess.check_output(["esphome", "version"], text=True).strip()
+          match = re.fullmatch(r"Version:\s+(\d+)\.(\d+)\.(\d+)(\S*)", output)
+          if match is None:
+              raise SystemExit("Could not determine the ESPHome CLI version: " + output)
+          installed = output.split()[-1]
+          release = tuple(int(part) for part in match.groups()[:3])
+          suffix = match.group(4)
+          minimum_prerelease = release == (2026, 10, 1) and suffix and not suffix.startswith(("+", ".post"))
+          if release < (2026, 10, 1) or minimum_prerelease:
               raise SystemExit("ESPHome 2026.10.1 or newer is required; update the release pin or manual override (got " + installed + ")")
           PYVERSION
 

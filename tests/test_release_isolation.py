@@ -73,7 +73,7 @@ def test_prerelease_version_and_shared_component_ref() -> None:
     hardware = [p for p in (ROOT / 'manifests').glob('*.yaml') if 'esp32' in load(p)]
     assert len(hardware) == 22
     for path in hardware:
-        assert load(path)['esphome']['project']['version'] == '2026.10.29.0', path.name
+        assert load(path)['esphome']['project']['version'] == '2026.10.29.1', path.name
     assert load(ROOT / 'packages/network-settings.yaml')['substitutions']['tubeszb_components_ref'] == 'refs/pull/7/head'
     build = load(ROOT / '.github/workflows/build.yml')
     assert build['on']['release']['types'] == ['published']
@@ -124,11 +124,11 @@ def test_release_notes_are_json_data_not_shell_code(tmp_path: Path, channel: str
     md5.chmod(0o755)
     notes = '## Release notes\nA "quoted" value, `touch NOTES_WERE_EXECUTED`, and $(touch NOTES_WERE_EXECUTED).\n'
     env = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
-           'RELEASE_TAG': '2026.10.29.0', 'RELEASE_URL': 'https://example.test/release', 'RELEASE_BODY': notes}
+           'RELEASE_TAG': '2026.10.29.1', 'RELEASE_URL': 'https://example.test/release', 'RELEASE_BODY': notes}
     result = subprocess.run(['bash', '-eu', '-c', script], cwd=tmp_path, env=env, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     manifest = json.loads((tmp_path / 'gh-pages' / folder / 'ota-test-model.json').read_text())
-    assert manifest['version'] == '2026.10.29.0'
+    assert manifest['version'] == '2026.10.29.1'
     assert manifest['builds'][0]['ota']['summary'] == notes
     assert manifest['builds'][0]['ota']['md5'] == hashlib.md5(payload).hexdigest()
     assert not (tmp_path / 'NOTES_WERE_EXECUTED').exists()

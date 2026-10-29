@@ -6,7 +6,7 @@ esphome:
   name: tubeszb-dual-radio-kit-mgm24
   project:
     name: tubezb.mgm24+zw
-    version: "2026.10.29.0"
+    version: "2026.10.29.1"
   min_version: 2026.10.1
   on_boot:
     - priority: 900
