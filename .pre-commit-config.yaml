@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: esphome-validate
         name: Validate ESPHome manifests
-        entry: scripts/validate-esphome.sh
-        language: script
-        files: ^manifests/.*\.yaml$
+        entry: python3 tests/check_configs.py
+        language: system
+        files: ^(manifests|esphome-config|packages|components)/
         pass_filenames: false

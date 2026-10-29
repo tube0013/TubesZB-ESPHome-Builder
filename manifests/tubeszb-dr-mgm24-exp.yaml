@@ -1,9 +1,13 @@
+packages:
+  network_settings: !include ../packages/network-settings.yaml
+  dual_web: !include ../packages/dual-efr32-web.yaml
+
 esphome:
   name: tubeszb-dr-mgm24-exp
   project:
     name: tubezb.mgm24+zw
-    version: "2026.07.11.0"
-  min_version: 2026.3.2
+    version: "2026.10.29.0"
+  min_version: 2026.10.1
   on_boot:
     - priority: 900
       then:
@@ -48,6 +52,21 @@ esphome:
             id: apply_efr32_fw_url
             url_str: !lambda 'return id(efr32_custom_fw_url).state;'
 
+    - priority: 145
+      then:
+        - if:
+            condition:
+              switch.is_on: beta_channel_switch
+            then:
+              - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-dual-radio-kit-mgm24.json");'
+    - priority: 145
+      then:
+        - if:
+            condition:
+              switch.is_on: zigbee_fw_beta_switch
+            then:
+              - lambda: 'id(efr32_manifest_url_default) = "https://tube0013.github.io/tube_gateways/firmware/efr32manifest_beta.json";'
+
 esp32:
   board: esp32-poe
   framework:
@@ -65,8 +84,12 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
-  - source: github://tube0013/esphome-components
-    components: [stream_server, efr32_flasher, efr32_info]
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
+    components: [efr32_flasher, zigbee_firmware_baud]
+    refresh: 2min
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
+    components: [stream_server, efr32_info]
+    refresh: 2min
 
 globals:
   - id: has_internet
@@ -80,7 +103,7 @@ globals:
   - id: efr32_manifest_url_default
     type: std::string
     restore_value: no
-    initial_value: '"https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"'
+    initial_value: '"https://tube0013.github.io/tube_gateways/firmware/efr32manifest.json"'
 
 #Olimex ESP32-PoE Ethernet
 ethernet:
@@ -97,11 +120,6 @@ ethernet:
     then:
       - script.execute: on_ethernet_connect
 
-    # Optional manual IP
-  #manual_ip:
-  #  static_ip: STATIC_IP
-  #  gateway: GATEWAY
-  #  subnet: SUBNET
 
 # Enable logging
 logger:
@@ -129,17 +147,8 @@ interval:
   - interval: 7d
     startup_delay: 7d
     then:
+      # The connectivity result triggers update checks once, after the probe finishes.
       - script.execute: check_connectivity
-      - delay: 5s
-      - if:
-          condition:
-            lambda: 'return id(has_internet);'
-          then:
-            - update.check: esphome_fw_updater
-            - delay: 1s
-            - efr32_flasher.check_update: { id: zigbee_efr32 }
-          else:
-            - logger.log: "Skipping update checks: No Internet."
 
 web_server:
   port: 80
@@ -178,23 +187,38 @@ script:
     then:
       - if:
           condition:
+            lambda: 'return !id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: check_connectivity
+      - if:
+          condition:
             lambda: 'return id(ethernet0).is_connected();'
           then:
             - http_request.get:
                 url: https://www.google.com/generate_204
                 on_response:
                   then:
-                    - lambda: 'id(has_internet) = (response->status_code == 204);'
+                    - lambda: 'id(has_internet) = id(device_network_settings).internet_allowed() && (response->status_code == 204);'
                     - if:
                         condition:
-                          lambda: 'return id(has_internet);'
+                          lambda: 'return id(device_network_settings).internet_allowed() && id(has_internet);'
                         then:
                           - script.execute: run_update_checks
           else:
             - logger.log: "Ethernet not ready yet. Skipping connectivity check."
 
   - id: run_update_checks
+    mode: single
     then:
+      - if:
+          condition:
+            lambda: 'return !id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: run_update_checks
       - logger.log: "Internet confirmed. Triggering firmware checks."
       - if:
           condition:
@@ -205,11 +229,24 @@ script:
                 condition:
                   lambda: 'return !id(board_name).state.empty();'
                 timeout: 60s
-      - update.check: esphome_fw_updater
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(tubeszb_frontend).check_gateway_update();'
+          else:
+            - logger.log: "Skipped firmware request: Use without internet is enabled."
       - delay: 1s
-      - efr32_flasher.check_update: { id: zigbee_efr32 }
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed();'
+          then:
+            - efr32_flasher.check_update: { id: zigbee_efr32 }
 
+          else:
+            - logger.log: "Skipped firmware request: Use without internet is enabled."
   - id: fw_update_mode
+    mode: single
     then:
       - switch.turn_on: zBSL
       - delay: 1s
@@ -251,6 +288,11 @@ script:
     parameters:
       baud_str: string
     then:
+      - if:
+          condition:
+            lambda: 'return id(zigbee_efr32).is_applying_manifest_baud();'
+          then:
+            - script.stop: apply_uart_baud
       - if:
           condition:
             lambda: 'return baud_str.empty();'
@@ -305,6 +347,46 @@ script:
                 ESP_LOGD("efr32_custom_url", "Custom URL set: %s", url_str.c_str());
 
 switch:
+  - platform: template
+    name: "Beta Zigbee Firmware Channel"
+    id: zigbee_fw_beta_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(efr32_manifest_url_default) = "https://tube0013.github.io/tube_gateways/firmware/efr32manifest_beta.json";'
+      - script.execute:
+          id: apply_efr32_fw_url
+          url_str: !lambda 'return id(efr32_custom_fw_url).state;'
+      - logger.log: "Zigbee firmware channel: BETA"
+    turn_off_action:
+      - lambda: 'id(efr32_manifest_url_default) = "https://tube0013.github.io/tube_gateways/firmware/efr32manifest.json";'
+      - script.execute:
+          id: apply_efr32_fw_url
+          url_str: !lambda 'return id(efr32_custom_fw_url).state;'
+      - logger.log: "Zigbee firmware channel: STABLE"
+
+  - platform: template
+    name: "Beta Firmware Channel"
+    id: beta_channel_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-dual-radio-kit-mgm24.json");'
+      - logger.log: "ESP firmware channel: BETA; use Check ESP Firmware Update to check"
+    turn_off_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-dual-radio-kit-mgm24.json");'
+      - logger.log: "ESP firmware channel: STABLE; use Check ESP Firmware Update to check"
+
   - platform: gpio
     pin: 5
     id: zRST_gpio
@@ -337,6 +419,7 @@ button:
 
   - platform: template
     name: "Serial Server Pause"
+    id: pause_serial_server
     internal: true
     on_press:
       - stream_server.pause: { id: zb }
@@ -346,6 +429,7 @@ button:
 
   - platform: template
     name: "Serial Server Resume"
+    id: resume_serial_server
     internal: true
     on_press:
       - stream_server.resume: { id: zb }
@@ -368,6 +452,7 @@ button:
 
   - platform: template
     name: "Trigger MGM24 Module Bootloader"
+    id: trigger_efr32_bootloader
     disabled_by_default: true
     icon: mdi:application-import
     web_server:
@@ -384,8 +469,14 @@ button:
       sorting_group_id: zigbee_control_group
       sorting_weight: 30
     on_press:
-      - efr32_flasher.update_firmware: { id: zigbee_efr32 }
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed();'
+          then:
+            - efr32_flasher.update_firmware: { id: zigbee_efr32 }
 
+          else:
+            - logger.log: "Skipped firmware request: Use without internet is enabled."
   - platform: template
     name: "Check EFR32 Update"
     id: check_efr32_update
@@ -394,8 +485,14 @@ button:
       sorting_group_id: zigbee_control_group
       sorting_weight: 20
     on_press:
-      - efr32_flasher.check_update: { id: zigbee_efr32 }
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed();'
+          then:
+            - efr32_flasher.check_update: { id: zigbee_efr32 }
 
+          else:
+            - logger.log: "Skipped firmware request: Use without internet is enabled."
   - platform: template
     name: "Probe EZSP Info"
     id: ezsp_replay_identity
@@ -518,8 +615,9 @@ mdns:
 
 efr32_flasher:
   id: zigbee_efr32
+  runtime_baud_select: change_baud_rate
   uart_id: uart_bus_zb
-  url: "https://github.com/tube0013/tube_gateways/raw/refs/heads/main/misc/efr32manifest.json"
+  url: "https://tube0013.github.io/tube_gateways/firmware/efr32manifest.json"
   boot_switch: zBSL
   rst_switch: zRST_gpio
   # pause_switch intentionally not used; we coordinate via ncp_busy + YAML automations

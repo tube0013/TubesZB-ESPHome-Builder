@@ -1,0 +1,7 @@
+# Shared MGM21 flasher/controls bound to the Zigbee UART; the Z-Wave proxy is separate.
+packages:
+  radio_controls: !include older-efr32-radio.yaml
+
+tubeszb_web:
+  model: "TubesZB Dual Radio MGM21 + Z-Wave"
+  zwave_uart_id: uart_bus_zw

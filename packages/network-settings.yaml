@@ -1,0 +1,31 @@
+# Included by every hardware manifest. Change this ref to main after component PR #7 merges.
+substitutions:
+  tubeszb_components_ref: refs/pull/7/head
+external_components:
+  - source: github://tube0013/esphome-components@${tubeszb_components_ref}
+    components: [network_settings]
+    refresh: 2min
+
+network_settings:
+  id: device_network_settings
+  ethernet_id: ethernet0
+  firmware_update_id: esphome_fw_updater
+  on_internet_enabled:
+    - script.execute: check_connectivity
+
+# State is restored synchronously from NVS by network_settings before Ethernet.
+# DISABLED avoids an earlier template-switch setup overwriting that saved value.
+switch:
+  - platform: template
+    id: use_without_internet
+    name: "Use without internet"
+    entity_category: config
+    icon: mdi:cloud-off-outline
+    restore_mode: DISABLED
+    lambda: 'return id(device_network_settings).use_without_internet();'
+    turn_on_action:
+      - lambda: |-
+          if (id(device_network_settings).set_use_without_internet(true))
+            id(has_internet) = false;
+    turn_off_action:
+      - lambda: 'id(device_network_settings).set_use_without_internet(false);'

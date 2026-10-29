@@ -1,22 +1,66 @@
-# ESPHome firmware builder
+# TubesZB ESPHome firmware builder
 
-Build ESPHome firmware for specific TubesZB devices.
+Build ESPHome firmware for TubesZB devices. Each hardware model has one firmware
+image that supports both DHCP and a user-configured static IPv4 address.
 
-To Flash a TubesZB device with a web based flasher: https://tube0013.github.io/TubesZB-ESPHome-Builder
+All custom components and embedded frontend assets are maintained in
+[esphome-components](https://github.com/tube0013/esphome-components/pull/7).
+The YAMLs import them from GitHub; there is no local component-source dependency.
+During review, `tubeszb_components_ref` in `packages/network-settings.yaml` points
+to `refs/pull/7/head`. Change that single default to `main` after the component PR
+merges; CI checks out the same reference for host/browser integration tests.
 
-**For Static IP Firmware Builds**
+**Upgrading an old static-IP build:** the first upgrade starts on DHCP because
+old compiled-in addresses are not stored in the new settings. Find the device's
+DHCP lease, set and confirm its desired static address, and update the ZHA,
+Zigbee2MQTT or Z-Wave connection address if it changed. See the
+[upgrade and release notes](docs/release-notes.md).
 
-This Repository can create binaries for TubesZB devices which require a static IP.
+[Open the web flasher](https://tube0013.github.io/TubesZB-ESPHome-Builder).
 
-To Start Create an Issue using the Issue Form, selecting the device name, inputting the desired network configuration.
+Every hardware manifest now opens the TubesZB frontend at the device's main
+address. It includes device/radio status, network settings, gateway firmware
+management, diagnostics and downloadable logs retained across sections. The
+original ESPHome interface remains at `/esphome`.
 
-A GitHub action will start once the issue is submitted and if all goes okay the issue will get a comment including a link to download the compiled binaries for flashing your device.
+Zigbee models include native radio identity, flashing, bootloader controls and
+saved application baud. Older MGM12/MGM210 profiles use model-specific stable
+images; MGM21 dual boards enter their bootloader over EZSP because the boot pin
+is input-only. Dual-radio models show Zigbee and Z-Wave independently.
+See [rollout coverage and feature gaps](docs/frontend-feature-parity.md),
+[dual-radio notes](docs/dual-radio-frontend.md), and
+[MGM24/BP controls](docs/mgm24-frontend.md).
 
-The download will include 2 .bin files.
-The firmware.factory.bin is suitible for flashing over usb using https://web.esphome.io
-The firmware.ota.bin can be flashed through the devices web frontend (if option exists).
+The retired MGM12 Pro1 and original MGM210 Series 2 profiles preserve the archived
+WT32-ETH01 pin mappings. Their Arduino-to-ESP-IDF migration builds need physical
+OTA/partition and radio-traffic validation before release use; see the rollout notes.
 
-> Inspired by works from @nerivec, @shawly & more.
+New installations use DHCP. Open the device's web interface and select **Network
+settings**, or visit `http://<device-ip>/network`. Choose DHCP or Static IP, enter
+the address, subnet mask, gateway and DNS servers, then select **Apply & Restart**.
+Open the new address and select **Keep settings** within two minutes. Without
+confirmation, the device restores the previous confirmed configuration and restarts.
+An unexpected restart during a trial also restores the confirmed configuration.
+
+Confirmed settings survive normal restarts and OTA updates that preserve NVS.
+The `firmware.factory.bin` image is for USB installation; `firmware.ota.bin` is
+for OTA installation through the device's web interface.
+
+The static-IP issue form and action remain available while the new firmware is
+being tested. They check out the frozen `2026.10.25.0` release source and use
+ESPHome `2026.6.5` plus pinned legacy components, independently of this branch's
+runtime-network-settings builds. The `esphome-config/` files on this branch remain
+compatibility entry points to the new manifests; the issue action reads those
+files from the frozen release instead. See [legacy build isolation](docs/legacy-static-ip.md).
+
+Requires ESPHome **2026.10.1 or later**; development validation uses **2026.10.1**.
+Before publishing a release, set the repository's `ESPHOME_VERSION` variable to
+a compatible version.
+
+See [network settings design, tests, and hardware acceptance checks](docs/network-settings.md).
+
+The TubesZB frontend also supports the seven single-radio CC2652 configurations.
+See [CC2652 frontend](docs/cc2652-frontend.md) for controls and test-image details.
 
 ## ESPHome build versions
 
@@ -24,21 +68,30 @@ Set repository variables under **Settings → Secrets and variables → Actions 
 
 | Variable | Used by |
 | --- | --- |
-| `ESPHOME_VERSION` | Stable releases, static IP builds, and manual builds without an override |
+| `ESPHOME_VERSION` | Stable releases and manual builds without an override |
 | `ESPHOME_PRERELEASE_VERSION` | Releases marked as a prerelease |
 
 Prerelease builds fall back to `ESPHOME_VERSION` if `ESPHOME_PRERELEASE_VERSION` is unset.
 The manual **Build ESPHome Firmware** workflow's `esphome_version` input overrides
 these variables for that run only.
 
-For example, keep stable builds on ESPHome 2026.6.5 while testing 2026.10.0:
-
-```sh
-gh variable set ESPHOME_VERSION --body 2026.6.5
-gh variable set ESPHOME_PRERELEASE_VERSION --body 2026.10.0
-```
+Both pins must be compatible with these manifests (ESPHome 2026.10.1 or newer).
+Local development and regression builds use 2026.10.1.
 
 Publishing a prerelease builds with the prerelease pin and publishes its firmware
 to `Beta_Release` and `beta_ota_manifests`. Publishing a stable release uses the
 stable pin and publishes to `Latest_Release` and `ota_manifests`. Manual builds
 upload workflow artifacts only.
+
+For local source/browser tests, validate a hardware manifest first to populate
+the GitHub component cache, or set `TZB_COMPONENTS_ROOT` to the `components`
+directory of an esphome-components checkout. Firmware builds always use their
+GitHub source; this variable only selects source for host/browser tests.
+
+Component host tests are maintained in esphome-components. This repo keeps
+hardware configuration contracts and browser integration tests; CI runs the
+component suite directly from the matching external checkout.
+
+Product model labels are explicit in the hardware manifests, so changing a device
+hostname does not alter the UI's model identity. Component cleanup and the deferred
+radio-controller refactor are tracked in the paired component PR.

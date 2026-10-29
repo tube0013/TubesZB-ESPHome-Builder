@@ -58,7 +58,7 @@ jobs:
   build-firmwares:
     name: Firmware builder
     runs-on: ubuntu-latest
-    # Stable releases use ESPHOME_VERSION, as does main.yml's static-IP builder.
+    # Stable releases use ESPHOME_VERSION (2026.10.1 or newer for these manifests).
     # Prereleases use ESPHOME_PRERELEASE_VERSION so newer ESPHome versions can
     # be tested without moving the stable pin. If unset, fall back to the stable pin.
     # A manual esphome_version input overrides both pins for that run only.
@@ -72,6 +72,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Require the supported ESPHome API version
+        run: |
+          python - <<'PYVERSION'
+          from importlib.metadata import version
+          from packaging.version import Version
+          installed = version("esphome")
+          if Version(installed) < Version("2026.10.1"):
+              raise SystemExit("ESPHome 2026.10.1 or newer is required; update the release pin or manual override (got " + installed + ")")
+          PYVERSION
 
       - name: Compile ESPHome Firmware
         id: compile-firmware
@@ -122,6 +132,10 @@ jobs:
     # This job only runs when the workflow is triggered by a release event
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      RELEASE_URL: ${{ github.event.release.html_url }}
+      RELEASE_BODY: ${{ github.event.release.body }}
     permissions:
       # Required to write to the release assets
       contents: write
@@ -196,12 +210,12 @@ jobs:
             # Use jq to create the JSON manifest file inside the gh-pages checkout
             jq -n \
               --arg name "$device_name" \
-              --arg version "${{ github.event.release.tag_name }}" \
+              --arg version "$RELEASE_TAG" \
               --arg chipFamily "ESP32" \
               --arg path "$ota_url" \
               --arg md5 "$md5_checksum" \
-              --arg release_url "${{ github.event.release.html_url }}" \
-              --arg summary "${{ github.event.release.body }}" \
+              --arg release_url "$RELEASE_URL" \
+              --arg summary "$RELEASE_BODY" \
               '{
                 "name": $name,
                 "version": $version,
@@ -295,12 +309,12 @@ jobs:
 
             jq -n \
               --arg name "$device_name" \
-              --arg version "${{ github.event.release.tag_name }}" \
+              --arg version "$RELEASE_TAG" \
               --arg chipFamily "ESP32" \
               --arg path "$ota_url" \
               --arg md5 "$md5_checksum" \
-              --arg release_url "${{ github.event.release.html_url }}" \
-              --arg summary "${{ github.event.release.body }}" \
+              --arg release_url "$RELEASE_URL" \
+              --arg summary "$RELEASE_BODY" \
               '{
                 "name": $name,
                 "version": $version,

@@ -1,9 +1,13 @@
+packages:
+  zwave_web: !include ../packages/zwave-web.yaml
+  network_settings: !include ../packages/network-settings.yaml
+
 esphome:
   name: tubeszb-zw-experimental
   project:
     name: tubezb.zw
-    version: "2026.07.11.0"
-  min_version: 2026.3.2
+    version: "2026.10.29.0"
+  min_version: 2026.10.1
 
 esp32:
   board: esp32-poe
@@ -36,11 +40,6 @@ ethernet:
     then:
       - script.execute: on_ethernet_connect
 
-    # Optional manual IP
-  #manual_ip:
-  #  static_ip: STATIC_IP
-  #  gateway: GATEWAY
-  #  subnet: SUBNET
 
 # Enable logging
 logger:
@@ -68,15 +67,8 @@ interval:
   - interval: 7d
     startup_delay: 7d
     then:
+      # The connectivity result triggers update checks once, after the probe finishes.
       - script.execute: check_connectivity
-      - delay: 5s
-      - if:
-          condition:
-            lambda: 'return id(has_internet);'
-          then:
-            - update.check: esphome_fw_updater
-          else:
-            - logger.log: "Skipping update checks: No Internet."
 
 web_server:
   port: 80
@@ -115,26 +107,47 @@ script:
     then:
       - if:
           condition:
+            lambda: 'return !id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: check_connectivity
+      - if:
+          condition:
             lambda: 'return id(ethernet0).is_connected();'
           then:
             - http_request.get:
                 url: https://www.google.com/generate_204
                 on_response:
                   then:
-                    - lambda: 'id(has_internet) = (response->status_code == 204);'
+                    - lambda: 'id(has_internet) = id(device_network_settings).internet_allowed() && (response->status_code == 204);'
                     - if:
                         condition:
-                          lambda: 'return id(has_internet);'
+                          lambda: 'return id(device_network_settings).internet_allowed() && id(has_internet);'
                         then:
                           - script.execute: run_update_checks
           else:
             - logger.log: "Ethernet not ready yet. Skipping connectivity check."
 
   - id: run_update_checks
+    mode: single
     then:
+      - if:
+          condition:
+            lambda: 'return !id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: run_update_checks
       - logger.log: "Internet confirmed. Triggering firmware checks."
-      - update.check: esphome_fw_updater
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed();'
+          then:
+            - update.check: esphome_fw_updater
 
+          else:
+            - logger.log: "Skipped firmware request: Use without internet is enabled."
 button:
   - platform: restart
     name: "Restart the Device"
@@ -198,3 +211,6 @@ text_sensor:
     web_server:
       sorting_group_id: info_group
       sorting_weight: 40
+
+tubeszb_web:
+  model: "TubesZB Z-Wave (experimental)"

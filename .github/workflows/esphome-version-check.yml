@@ -1,7 +1,7 @@
 name: Check for newer ESPHome release
 
 # Passive nudge only: compares the pinned ESPHOME_VERSION repo variable
-# (used by build.yml and main.yml) against ESPHome's latest stable release,
+# (used by build.yml) against ESPHome's latest stable release,
 # and opens/updates a single tracking issue when a newer one exists.
 # Never bumps the pin or triggers a build itself.
 
@@ -49,7 +49,7 @@ jobs:
 
           body="A newer ESPHome stable release is available.
 
-          - **Pinned version** (\`ESPHOME_VERSION\` repo variable, used by \`build.yml\` and \`main.yml\`): \`$CURRENT_VERSION\`
+          - **Pinned version** (\`ESPHOME_VERSION\` repo variable, used by \`build.yml\`): \`$CURRENT_VERSION\`
           - **Latest stable release:** [\`$latest_version\`]($latest_url)
 
           This is informational only — nothing was changed automatically. Review the [ESPHome changelog]($latest_url) and, when ready, bump the pin with:

@@ -6,3 +6,9 @@ manifests/tubeszb-mgm24-bp.yaml
 # Personal bench-test scripts stay local
 scripts/*
 manifests/tubeszb-zigguart.yaml
+/build-artifacts/
+__pycache__/
+.pytest_cache/
+
+# External component checkout used only by integration tests
+/.ci/
