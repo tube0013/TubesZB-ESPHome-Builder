@@ -85,7 +85,8 @@ capture continues. Logs do not include boot history from before capture began.
 ## Verification
 
 ```sh
-python -m pytest -q tests/test_network_settings.py tests/test_tubeszb_web_assets.py
+python -m pytest -q tests
+# Component unit tests live in the matching esphome-components checkout.
 python tests/check_configs.py
 NODE_PATH=/tmp/tzb-browser-tests/node_modules node tests/tubeszb_web_ui_test.cjs
 NODE_PATH=/tmp/tzb-browser-tests/node_modules node tests/log_panel_ui_test.cjs

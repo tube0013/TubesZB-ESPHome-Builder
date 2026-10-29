@@ -83,7 +83,8 @@ stays disabled. There is no silent fallback to stable firmware for a beta check.
 ## Validation
 
 ```sh
-python -m pytest -q tests/test_network_settings.py tests/test_tubeszb_web_assets.py
+python -m pytest -q tests
+# Component unit tests live in the matching esphome-components checkout.
 python tests/check_configs.py
 NODE_PATH=/tmp/tzb-browser-tests/node_modules node tests/cc2652_web_ui_test.cjs
 esphome compile manifests/tubeszb-cc2652p2-poe-2021.yaml

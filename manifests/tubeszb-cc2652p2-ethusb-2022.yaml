@@ -11,7 +11,7 @@ esphome:
   project:
     name: tubeszb.cc2652p2-ethusb-2022
     version: "2026.10.25.1"
-  min_version: 2026.10.0
+  min_version: 2026.10.1
   includes:
     - <freertos/task.h>
   on_boot:
@@ -119,17 +119,8 @@ interval:
   - interval: 7d
     startup_delay: 7d
     then:
+      # The connectivity result triggers update checks once, after the probe finishes.
       - script.execute: check_connectivity
-      - delay: 5s
-      - if:
-          condition:
-            lambda: 'return id(device_network_settings).internet_allowed() && id(has_internet) && !id(device_network_settings).is_trial_active();'
-          then:
-            - lambda: 'id(tubeszb_frontend).check_gateway_update();'
-            - delay: 1s
-            - lambda: 'id(tubeszb_frontend).request_cc2652_check();'
-          else:
-            - logger.log: "Skipping update checks: No Internet."
 
 web_server:
   port: 80
@@ -193,26 +184,35 @@ script:
             # affecting the main loop at all. Results are handed back via defer(), which
             # is safe to call from another task and runs on the next loop() iteration.
             - lambda: |-
+                if (!id(device_network_settings).begin_connectivity_check()) return;
                 struct ConnCheckCtx { esphome::http_request::HttpRequestComponent *req; };
                 auto *ctx = new ConnCheckCtx{ id(http_request_id) };
 
-                xTaskCreate([](void *param) {
+                const auto created = xTaskCreate([](void *param) {
                   auto *ctx = static_cast<ConnCheckCtx *>(param);
                   auto container = id(device_network_settings).internet_allowed() ? ctx->req->get("https://www.google.com/generate_204") : nullptr;
                   bool ok = container && container->status_code == 204;
                   if (container) container->end();
 
                   ctx->req->defer([ok]() {
+                    id(device_network_settings).end_connectivity_check();
                     id(has_internet) = ok && id(device_network_settings).internet_allowed();
                     if (id(has_internet)) id(run_update_checks)->execute();
                   });
                   delete ctx;
                   vTaskDelete(nullptr);
                 }, "conn_check", 8192, ctx, 1, nullptr);
+                if (created != pdPASS) {
+                  delete ctx;
+                  id(device_network_settings).end_connectivity_check();
+                  id(has_internet) = false;
+                  ESP_LOGE("connectivity", "Could not start connectivity task");
+                }
           else:
             - logger.log: "Ethernet not ready yet. Skipping connectivity check."
 
   - id: run_update_checks
+    mode: single
     then:
       - if:
           condition:

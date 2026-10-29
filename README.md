@@ -10,6 +10,12 @@ During review, `tubeszb_components_ref` in `packages/network-settings.yaml` poin
 to `refs/pull/7/head`. Change that single default to `main` after the component PR
 merges; CI checks out the same reference for host/browser integration tests.
 
+**Upgrading an old static-IP build:** the first upgrade starts on DHCP because
+old compiled-in addresses are not stored in the new settings. Find the device's
+DHCP lease, set and confirm its desired static address, and update the ZHA,
+Zigbee2MQTT or Z-Wave connection address if it changed. See the
+[upgrade and release notes](docs/release-notes.md).
+
 [Open the web flasher](https://tube0013.github.io/TubesZB-ESPHome-Builder).
 
 Every hardware manifest now opens the TubesZB frontend at the device's main
@@ -43,7 +49,7 @@ for OTA installation through the device's web interface.
 Separate static-IP issue builds are retired. The files in `esphome-config/` are
 compatibility entry points to the same manifests used by release builds.
 
-Requires ESPHome **2026.10.0 or later**; development validation uses **2026.10.1**.
+Requires ESPHome **2026.10.1 or later**; development validation uses **2026.10.1**.
 Before publishing a release, set the repository's `ESPHOME_VERSION` variable to
 a compatible version.
 
@@ -65,7 +71,7 @@ Prerelease builds fall back to `ESPHOME_VERSION` if `ESPHOME_PRERELEASE_VERSION`
 The manual **Build ESPHome Firmware** workflow's `esphome_version` input overrides
 these variables for that run only.
 
-Both pins must be compatible with these manifests (ESPHome 2026.10.0 or newer).
+Both pins must be compatible with these manifests (ESPHome 2026.10.1 or newer).
 Local development and regression builds use 2026.10.1.
 
 Publishing a prerelease builds with the prerelease pin and publishes its firmware
@@ -77,3 +83,7 @@ For local source/browser tests, validate a hardware manifest first to populate
 the GitHub component cache, or set `TZB_COMPONENTS_ROOT` to the `components`
 directory of an esphome-components checkout. Firmware builds always use their
 GitHub source; this variable only selects source for host/browser tests.
+
+Component host tests are maintained in esphome-components. This repo keeps
+hardware configuration contracts and browser integration tests; CI runs the
+component suite directly from the matching external checkout.

@@ -84,3 +84,8 @@ policy guard. The frontend includes the boot probe script in its busy state, so
 maintenance and network controls remain blocked through restoration. Keep native
 `detect_on_boot: false` to avoid a second probe outside this sequence. New CC2652
 configs inherit this startup sequence with the same shared package/stream binding.
+
+Flash ownership now uses the native flasher result/sequence getter, rather than
+matching log messages. A queued operation that never starts times out after 35
+seconds and restores the bridge state. Active synchronous flashing and readback
+keep their existing ownership; progress at 100% alone does not signal completion.

@@ -12,7 +12,8 @@ const entities=[
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');requests.push(url.pathname);
  if(url.pathname==='/'||url.pathname==='/esphome'||url.pathname==='/esphome/'){
-  res.setHeader('Content-Type','text/html');res.end('<!doctype html><html><head><meta charset="UTF-8"><link rel="icon" href="data:"></head><body><script type="module" src="/0.js"></script><esp-app></esp-app></body></html>');return;
+  const script=url.searchParams.has('late')?'':'<script type="module" src="/0.js"></script>';
+  res.setHeader('Content-Type','text/html');res.end('<!doctype html><html><head><meta charset="UTF-8"><link rel="icon" href="data:"></head><body>'+script+'<esp-app></esp-app></body></html>');return;
  }
  if(url.pathname==='/0.js'){res.setHeader('Content-Type','text/javascript');res.end(bundle);return;}
  if(url.pathname==='/events'){
@@ -41,6 +42,12 @@ const server=http.createServer(async(req,res)=>{
    assert.equal(actions.at(-1),'/button/Restart Gateway/press');
    assert.equal(await page.getByRole('link',{name:'TubesZB frontend',exact:true}).getAttribute('href'),'/');
   }
+  // Loading the actual bundle after DOMContentLoaded must still add navigation.
+  await page.goto(base+'/esphome?late=1');
+  assert.equal(await page.evaluate(()=>document.readyState),'complete');
+  await page.evaluate(()=>{const script=document.createElement('script');script.type='module';script.src='/0.js?late=1';document.body.append(script);});
+  await page.getByRole('link',{name:'TubesZB frontend',exact:true}).waitFor();
+  assert.equal(await page.locator('#tubeszb-navigation').count(),1);
   await page.goto(base+'/');
   await page.getByText('ESP IP Address',{exact:true}).waitFor();
   assert.equal(await page.getByRole('link',{name:'Network settings',exact:true}).getAttribute('href'),'/network');

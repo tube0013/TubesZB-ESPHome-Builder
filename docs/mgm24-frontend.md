@@ -78,7 +78,8 @@ entities, a working button, both alias paths and the original root behavior.
 ## Verification and bench testing
 
 ```sh
-python -m pytest -q tests/test_network_settings.py tests/test_tubeszb_web_assets.py
+python -m pytest -q tests
+# Component unit tests live in the matching esphome-components checkout.
 python tests/check_configs.py
 NODE_PATH=/tmp/tzb-browser-tests/node_modules node tests/mgm24_web_ui_test.cjs
 NODE_PATH=/tmp/tzb-browser-tests/node_modules node tests/legacy_web_ui_test.cjs

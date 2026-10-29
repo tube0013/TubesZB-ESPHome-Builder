@@ -23,14 +23,6 @@ globals:
     type: esphome::cc2652_flash_guard::FlashSession
     restore_value: false
 
-logger:
-  on_message:
-    - level: DEBUG
-      then:
-        - lambda: |-
-            if (strcmp(tag, "cc2652_flasher") == 0)
-              id(cc2652_flash_session).observe(level <= ESPHOME_LOG_LEVEL_ERROR, message);
-
 script:
   - id: probe_cc2652_on_boot
     mode: single
@@ -62,7 +54,7 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return id(device_network_settings).internet_allowed() && id(cc2652_flash_session).begin(id(${cc2652_stream_server}).is_paused());'
+            lambda: 'return id(device_network_settings).internet_allowed() && id(cc2652_flash_session).begin(id(${cc2652_stream_server}).is_paused(), id(zigbee_flasher).get_flash_status().sequence);'
           then:
             - logger.log: "CC2652 flash: pausing Zigbee serial bridge."
             - stream_server.pause: {id: '${cc2652_stream_server}'}
@@ -72,7 +64,15 @@ script:
             # during the native flasher's synchronous UART work or cleanup.
             - wait_until:
                 condition:
-                  lambda: 'return id(cc2652_flash_session).completed;'
+                  lambda: |-
+                    id(cc2652_flash_session).observe(id(zigbee_flasher).get_flash_status());
+                    return id(cc2652_flash_session).completed;
+                timeout: 35s
+            - if:
+                condition:
+                  lambda: 'return !id(cc2652_flash_session).completed;'
+                then:
+                  - logger.log: {level: ERROR, format: "CC2652 flash did not start; restoring the previous bridge state."}
             - if:
                 condition:
                   lambda: 'return id(cc2652_flash_session).success;'

@@ -71,8 +71,10 @@ if (document.readyState === 'loading') {
     addTubesZBBanner();
 }
 // Persistent Ethernet settings are served locally by the network_settings component.
-document.addEventListener("DOMContentLoaded", () => {
+function addTubesZBNavigation() {
+  if (document.getElementById("tubeszb-navigation")) return;
   const nav = document.createElement("nav");
+  nav.id = "tubeszb-navigation";
   nav.setAttribute("aria-label", "Device settings");
   nav.style.cssText = "padding:12px 20px;text-align:right;font:600 15px system-ui,sans-serif";
   const link = document.createElement("a");
@@ -82,4 +84,9 @@ document.addEventListener("DOMContentLoaded", () => {
   link.style.color = "#1581b0";
   nav.appendChild(link);
   document.body.prepend(nav);
-});
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", addTubesZBNavigation);
+} else {
+  addTubesZBNavigation();
+}

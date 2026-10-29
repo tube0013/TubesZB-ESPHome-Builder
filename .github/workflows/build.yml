@@ -58,7 +58,7 @@ jobs:
   build-firmwares:
     name: Firmware builder
     runs-on: ubuntu-latest
-    # Stable releases use ESPHOME_VERSION (2026.10.0 or newer for these manifests).
+    # Stable releases use ESPHOME_VERSION (2026.10.1 or newer for these manifests).
     # Prereleases use ESPHOME_PRERELEASE_VERSION so newer ESPHome versions can
     # be tested without moving the stable pin. If unset, fall back to the stable pin.
     # A manual esphome_version input overrides both pins for that run only.
@@ -72,6 +72,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Require the supported ESPHome API version
+        run: |
+          python - <<'PYVERSION'
+          from importlib.metadata import version
+          from packaging.version import Version
+          installed = version("esphome")
+          if Version(installed) < Version("2026.10.1"):
+              raise SystemExit("ESPHome 2026.10.1 or newer is required; update the release pin or manual override (got " + installed + ")")
+          PYVERSION
 
       - name: Compile ESPHome Firmware
         id: compile-firmware

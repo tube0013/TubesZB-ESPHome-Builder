@@ -23,6 +23,8 @@ jobs:
         with:
           node-version: '22'
       - run: python -m pip install esphome==2026.10.1 pytest
+      - name: Supply pinned JSON headers for component host tests
+        run: git clone --depth 1 --branch v7.4.3 https://github.com/bblanchon/ArduinoJson.git /tmp/arduinojson
       - name: Read the shared component source reference
         id: components
         run: |
@@ -41,8 +43,12 @@ jobs:
           repository: tube0013/esphome-components
           ref: ${{ steps.components.outputs.ref }}
           path: .ci/esphome-components
-      - name: Test validation and network trial transactions
-        run: python -m pytest -q tests/test_network_settings.py tests/test_tubeszb_web_assets.py tests/test_internet_policy.py tests/test_dual_radio_configs.py tests/test_frontend_rollout.py tests/test_manifest_baud.py tests/test_older_efr32_flashing.py tests/test_ezsp_bootloader.py
+      - name: Test hardware configuration contracts
+        run: python -m pytest -q tests
+      - name: Test the matching external component source
+        env:
+          ARDUINOJSON_INCLUDE: /tmp/arduinojson/src
+        run: python -m pytest -q .ci/esphome-components/tests
       - name: Install browser test tools
         run: |
           npm install --prefix /tmp/tzb-browser-tests playwright@1.62.1
@@ -107,5 +113,3 @@ jobs:
         run: esphome compile manifests/tubeszb-efr32-mgm12-pro1.yaml
       - name: Compile retired MGM210 Series 2 frontend
         run: esphome compile manifests/tubeszb-efr32-mgm210-series-2.yaml
-      - name: Check manifest baud parsing against the compiled ArduinoJson dependency
-        run: python -m pytest -q tests/test_manifest_baud.py tests/test_older_efr32_flashing.py tests/test_ezsp_bootloader.py

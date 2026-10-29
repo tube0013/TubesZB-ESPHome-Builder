@@ -11,7 +11,7 @@ esphome:
   project:
     name: tubezb.cc2652+zw
     version: "2026.10.25.1"
-  min_version: 2026.10.0
+  min_version: 2026.10.1
   on_boot:
     - priority: 600
       then:
@@ -112,29 +112,8 @@ interval:
   - interval: 7d
     startup_delay: 7d
     then:
+      # The connectivity result triggers update checks once, after the probe finishes.
       - script.execute: check_connectivity
-      - delay: 5s
-      - if:
-          condition:
-            lambda: 'return id(device_network_settings).internet_allowed() && id(has_internet);'
-          then:
-            - if:
-                condition:
-                  lambda: 'return id(device_network_settings).internet_allowed();'
-                then:
-                  - lambda: 'id(tubeszb_frontend).check_gateway_update();'
-                else:
-                  - logger.log: "Skipped firmware request: Use without internet is enabled."
-            - delay: 1s
-            - if:
-                condition:
-                  lambda: 'return id(device_network_settings).internet_allowed();'
-                then:
-                  - lambda: 'id(tubeszb_frontend).request_cc2652_check();'
-                else:
-                  - logger.log: "Skipped firmware request: Use without internet is enabled."
-          else:
-            - logger.log: "Skipping update checks: No Internet."
 
 web_server:
   port: 80
@@ -202,6 +181,7 @@ script:
             - logger.log: "Ethernet not ready yet. Skipping connectivity check."
 
   - id: run_update_checks
+    mode: single
     then:
       - if:
           condition:

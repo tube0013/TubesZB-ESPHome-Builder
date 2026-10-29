@@ -105,7 +105,8 @@ new branded frontend still needs its own physical-device acceptance test.
 
 ```sh
 python -m pip install esphome==2026.10.1 pytest
-python -m pytest -q tests/test_network_settings.py
+python -m pytest -q tests
+# Run network unit tests from the matching esphome-components checkout.
 python tests/check_configs.py
 esphome compile manifests/tubeszb-2026-zw.yaml
 esphome compile manifests/tubeszb-cc2652p7-poe-2023.yaml
@@ -178,8 +179,9 @@ leave the current setting unchanged and are reported to the browser. No reboot i
 needed to change it. The GitHub release link is opened by the user's browser;
 the device does not fetch it.
 
-Verification: `tests/test_internet_policy.py` runs native restoration/commit and
-HTTP-transport checks plus an inventory of every manifest's guards.
+Verification: esphome-components owns the native restoration/commit and
+HTTP-transport tests. This repo's `tests/test_internet_policy.py` checks the
+manifest guards, online re-enable automation and single connectivity-check path.
 `tests/internet_mode_ui_test.cjs` checks enable/cancel, failed saves, persisted
 reloads, release links, disabled online controls, retained local controls and
 mobile layout for Z-Wave, CC2652 and EFR32.
