@@ -6,7 +6,7 @@ esphome:
   name: tubeszb-2026-zw-experimental
   project:
     name: tubezb.zw2026
-    version: "2026.10.29.0"
+    version: "2026.10.29.1"
   min_version: 2026.10.1
 
 esp32:

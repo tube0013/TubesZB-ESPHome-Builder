@@ -92,7 +92,7 @@ configure the desired static address in the UI. After confirming it once, normal
 OTA updates retain it. Erasing NVS or factory reset returns networking to DHCP.
 Older firmware does not read this component's settings.
 
-Project version `2026.10.29.0` is the prerelease target. Set repository variable `ESPHOME_VERSION`
+Project version `2026.10.29.1` is the prerelease target. Set repository variable `ESPHOME_VERSION`
 to 2026.10.1 or another tested compatible version. The release workflow now finds
 binaries in the native-IDF layout. No existing tag or external variable is changed.
 

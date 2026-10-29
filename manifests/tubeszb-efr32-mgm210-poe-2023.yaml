@@ -11,7 +11,7 @@ esphome:
   name: tubeszb-efr32-mgm210-poe-2023
   project:
     name: tubeszb.efr32_mgm210_poe_2023
-    version: "2026.10.29.0"
+    version: "2026.10.29.1"
   min_version: 2026.10.1
   on_boot:
     - priority: 350
