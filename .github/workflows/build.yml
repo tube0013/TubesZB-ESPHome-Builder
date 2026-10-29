@@ -132,6 +132,10 @@ jobs:
     # This job only runs when the workflow is triggered by a release event
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      RELEASE_URL: ${{ github.event.release.html_url }}
+      RELEASE_BODY: ${{ github.event.release.body }}
     permissions:
       # Required to write to the release assets
       contents: write
@@ -206,12 +210,12 @@ jobs:
             # Use jq to create the JSON manifest file inside the gh-pages checkout
             jq -n \
               --arg name "$device_name" \
-              --arg version "${{ github.event.release.tag_name }}" \
+              --arg version "$RELEASE_TAG" \
               --arg chipFamily "ESP32" \
               --arg path "$ota_url" \
               --arg md5 "$md5_checksum" \
-              --arg release_url "${{ github.event.release.html_url }}" \
-              --arg summary "${{ github.event.release.body }}" \
+              --arg release_url "$RELEASE_URL" \
+              --arg summary "$RELEASE_BODY" \
               '{
                 "name": $name,
                 "version": $version,
@@ -305,12 +309,12 @@ jobs:
 
             jq -n \
               --arg name "$device_name" \
-              --arg version "${{ github.event.release.tag_name }}" \
+              --arg version "$RELEASE_TAG" \
               --arg chipFamily "ESP32" \
               --arg path "$ota_url" \
               --arg md5 "$md5_checksum" \
-              --arg release_url "${{ github.event.release.html_url }}" \
-              --arg summary "${{ github.event.release.body }}" \
+              --arg release_url "$RELEASE_URL" \
+              --arg summary "$RELEASE_BODY" \
               '{
                 "name": $name,
                 "version": $version,

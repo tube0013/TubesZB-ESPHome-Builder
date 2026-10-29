@@ -94,3 +94,41 @@ def test_existing_mgm21_form_alias_targets_the_released_filename(tmp_path: Path)
     assert result.returncode == 0, result.stdout
     assert 'STATIC_IP' not in canonical.read_text()
     assert not canonical.with_name('tubeszb-dual-radio-kit-mgm21-2022.yaml').exists()
+
+
+@pytest.mark.parametrize('channel,folder', [('stable', 'ota_manifests'), ('beta', 'beta_ota_manifests')])
+def test_release_notes_are_json_data_not_shell_code(tmp_path: Path, channel: str, folder: str) -> None:
+    import hashlib
+    import json
+    import os
+    import shutil
+    import subprocess
+    import sys
+    assert shutil.which('jq'), 'Release manifest tests require jq, as the workflow does'
+    data = load(ROOT / '.github/workflows/build.yml')
+    job = data['jobs']['release-assets']
+    assert job['env']['RELEASE_BODY'] == '${{ github.event.release.body }}'
+    step = next(x for x in job['steps'] if x.get('name') == 'Generate OTA Manifests (' + channel + ')')
+    script = step['run'].replace('${{ github.repository }}', 'tube0013/TubesZB-ESPHome-Builder')
+    assert '${{' not in script
+    artifacts = tmp_path / 'artifacts'
+    artifacts.mkdir()
+    payload = b'test-ota-image'
+    (artifacts / 'test-model.ota.bin').write_bytes(payload)
+    # Supply the same md5sum CLI contract on macOS as on the Ubuntu Actions runner.
+    tools = tmp_path / 'tools'
+    tools.mkdir()
+    md5 = tools / 'md5sum'
+    md5.write_text('#!' + sys.executable + '\nimport hashlib,sys\nfrom pathlib import Path\n'
+                   'print(hashlib.md5(Path(sys.argv[1]).read_bytes()).hexdigest(), sys.argv[1])\n')
+    md5.chmod(0o755)
+    notes = '## Release notes\nA "quoted" value, `touch NOTES_WERE_EXECUTED`, and $(touch NOTES_WERE_EXECUTED).\n'
+    env = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
+           'RELEASE_TAG': '2026.10.29.0', 'RELEASE_URL': 'https://example.test/release', 'RELEASE_BODY': notes}
+    result = subprocess.run(['bash', '-eu', '-c', script], cwd=tmp_path, env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads((tmp_path / 'gh-pages' / folder / 'ota-test-model.json').read_text())
+    assert manifest['version'] == '2026.10.29.0'
+    assert manifest['builds'][0]['ota']['summary'] == notes
+    assert manifest['builds'][0]['ota']['md5'] == hashlib.md5(payload).hexdigest()
+    assert not (tmp_path / 'NOTES_WERE_EXECUTED').exists()
