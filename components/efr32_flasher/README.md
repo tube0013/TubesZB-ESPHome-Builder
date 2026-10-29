@@ -56,7 +56,7 @@ root-level `fw_url`, `md5` and optional `size` are used.
 ```yaml
 external_components:
   - source: github://youruser/yourrepo@latest
-    components: [efr32_flasher]
+    components: [efr32_flasher, efr32_info, zigbee_firmware_baud]
 
 uart:
   id: uart_bus

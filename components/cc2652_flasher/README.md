@@ -24,7 +24,7 @@ external_components:
   - source: github://oxan/esphome-stream-server
   # main component
   - source: github://tube0013/esphome-components
-    components: [cc2652_flasher]
+    components: [cc2652_flasher, zigbee_firmware_baud]
 ```
 
 ## YAML example
