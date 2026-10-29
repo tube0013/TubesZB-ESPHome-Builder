@@ -33,4 +33,3 @@ tubeszb_web:
     custom_url_text: efr32_custom_fw_url
     gateway_beta_switch: beta_channel_switch
     zigbee_beta_switch: zigbee_fw_beta_switch
-

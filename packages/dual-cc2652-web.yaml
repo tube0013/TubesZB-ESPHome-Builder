@@ -30,4 +30,3 @@ tubeszb_web:
     bootloader_button: cc2652_bootloader
     gateway_beta_switch: beta_channel_switch
     zigbee_beta_switch: zigbee_fw_beta_switch
-

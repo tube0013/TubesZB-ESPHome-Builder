@@ -159,4 +159,3 @@ This component is licensed under the GNU General Public License v3.0 (GPLv3).
 - Portions inspired by work in the XZG project (Arduino CC2652 flashing utilities).
 - You should have received a copy of the GNU General Public License
   along with this program. If not, see https://www.gnu.org/licenses/
-
