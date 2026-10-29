@@ -1,0 +1,180 @@
+name: Build Static IP ESPHome Firmware
+
+on:
+  issues:
+    types: [opened, edited]
+
+# Keep issue builds independent of the new runtime-network-settings release.
+# Source is the last published release, with its known-working compiler and components.
+env:
+  LEGACY_RELEASE_TAG: '2026.10.25.0'
+  LEGACY_SOURCE_REF: '7f968ca5aa95db46bd67e7be209946c45cb11bf5'
+  ESPHOME_LEGACY_VERSION: '2026.6.5'
+  LEGACY_COMPONENTS_REF: '0e35b4afe1ad12b17418626d3bd75b7bcad52de6'
+  LEGACY_DEVICE_ALIASES: '{"tubeszb-dual-radio-kit-mgm21-2022": "tubeszb-dual-radio-mgm21-2022"}'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  build:
+    # Only run for issues created from the "ESPHome Static IP Configuration"
+    # form (title is fixed by the template); the form's auto-label has
+    # historically not attached reliably, so gate on title instead.
+    if: startsWith(github.event.issue.title, '[ESPHome] New Configuration Request')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ env.LEGACY_SOURCE_REF }}
+        persist-credentials: false
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install ESPHome
+      # Frozen separately from ESPHOME_VERSION / ESPHOME_PRERELEASE_VERSION.
+      run: python -m pip install setuptools "esphome==${{ env.ESPHOME_LEGACY_VERSION }}"
+
+    - name: Parse issue form
+      id: parse_form
+      uses: onmax/issue-form-parser@v1.5
+      with:
+        issue_number: ${{ github.event.issue.number }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Validate input and render frozen static configuration
+      env:
+        ISSUE_PAYLOAD: ${{ steps.parse_form.outputs.payload }}
+      run: |
+        python - <<'PYLEGACY'
+        import ipaddress
+        import json
+        import os
+        from pathlib import Path
+        import re
+
+        allowed_devices = ['tubeszb-cc2652p2-poe-2023', 'tubeszb-cc2652p7-poe-2023', 'tubeszb-cc2652p2-poe-2021', 'tubeszb-cc2652p2-poe-2022', 'tubeszb-cc2652p2-ethusb-2023', 'tubeszb-cc2652p2-ethusb-2022', 'tubeszb-dual-radio-kit-cc2652', 'tubeszb-dr-cc2652-exp', 'tubeszb-efr32-mgm210-poe-2022', 'tubeszb-efr32-mgm210-poe-2023', 'tubeszb-efr32-mgm24-2023', 'tubeszb-dual-radio-kit-mgm24', 'tubeszb-dr-mgm24-exp', 'tubeszb-dual-radio-kit-mgm21-2022', 'tubeszb-dr-mgm21-22-exp', 'tubeszb-zw', 'tubeszb-zw-experimental', 'tubeszb-2026-zw', 'tubeszb-2026-zw-experimental']
+        payload = json.loads(os.environ["ISSUE_PAYLOAD"])
+        if not isinstance(payload, dict):
+            raise SystemExit("The issue form payload must be an object")
+        values = {}
+        for key in ("Device_Name", "Static_IP", "Gateway", "Subnet"):
+            value = payload.get(key)
+            if not isinstance(value, str) or not value.strip():
+                raise SystemExit("Missing issue form field: " + key)
+            values[key] = value.strip()
+        device_name = values["Device_Name"]
+        if device_name not in allowed_devices:
+            raise SystemExit("Unsupported device: " + device_name)
+        device_name = json.loads(os.environ["LEGACY_DEVICE_ALIASES"]).get(device_name, device_name)
+        for key in ("Static_IP", "Gateway", "Subnet"):
+            try:
+                values[key] = str(ipaddress.IPv4Address(values[key]))
+            except ipaddress.AddressValueError:
+                raise SystemExit("Invalid IPv4 address in " + key)
+        try:
+            ipaddress.IPv4Network("0.0.0.0/" + values["Subnet"])
+        except ValueError:
+            raise SystemExit("Subnet must be a contiguous IPv4 netmask")
+        component_ref = os.environ["LEGACY_COMPONENTS_REF"]
+        if re.fullmatch(r"[0-9a-f]{40}", component_ref) is None:
+            raise SystemExit("The legacy component source must be pinned to a commit")
+        path = Path("esphome-config") / (device_name + ".yaml")
+        source = path.read_text()
+        for placeholder, key in (("STATIC_IP", "Static_IP"), ("GATEWAY", "Gateway"), ("SUBNET", "Subnet")):
+            if placeholder not in source:
+                raise SystemExit("Frozen legacy template is missing " + placeholder + "; check the source pin")
+            source = source.replace(placeholder, values[key])
+        source = re.sub(r"(github://tube0013/esphome-components)(?:@[A-Za-z0-9_.\-/]+)?(?=[\s#]|$)",
+                        lambda match: match[1] + "@" + component_ref, source)
+        path.write_text(source)
+        with open(os.environ["GITHUB_ENV"], "a") as output:
+            for key, value in (("device_name", device_name), ("static_ip", values["Static_IP"]),
+                               ("gateway", values["Gateway"]), ("subnet", values["Subnet"])):
+                output.write(key + "=" + value + "\n")
+        print("Rendered " + str(path) + " from " + os.environ["LEGACY_RELEASE_TAG"])
+        PYLEGACY
+
+    - name: Compile ESPHome Firmware
+      run: |
+        device_yaml="esphome-config/${{ env.device_name }}.yaml"
+        esphome compile $device_yaml
+
+    # Same layout change as build.yml: ESPHome 2026.9.0 builds ESP-IDF targets
+    # natively rather than through PlatformIO, so the binaries moved from
+    # <build>/.pioenvs/<device_name>/ to <build>/build/, and the plain
+    # firmware.bin is now named after the device. Stage factory and OTA images
+    # in a flat folder, retaining firmware.bin when available for compatibility.
+    - name: Stage firmware artifacts
+      run: |
+        build_root="esphome-config/.esphome/build/${{ env.device_name }}"
+        mkdir -p artifacts
+
+        copy_first() {
+          src=$(find "$build_root" -type f -name "$1" -print -quit)
+          if [ -n "$src" ]; then cp "$src" "artifacts/$2"; fi
+          return 0
+        }
+
+        # Both supported flashing methods must be present in the download.
+        for kind in factory ota; do
+          src=$(find "$build_root" -type f -name "firmware.$kind.bin" -print -quit)
+          if [ -z "$src" ]; then
+            echo "::error::Could not find firmware.$kind.bin under $build_root"
+            find "$build_root" -type f -name '*.bin' -print
+            exit 1
+          fi
+          cp "$src" "artifacts/firmware.$kind.bin"
+        done
+
+        copy_first firmware.bin firmware.bin
+        [ -f artifacts/firmware.bin ] || copy_first "${{ env.device_name }}.bin" firmware.bin
+
+        ls -l artifacts
+
+    - name: Upload Firmware
+      id: upload_firmware
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware-${{ env.device_name }}-${{ github.run_id }}
+        path: artifacts
+        if-no-files-found: error
+
+    - name: Create comment with firmware link
+      uses: actions/github-script@v6
+      env:
+        FIRMWARE_ARTIFACT_URL: ${{ steps.upload_firmware.outputs.artifact-url }}
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const issue_number = ${{ github.event.issue.number }};
+          // Use the URL returned by the upload instead of looking it up again.
+          const firmwareArtifactUrl = process.env.FIRMWARE_ARTIFACT_URL;
+          if (!firmwareArtifactUrl) {
+            throw new Error('Firmware upload did not return an artifact URL.');
+          }
+
+          const commentBody = `
+          ## Firmware Build Complete
+
+          The firmware build for your device \`${{ env.device_name }}\` is complete. You can download the firmware files from the artifact link below (you must be logged into GitHub to download).
+
+          [Download Firmware Artifact](${firmwareArtifactUrl})
+
+          - **Static IP:** \`${{ env.static_ip }}\`
+          - **Gateway:** \`${{ env.gateway }}\`
+          - **Subnet:** \`${{ env.subnet }}\`
+          `;
+          
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issue_number,
+            body: commentBody
+          });

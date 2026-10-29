@@ -115,3 +115,25 @@ jobs:
         run: esphome compile manifests/tubeszb-efr32-mgm210-series-2.yaml
       - name: Compile the serial-only compatibility frontend
         run: esphome compile tests/fixtures/serial-only.yaml
+
+  legacy-static:
+    name: Validate frozen legacy static-IP builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out the preserved static-IP release
+        uses: actions/checkout@v4
+        with:
+          ref: 7f968ca5aa95db46bd67e7be209946c45cb11bf5
+          path: .ci/legacy-static-source
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install setuptools esphome==2026.6.5
+      - name: Validate every legacy form device and compile representative hardware
+        run: |
+          python tests/check_legacy_static.py --root .ci/legacy-static-source \
+            --compile tubeszb-cc2652p2-poe-2021 \
+            --compile tubeszb-efr32-mgm24-2023 \
+            --compile tubeszb-2026-zw

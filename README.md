@@ -46,8 +46,12 @@ Confirmed settings survive normal restarts and OTA updates that preserve NVS.
 The `firmware.factory.bin` image is for USB installation; `firmware.ota.bin` is
 for OTA installation through the device's web interface.
 
-Separate static-IP issue builds are retired. The files in `esphome-config/` are
-compatibility entry points to the same manifests used by release builds.
+The static-IP issue form and action remain available while the new firmware is
+being tested. They check out the frozen `2026.10.25.0` release source and use
+ESPHome `2026.6.5` plus pinned legacy components, independently of this branch's
+runtime-network-settings builds. The `esphome-config/` files on this branch remain
+compatibility entry points to the new manifests; the issue action reads those
+files from the frozen release instead. See [legacy build isolation](docs/legacy-static-ip.md).
 
 Requires ESPHome **2026.10.1 or later**; development validation uses **2026.10.1**.
 Before publishing a release, set the repository's `ESPHOME_VERSION` variable to

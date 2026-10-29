@@ -8,8 +8,10 @@ this feature from its implementation branch or a new release commit.
 
 Every release manifest includes `packages/network-settings.yaml`. This adds the
 `network_settings` external component from the shared GitHub repository. The old `esphome-config/` paths
-include these same manifests. There is no separately compiled static-IP firmware.
-The old static-IP issue form and workflow are removed.
+include these same manifests. New firmware has one image per model; legacy static-IP
+issue builds use their separate frozen source.
+The static-IP issue form and workflow remain available against a frozen legacy release;
+see [legacy build isolation](legacy-static-ip.md).
 
 The existing web frontend links to `/network`. The settings page embeds all HTML,
 CSS and JavaScript in firmware and needs no Internet connection or Home Assistant.
@@ -90,8 +92,7 @@ configure the desired static address in the UI. After confirming it once, normal
 OTA updates retain it. Erasing NVS or factory reset returns networking to DHCP.
 Older firmware does not read this component's settings.
 
-Project version `2026.10.25.1` is the development baseline. Set the final version
-and a new tag when preparing the release. Set repository variable `ESPHOME_VERSION`
+Project version `2026.10.29.0` is the prerelease target. Set repository variable `ESPHOME_VERSION`
 to 2026.10.1 or another tested compatible version. The release workflow now finds
 binaries in the native-IDF layout. No existing tag or external variable is changed.
 

@@ -14,11 +14,11 @@ updates and normal restarts. Include this notice in the published release body.
 
 This review intentionally builds on the 2026.10.25.1 release work: TCP send-buffer
 settings, background connectivity probes where already enabled, beta channels,
-and GitHub Pages feeds remain included. The static-IP issue form/workflow is
-retired because each model now has one firmware with saved network settings.
+and GitHub Pages feeds remain included. The static-IP issue form/workflow stays available on the frozen `2026.10.25.0`
+source, ESPHome `2026.6.5` and pinned legacy components during testing.
 
-The project version stays 2026.10.25.1 while this is a draft. Before publishing,
-assign the actual next release version/tag and switch the shared component ref
-from refs/pull/7/head to main after the component PR merges. ESPHome 2026.10.1 is
-the minimum for both release pins and manual builds. No release is published as
-part of these review fixes.
+The project version and prerelease tag are `2026.10.29.0`. Stage this as a draft
+prerelease; publishing it later triggers only the beta asset/feed path. Keep
+`refs/pull/7/head` until component PR #7 is merged, then switch the shared default
+to `main`. ESPHome `2026.10.1` is the minimum for the new firmware; the legacy
+issue action has its own immutable source and compiler pins.
