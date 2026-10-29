@@ -79,6 +79,17 @@ const server=http.createServer(async(req,res)=>{
     await page.getByText('You’re up to date.',{exact:true}).waitFor();
     assert.equal(actions.at(-1).path,'/tubeszb/check-update');
 
+    // A pending update that never began must leave restart available immediately.
+    device={...baseDevice(),action_pending:true,update_state:3,gateway_ota_state:0,restart_allowed:true};
+    await load('overview');
+    assert.equal(await page.getByRole('button',{name:'Restart device',exact:true}).isEnabled(),true);
+    await page.getByRole('button',{name:'Restart device',exact:true}).click();
+    await page.getByRole('dialog').waitFor();
+    await page.getByRole('button',{name:'Cancel',exact:true}).click();
+    device={...baseDevice(),gateway_ota_state:1,restart_allowed:false};await load('overview');
+    assert.equal(await page.getByRole('button',{name:'Restart device',exact:true}).isDisabled(),true);
+    device=baseDevice();await load('diagnostics');
+
     // Opening the shared dropdown captures once; section changes retain the stream and history.
     await page.getByRole('button',{name:'Diagnostics',exact:true}).click();
     assert.equal(streamCount,0);

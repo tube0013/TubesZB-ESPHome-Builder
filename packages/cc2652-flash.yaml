@@ -68,6 +68,10 @@ script:
                     id(cc2652_flash_session).observe(id(zigbee_flasher).get_flash_status());
                     return id(cc2652_flash_session).completed;
                 timeout: 35s
+            # An expired WaitUntilAction skips its condition. A long synchronous
+            # flash can therefore finish before observe() gets another call.
+            # Refresh the final native result before reporting failure or resuming.
+            - lambda: 'id(cc2652_flash_session).observe(id(zigbee_flasher).get_flash_status());'
             - if:
                 condition:
                   lambda: 'return !id(cc2652_flash_session).completed;'

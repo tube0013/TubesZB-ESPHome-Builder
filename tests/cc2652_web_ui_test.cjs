@@ -55,6 +55,15 @@ const server=http.createServer(async(req,res)=>{
   assert.equal(await page.getByText('Connect ZHA or Zigbee2MQTT to tcp://192.168.1.52:6638.',{exact:true}).isVisible(),true);
   assert.equal(await page.getByText('esp-wrover-kit',{exact:true}).isVisible(),true);
   const ready=()=>page.waitForFunction(()=>!document.querySelector('[data-action="check-update"]').disabled);
+  // Server-authorized recovery is available for a queued radio flash.
+  device.action_pending=true;device.restart_allowed=true;device.zigbee.result=1;device.zigbee.operation='flash';
+  await page.reload();await page.getByText('Zigbee operation in progress',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Restart device',exact:true}).isEnabled(),true);
+  device.restart_allowed=false;
+  await page.reload();await page.getByText('Zigbee operation in progress',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Restart device',exact:true}).isDisabled(),true);
+  device.action_pending=false;delete device.restart_allowed;device.zigbee.result=0;device.zigbee.operation='';
+  await page.reload();await page.getByText('Zigbee client connected',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Firmware',exact:true}).click();
   assert.deepEqual(await page.locator('[data-view=firmware] h2:visible').allTextContents(),['TubesZB firmware','Install a firmware file','Zigbee radio firmware']);
   assert.equal(await page.getByText('Custom radio firmware source',{exact:true}).isVisible(),false);

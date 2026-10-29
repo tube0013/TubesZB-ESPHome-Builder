@@ -89,3 +89,9 @@ Flash ownership now uses the native flasher result/sequence getter, rather than
 matching log messages. A queued operation that never starts times out after 35
 seconds and restores the bridge state. Active synchronous flashing and readback
 keep their existing ownership; progress at 100% alone does not signal completion.
+
+After the bounded wait, the automation unconditionally reads the native result
+again. ESPHome skips the wait condition once its timeout expires, including when
+a successful synchronous flash held the main loop for longer than 35 seconds.
+The final read preserves the success result and the 5-second identity-readback
+hold before restoring the bridge.

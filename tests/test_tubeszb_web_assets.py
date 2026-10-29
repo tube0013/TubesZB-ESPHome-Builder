@@ -32,3 +32,20 @@ def test_cc2652_flash_scripts_bind_the_radio_uart():
         assert "cc2652_flasher.update_firmware" not in source, path.name
         checked.append(path.name)
     assert len(checked) >= 9
+
+
+def test_long_cc2652_flash_observes_result_after_wait_timeout():
+    """Expiry skips the wait predicate; cleanup must still read the native result."""
+    from test_frontend_rollout import load
+    package=load(ROOT/'packages/cc2652-flash.yaml')
+    flash=next(x for x in package['script'] if x['id']=='flash_cc2652_safely')
+    actions=flash['then'][0]['if']['then']
+    wait=next(i for i,x in enumerate(actions) if 'wait_until' in x)
+    assert actions[wait]['wait_until']['timeout']=='35s'
+    assert actions[wait+1]=={'lambda':'id(cc2652_flash_session).observe(id(zigbee_flasher).get_flash_status());'}
+    failure=actions[wait+2]['if']
+    assert '!id(cc2652_flash_session).completed' in failure['condition']['lambda']
+    success=actions[wait+3]['if']
+    assert success['condition']['lambda']=='return id(cc2652_flash_session).success;'
+    assert success['then']==[{'delay':'5s'}]
+    assert 'resume_after' in actions[wait+4]['if']['condition']['lambda']
