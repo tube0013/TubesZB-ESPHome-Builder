@@ -104,3 +104,13 @@ def test_retired_cc2652_hardware_matches_existing_2021_profiles():
         pins={x['id']:x['pin'] for x in data['switch'] if x['platform']=='gpio'}
         assert pins=={'zRST_gpio':'33','zBSL':'32'}
         assert 'cc2652' in frontend(ROOT/'manifests'/(name+'.yaml'))
+
+
+def test_every_hardware_profile_has_an_explicit_model():
+    profiles=[]
+    for path in (ROOT/'manifests').glob('*.yaml'):
+        if 'esp32' not in load(path):continue
+        model=frontend(path).get('model')
+        assert model and model.startswith('TubesZB '),path.name
+        profiles.append(path.name)
+    assert len(profiles)==22

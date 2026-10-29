@@ -514,3 +514,6 @@ text_sensor:
     web_server:
       sorting_group_id: info_group
       sorting_weight: 40
+
+tubeszb_web:
+  model: "TubesZB CC2652P2 POE 2021"

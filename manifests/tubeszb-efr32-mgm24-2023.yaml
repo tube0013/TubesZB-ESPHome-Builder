@@ -753,3 +753,6 @@ efr32_info:
   firmware_text: ezsp_firmware
   ieee_text: ezsp_ieee
   raw_capture: true
+
+tubeszb_web:
+  model: "TubesZB MGM24"

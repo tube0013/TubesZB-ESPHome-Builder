@@ -113,3 +113,5 @@ jobs:
         run: esphome compile manifests/tubeszb-efr32-mgm12-pro1.yaml
       - name: Compile retired MGM210 Series 2 frontend
         run: esphome compile manifests/tubeszb-efr32-mgm210-series-2.yaml
+      - name: Compile the serial-only compatibility frontend
+        run: esphome compile tests/fixtures/serial-only.yaml

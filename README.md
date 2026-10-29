@@ -87,3 +87,7 @@ GitHub source; this variable only selects source for host/browser tests.
 Component host tests are maintained in esphome-components. This repo keeps
 hardware configuration contracts and browser integration tests; CI runs the
 component suite directly from the matching external checkout.
+
+Product model labels are explicit in the hardware manifests, so changing a device
+hostname does not alter the UI's model identity. Component cleanup and the deferred
+radio-controller refactor are tracked in the paired component PR.

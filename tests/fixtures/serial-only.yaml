@@ -1,0 +1,14 @@
+# Compile coverage for the serial-only backend, independent of product manifests.
+packages:
+  base: !include ../../manifests/tubeszb-efr32-mgm24-2023.yaml
+esphome:
+  name: tubeszb-serial-profile-check
+tubeszb_web:
+  model: TubesZB Serial Compatibility Check
+  zigbee: !remove
+  serial_radio:
+    stream_server_id: stream_srv
+    reset_button: zRST
+    pause_button: pause_serial_server
+    resume_button: resume_serial_server
+    baud_select: change_baud_rate
