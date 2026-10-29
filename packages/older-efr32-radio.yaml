@@ -1,0 +1,252 @@
+# MGM12 and MGM210/MGM21: two-wire UART and model-specific flat manifests.
+substitutions:
+  older_efr32_uart: uart_bus
+  older_efr32_bootloader_entry: gpio
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [efr32_flasher, zigbee_firmware_baud, tubeszb_web]
+  - source: github://tube0013/esphome-components
+    components: [efr32_info]
+
+esphome:
+  on_boot:
+    - priority: -100
+      then:
+        - script.execute: boot_probe_sequence
+
+globals:
+  - id: radio_was_paused
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: manual_bootloader_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: bootloader_was_paused
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+binary_sensor:
+  - platform: template
+    id: ncp_busy
+    name: NCP Busy
+    device_class: running
+    on_press:
+      - lambda: 'id(radio_was_paused) = id(${older_efr32_stream}).is_paused();'
+      - stream_server.pause: { id: '${older_efr32_stream}' }
+    on_release:
+      - if:
+          condition:
+            lambda: 'return !id(radio_was_paused);'
+          then:
+            - stream_server.resume: { id: '${older_efr32_stream}' }
+
+script:
+  - id: boot_probe_sequence
+    mode: single
+    then:
+      # Local identity is independent of internet access, after saved UART setup.
+      - delay: 2s
+      - wait_until:
+          condition:
+            lambda: 'return !id(device_network_settings).is_trial_active() && !id(ncp_busy).state && !id(manual_bootloader_active);'
+          timeout: 130s
+      - if:
+          condition:
+            lambda: 'return !id(device_network_settings).is_trial_active() && !id(ncp_busy).state && !id(manual_bootloader_active);'
+          then:
+            - efr32_info.probe: { id: zigbee_info }
+
+  - id: fw_update_mode
+    mode: single
+    then:
+      - lambda: |-
+          id(bootloader_was_paused) = id(${older_efr32_stream}).is_paused();
+          id(manual_bootloader_active) = true;
+      - stream_server.pause: { id: '${older_efr32_stream}' }
+      - efr32_flasher.enter_bootloader: { id: zigbee_efr32 }
+      - wait_until:
+          condition:
+            lambda: 'return !id(zigbee_efr32).bootloader_pending();'
+      - if:
+          condition:
+            lambda: 'return !id(zigbee_efr32).bootloader_succeeded();'
+          then:
+            - lambda: 'id(manual_bootloader_active) = false;'
+            - if:
+                condition:
+                  lambda: 'return !id(bootloader_was_paused);'
+                then:
+                  - stream_server.resume: { id: '${older_efr32_stream}' }
+
+  - id: apply_uart_baud
+    mode: queued
+    parameters:
+      baud_str: string
+    then:
+      - if:
+          condition:
+            lambda: 'return id(zigbee_efr32).is_applying_manifest_baud() || baud_str.empty();'
+          then:
+            - script.stop: apply_uart_baud
+      - lambda: |-
+          const auto baud = strtoul(baud_str.c_str(), nullptr, 10);
+          const bool was_paused = id(${older_efr32_stream}).is_paused();
+          id(${older_efr32_stream}).pause();
+          id(zigbee_efr32).set_runtime_baud_rate(baud);
+          if (id(${older_efr32_uart}).get_baud_rate() != baud) {
+            id(${older_efr32_uart}).flush();
+            id(${older_efr32_uart}).set_baud_rate(baud);
+            id(${older_efr32_uart}).load_settings(false);
+          }
+          if (!was_paused) id(${older_efr32_stream}).resume();
+
+switch:
+  - platform: template
+    id: beta_channel_switch
+    name: Beta Firmware Channel
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    turn_on_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-${older_efr32_profile}.json");'
+    turn_off_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-${older_efr32_profile}.json");'
+
+select:
+  - platform: template
+    id: change_baud_rate
+    name: Baud rate
+    options: ['115200', '230400', '460800', '921600']
+    initial_option: '115200'
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    set_action:
+      - script.execute:
+          id: apply_uart_baud
+          baud_str: !lambda 'return x;'
+
+text:
+  - platform: template
+    id: efr32_custom_fw_url
+    name: EFR32 Custom Firmware URL
+    mode: text
+    optimistic: true
+    restore_value: false
+    entity_category: config
+    set_action:
+      - lambda: 'id(zigbee_efr32).set_update_url(x.empty() ? "${older_efr32_manifest}" : x);'
+
+button:
+  - platform: template
+    id: trigger_efr32_bootloader
+    name: Trigger Bootloader Manually
+    on_press:
+      - script.execute: fw_update_mode
+  - platform: template
+    id: flash_efr32
+    name: Flash EFR32
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed() && !id(device_network_settings).is_trial_active() && !id(ncp_busy).state && !id(fw_update_mode).is_running();'
+          then:
+            - efr32_flasher.update_firmware: { id: zigbee_efr32 }
+  - platform: template
+    id: check_efr32_update
+    name: Check EFR32 Update
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed() && !id(device_network_settings).is_trial_active() && !id(ncp_busy).state && !id(fw_update_mode).is_running();'
+          then:
+            - efr32_flasher.check_update: { id: zigbee_efr32 }
+  - platform: template
+    id: ezsp_replay_identity
+    name: Probe EZSP Info
+    on_press:
+      - if:
+          condition:
+            lambda: 'return !id(ncp_busy).state && !id(fw_update_mode).is_running() && !id(manual_bootloader_active);'
+          then:
+            - efr32_info.probe: { id: zigbee_info }
+
+text_sensor:
+  - platform: template
+    id: ezsp_firmware
+    name: Zigbee - Current FW Version
+  - platform: template
+    id: zb_latest_fw
+    name: Zigbee - Latest FW Version
+  - platform: template
+    id: board_name
+    name: Zigbee Board
+  - platform: template
+    id: mfg_string
+    name: Zigbee Manufacturer
+  - platform: template
+    id: ezsp_ieee
+    name: Zigbee IEEE Address
+  - platform: template
+    id: ezsp_info_status
+    name: Zigbee Info Status
+
+# No MG24 variant detection/fallback, RTS, CTS or hard-coded TX/RX pins.
+efr32_flasher:
+  id: zigbee_efr32
+  uart_id: '${older_efr32_uart}'
+  url: '${older_efr32_manifest}'
+  variant: flat
+  hardware_flow_control: false
+  bootloader_entry: ${older_efr32_bootloader_entry}
+  rst_switch: zRST_gpio
+  busy_binary_sensor: ncp_busy
+  runtime_baud_select: change_baud_rate
+  latest_fw_version_text: zb_latest_fw
+  bootloader_baud_rate: 115200
+  show_progress: true
+  progress_step: 5
+
+efr32_info:
+  id: zigbee_info
+  uart_id: '${older_efr32_uart}'
+  # The busy callbacks above own pause/resume, including prior manual pauses.
+  busy_binary_sensor: ncp_busy
+  status_text: ezsp_info_status
+  manufacturer_text: mfg_string
+  board_name_text: board_name
+  firmware_text: ezsp_firmware
+  ieee_text: ezsp_ieee
+
+tubeszb_web:
+  id: tubeszb_frontend
+  network_settings_id: device_network_settings
+  ethernet_id: ethernet0
+  uart_id: '${older_efr32_uart}'
+  firmware_update_id: esphome_fw_updater
+  zigbee:
+    bootloader_script: fw_update_mode
+    bootloader_button: trigger_efr32_bootloader
+    stream_server_id: '${older_efr32_stream}'
+    busy_sensor: ncp_busy
+    firmware_sensor: ezsp_firmware
+    latest_sensor: zb_latest_fw
+    board_sensor: board_name
+    manufacturer_sensor: mfg_string
+    ieee_sensor: ezsp_ieee
+    status_sensor: ezsp_info_status
+    check_button: check_efr32_update
+    flash_button: flash_efr32
+    probe_button: ezsp_replay_identity
+    reset_button: zRST
+    pause_button: pause_stream
+    resume_button: resume_stream
+    baud_select: change_baud_rate
+    custom_url_text: efr32_custom_fw_url
+    gateway_beta_switch: beta_channel_switch

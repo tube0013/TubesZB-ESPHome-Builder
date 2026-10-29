@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network settings · TubesZB</title>
+<style>
+  :root{color-scheme:light dark;font:16px/1.5 system-ui,sans-serif;background:#f2f5f7;color:#172b36}
+  *{box-sizing:border-box}body{max-width:720px;margin:0 auto;padding:28px 20px 48px}
+  a{color:#096b96}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .brand{font-weight:750;letter-spacing:.04em}h1{font-size:1.8rem;line-height:1.2;margin:0 0 10px}
+  h2{font-size:1.05rem;margin:0 0 8px}p{margin:8px 0}.muted,small{color:#506672}
+  section{background:#fff;border:1px solid #d5dfe5;border-radius:12px;padding:24px;margin-top:20px}
+  label{display:block;font-weight:600;margin-bottom:6px}input,select,button{font:inherit}
+  input,select{width:100%;padding:10px 12px;border:1px solid #9aadb9;border-radius:6px;background:transparent;color:inherit}
+  input[aria-invalid=true]{border-color:#b22c25;outline-color:#b22c25}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px;margin-top:20px}
+  .field-error{display:block;color:#b22c25;font-size:.85rem;min-height:1.2em;margin-top:4px}
+  fieldset{border:0;padding:0;margin:0;min-width:0}button,.button{display:inline-block;border:0;border-radius:6px;padding:11px 16px;background:#086a91;color:white;font-weight:650;text-decoration:none;cursor:pointer}
+  button.secondary{background:transparent;color:inherit;border:1px solid #9aadb9}
+  button:disabled{opacity:.5;cursor:default}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+  .notice{border-left:4px solid #bf8200;background:#fff8df}.error{color:#a02620}
+  #connection{overflow-wrap:anywhere}#message:empty{display:none}[hidden]{display:none!important}
+  @media(max-width:520px){.grid{grid-template-columns:1fr}section{padding:18px}header{align-items:flex-start;gap:16px}}
+  @media(prefers-color-scheme:dark){:root{background:#101c24;color:#e6edf1}section{background:#192934;border-color:#344b5b}.muted,small{color:#adbfca}a{color:#79c8ef}.notice{background:#352f1d}.error,.field-error{color:#ffaaa4}}
+</style>
+<header><span class="brand">TubesZB</span><a href="/">← Device overview</a></header>
+<main>
+  <h1>Network settings</h1>
+  <p class="muted">Choose how this device gets its IPv4 address.</p>
+  <p id="connection" class="muted">Connecting to device…</p>
+  <section id="trial" class="notice" hidden aria-labelledby="trial-heading">
+    <h2 id="trial-heading">Keep these network settings?</h2>
+    <p>Confirm that you can reach the device at its new address.</p>
+    <p id="countdown" role="timer"></p>
+    <p id="return-location"></p>
+    <div class="actions"><button id="keep" type="button">Keep settings</button><button id="revert" type="button" class="secondary">Revert now</button></div>
+  </section>
+  <section id="reconnect" class="notice" hidden aria-labelledby="reconnect-heading">
+    <h2 id="reconnect-heading">Device restarting</h2>
+    <p id="reconnect-description"></p>
+    <p id="reconnect-location"></p>
+    <p id="reconnect-fallback" class="muted"></p>
+  </section>
+  <section aria-labelledby="address-heading">
+    <h2 id="address-heading">Address configuration</h2>
+    <form id="network-form" novalidate>
+      <fieldset id="settings" disabled>
+        <label for="mode">Address mode</label>
+        <select id="mode" name="mode"><option value="dhcp">DHCP (automatic)</option><option value="static">Static IP</option></select>
+        <p id="dhcp-help" class="muted">Your router assigns the address and DNS servers.</p>
+        <div id="static-fields" class="grid" hidden>
+          <div><label for="ip">IP address</label><input id="ip" name="ip" inputmode="decimal" maxlength="15" autocomplete="off" spellcheck="false" placeholder="192.168.1.50" aria-describedby="ip-error"><span id="ip-error" class="field-error"></span></div>
+          <div><label for="subnet">Subnet mask</label><input id="subnet" name="subnet" inputmode="decimal" maxlength="15" autocomplete="off" spellcheck="false" placeholder="255.255.255.0" aria-describedby="subnet-error"><span id="subnet-error" class="field-error"></span></div>
+          <div><label for="gateway">Gateway</label><input id="gateway" name="gateway" inputmode="decimal" maxlength="15" autocomplete="off" spellcheck="false" placeholder="192.168.1.1" aria-describedby="gateway-error"><span id="gateway-error" class="field-error"></span></div>
+          <div><label for="dns1">Primary DNS</label><input id="dns1" name="dns1" inputmode="decimal" maxlength="15" autocomplete="off" spellcheck="false" placeholder="192.168.1.1" aria-describedby="dns1-error"><span id="dns1-error" class="field-error"></span></div>
+          <div><label for="dns2">Secondary DNS <small>(optional)</small></label><input id="dns2" name="dns2" inputmode="decimal" maxlength="15" autocomplete="off" spellcheck="false" placeholder="1.1.1.1" aria-describedby="dns2-error"><span id="dns2-error" class="field-error"></span></div>
+        </div>
+        <p class="muted">Applying settings restarts the device and briefly disconnects its radio connection. You then have two minutes to open the new address and keep the settings.</p>
+        <div class="actions"><button id="apply" type="submit">Apply &amp; Restart</button><button id="restore-dhcp" type="button" class="secondary">Use DHCP</button></div>
+      </fieldset>
+    </form>
+    <p id="message" role="status" aria-live="polite"></p>
+  </section>
+</main>
+<script>
+/* NETWORK_VALIDATION */
+</script>
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const fields = ['ip', 'subnet', 'gateway', 'dns1', 'dns2'];
+  let status = null, busy = false, restarting = false, poll = null, deadline = 0, validationMessage = false;
+  function message(text, error = false) { $('message').textContent = text; $('message').className = error ? 'error' : ''; }
+  function addressURL(address) { const url = new URL('/network', location.href); url.hostname = address; return url.href; }
+  function link(container, address, text) {
+    const anchor = document.createElement('a'); anchor.href = addressURL(address); anchor.textContent = text || anchor.href;
+    container.replaceChildren(anchor);
+  }
+  function values() { return Object.fromEntries(['mode', ...fields].map(id => [id, $(id).value])); }
+  function validate(show = true) {
+    const errors = TZBNetworkValidation.validate(values());
+    if (show) for (const field of fields) {
+      $(field).setAttribute('aria-invalid', String(Boolean(errors[field])));
+      $(field + '-error').textContent = errors[field] || '';
+    }
+    return errors;
+  }
+  function modeChanged() {
+    const isStatic = $('mode').value === 'static';
+    $('static-fields').hidden = !isStatic; $('dhcp-help').hidden = isStatic;
+    fields.forEach(field => { $(field).disabled = !isStatic; });
+    validate(false);
+  }
+  function controls() {
+    $('settings').disabled = !status || busy || restarting || status.testing || !status.storage_ok;
+    $('keep').disabled = $('revert').disabled = busy || restarting || !status || !status.storage_ok || !status.testing;
+  }
+  async function request(path, data) {
+    const options = {cache:'no-store', signal:AbortSignal.timeout(5000)};
+    if (data !== undefined) {
+      options.method = 'POST';
+      options.headers = {'Content-Type':'application/x-www-form-urlencoded', 'X-TubesZB-Network':status.nonce};
+      options.body = new URLSearchParams(data);
+    }
+    const response = await fetch('/network/' + path, options);
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || 'The device could not complete the request.');
+    return body;
+  }
+  function showRestart(target, fallback, trial) {
+    restarting = true; clearTimeout(poll); $('trial').hidden = true; $('reconnect').hidden = false;
+    $('reconnect-description').textContent = trial ? 'Wait a few seconds, then open the new address and click Keep settings.' : 'Wait a few seconds, then reconnect to the previous configuration.';
+    link($('reconnect-location'), target);
+    $('reconnect-fallback').textContent = trial ? 'Without confirmation, the device will restore ' + fallback + '. If a DHCP address changed, check your router’s lease list.' : 'If the device uses DHCP, check your router’s lease list if its hostname does not resolve.';
+    controls();
+  }
+  async function refresh(initial = false) {
+    clearTimeout(poll);
+    if (busy || restarting) return;
+    try {
+      status = await request('status');
+      $('connection').textContent = (status.mode === 'static' ? 'Static IP' : 'DHCP') + ' · ' + status.ip;
+      if (initial) {
+        $('mode').value = status.mode;
+        for (const field of fields) $(field).value = status[field] === '0.0.0.0' ? '' : status[field];
+        modeChanged();
+      }
+      $('trial').hidden = !status.testing;
+      if (status.testing) {
+        deadline = performance.now() + status.remaining * 1000;
+        const fallback = status.return_ip || status.hostname;
+        $('return-location').textContent = 'If not confirmed, return to ';
+        const anchor = document.createElement('a'); anchor.href = addressURL(fallback); anchor.textContent = fallback;
+        $('return-location').append(anchor);
+        tick();
+      }
+      if (!status.storage_ok) message('Network settings storage is unavailable. Restart the device before making changes.', true);
+      if (status.restarting) showRestart(status.next_ip || status.hostname, status.return_ip || status.hostname, status.trial_pending);
+      controls();
+    } catch (error) { message('Cannot reach the device. ' + error.message, true); }
+    if (!restarting && (!status || status.testing)) poll = setTimeout(() => { if (document.visibilityState === 'visible') refresh(!status); }, 3000);
+  }
+  function tick() {
+    if (!status || !status.testing || restarting) return;
+    const seconds = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
+    $('countdown').textContent = 'Automatic rollback in ' + seconds + ' seconds.';
+    if (seconds === 0) showRestart(status.return_ip || status.hostname, '', false);
+  }
+  async function apply(config) {
+    if (busy || restarting) return;
+    busy = true; controls(); message('Saving trial configuration…');
+    try {
+      await request('apply', config);
+      const target = config.mode === 'static' ? config.ip : status.hostname;
+      const fallback = status.mode === 'static' ? status.ip : status.hostname;
+      showRestart(target, fallback, true); message('Trial saved. Reconnect to confirm.');
+    } catch (error) {
+      message(error.message + ' If the connection dropped, reconnect and check for a pending trial before retrying.', true);
+    } finally { busy = false; controls(); if (!restarting) await refresh(); }
+  }
+  $('network-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const errors = validate();
+    if (Object.keys(errors).length) { $(Object.keys(errors)[0]).focus(); validationMessage = true; message('Correct the highlighted fields before applying.', true); return; }
+    validationMessage = false;
+    apply(values());
+  });
+  $('mode').addEventListener('change', modeChanged);
+  fields.forEach(field => $(field).addEventListener('input', () => {
+    if (!Object.keys(validate()).length && validationMessage) { message(''); validationMessage = false; }
+  }));
+  $('restore-dhcp').addEventListener('click', () => { $('mode').value = 'dhcp'; modeChanged(); apply({mode:'dhcp'}); });
+  for (const [id, action] of [['keep', 'confirm'], ['revert', 'revert']]) $(id).addEventListener('click', async () => {
+    if (busy || restarting) return;
+    busy = true; controls();
+    try {
+      await request(action, {});
+      if (action === 'revert') showRestart(status.return_ip || status.hostname, '', false);
+      else message('Network settings confirmed and saved.');
+    } catch (error) { message(error.message, true); }
+    finally { busy = false; if (!restarting) await refresh(true); controls(); }
+  });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !restarting) refresh(); });
+  setInterval(tick, 1000);
+  refresh(true);
+})();
+</script>
+</html>

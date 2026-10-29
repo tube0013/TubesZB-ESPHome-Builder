@@ -1,10 +1,26 @@
+substitutions:
+  older_efr32_stream: stream_srv
+  older_efr32_profile: tubeszb-efr32-mgm210-poe-2022
+  older_efr32_manifest: https://tube0013.github.io/tube_gateways/firmware/efr32manifest_mgm210_poe.json
+
+packages:
+  network_settings: !include ../packages/network-settings.yaml
+  zigbee_web: !include ../packages/older-efr32-radio.yaml
+
 esphome:
   name: tubeszb-efr32-mgm210-poe-2022
   project:
     name: tubeszb.efr32_mgm210_poe_2022
-    version: "2026.06.24.1"
-  min_version: 2026.3.2
+    version: "2026.10.25.1"
+  min_version: 2026.10.0
   on_boot:
+    - priority: 350
+      then:
+        - if:
+            condition:
+              switch.is_on: beta_channel_switch
+            then:
+              - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-${older_efr32_profile}.json");'
     - priority: 150   # restore user-selected baud after core init/reset sequence
       then:
         - lambda: |-
@@ -53,11 +69,6 @@ ethernet:
     then:
       - script.execute: on_ethernet_connect
 
-    # Optional manual IP
-  #manual_ip:
-  #  static_ip: STATIC_IP
-  #  gateway: GATEWAY
-  #  subnet: SUBNET
 
 # Enable logging
 logger:
@@ -89,9 +100,15 @@ interval:
       - delay: 5s
       - if:
           condition:
-            lambda: 'return id(has_internet);'
+            lambda: 'return id(device_network_settings).internet_allowed() && id(has_internet);'
           then:
-            - update.check: esphome_fw_updater
+            - if:
+                condition:
+                  lambda: 'return id(device_network_settings).internet_allowed();'
+                then:
+                  - lambda: 'id(tubeszb_frontend).check_gateway_update();'
+                else:
+                  - logger.log: "Skipped firmware request: Use without internet is enabled."
           else:
             - logger.log: "Skipping update checks: No Internet."
 
@@ -138,16 +155,23 @@ script:
     then:
       - if:
           condition:
+            lambda: 'return !id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: check_connectivity
+      - if:
+          condition:
             lambda: 'return id(ethernet0).is_connected();'
           then:
             - http_request.get:
                 url: https://www.google.com/generate_204
                 on_response:
                   then:
-                    - lambda: 'id(has_internet) = (response->status_code == 204);'
+                    - lambda: 'id(has_internet) = id(device_network_settings).internet_allowed() && (response->status_code == 204);'
                     - if:
                         condition:
-                          lambda: 'return id(has_internet);'
+                          lambda: 'return id(device_network_settings).internet_allowed() && id(has_internet);'
                         then:
                           - script.execute: run_update_checks
           else:
@@ -155,45 +179,27 @@ script:
 
   - id: run_update_checks
     then:
-      - logger.log: "Internet confirmed. Triggering firmware checks."
-      - update.check: esphome_fw_updater
-
-  - id: apply_uart_baud
-    mode: queued
-    parameters:
-      baud_str: string
-    then:
       - if:
           condition:
-            lambda: 'return baud_str.empty();'
+            lambda: 'return !id(device_network_settings).internet_allowed();'
           then:
-            - logger.log:
-                format: "apply_uart_baud: empty baud_str; skipping"
-                level: DEBUG
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: run_update_checks
+      - logger.log: "Internet confirmed. Triggering firmware checks."
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(tubeszb_frontend).check_gateway_update();'
+
           else:
-            - stream_server.pause: { id: stream_srv }
-            - delay: 50ms
-            - lambda: |-
-                auto *bus = id(uart_bus);
-                const uint32_t new_baud_rate = strtoul(baud_str.c_str(), nullptr, 10);
-                const uint32_t current_baud = bus->get_baud_rate();
-                ESP_LOGD("apply_uart_baud", "Changing baud rate from %u to %u", current_baud, new_baud_rate);
-                if (current_baud == new_baud_rate) {
-                  ESP_LOGD("apply_uart_baud", "Requested baud already active; skipping reconfig");
-                  return;
-                }
-                // Best-effort drain TX without blocking indefinitely (avoid WDT).
-                #include "driver/uart.h"
-                const uart_port_t uart_num = static_cast<uart_port_t>(bus->get_hw_serial_number());
-                uart_wait_tx_done(uart_num, pdMS_TO_TICKS(50));
-                uart_flush_input(uart_num);
-                App.feed_wdt();
-                bus->set_baud_rate(new_baud_rate);
-                App.feed_wdt();
-                bus->load_settings();
-                App.feed_wdt();
-            - delay: 50ms
-            - stream_server.resume: { id: stream_srv }
+            - logger.log: "Skipped firmware request: Use without internet is enabled."
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed() && !id(device_network_settings).is_trial_active();'
+          then:
+            - button.press: check_efr32_update
 
 switch:
   - platform: gpio
@@ -236,6 +242,17 @@ button:
       - switch.turn_on: zRST_gpio
       - delay: 15ms
       - switch.turn_off: zRST_gpio
+      - lambda: 'id(zigbee_efr32).restore_runtime_baud();'
+      - if:
+          condition:
+            lambda: 'return id(manual_bootloader_active);'
+          then:
+            - if:
+                condition:
+                  lambda: 'return !id(bootloader_was_paused);'
+                then:
+                  - stream_server.resume: { id: '${older_efr32_stream}' }
+            - lambda: 'id(manual_bootloader_active) = false;'
 
   - platform: template
     name: "Pause Stream"
@@ -254,29 +271,6 @@ button:
       sorting_weight: 30
     on_press:
       - stream_server.resume: { id: stream_srv }
-
-select:
-  - id: change_baud_rate
-    name: Baud rate
-    platform: template
-    options:
-      - "115200"
-      - "230400"
-      - "460800"
-      - "921600"
-    initial_option: "115200"
-    optimistic: true
-    restore_value: True
-    internal: false
-    entity_category: config
-    icon: mdi:swap-horizontal
-    web_server:
-      sorting_group_id: zigbee_control_group
-      sorting_weight: 10
-    set_action:
-      - script.execute:
-          id: apply_uart_baud
-          baud_str: !lambda 'return x;'
 
 uart:
   id: uart_bus
@@ -355,3 +349,10 @@ text_sensor:
     web_server:
       sorting_group_id: info_group
       sorting_weight: 50
+
+tubeszb_web:
+  model: "TubesZB MGM210 PoE 2022"
+
+# Physical boot output remains available on this standalone board.
+efr32_flasher:
+  boot_switch: zBSL

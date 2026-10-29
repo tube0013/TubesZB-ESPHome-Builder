@@ -1,0 +1,33 @@
+# Shared frontend bindings; CC2652 retains its existing flasher and GPIO actions.
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [tubeszb_web]
+
+tubeszb_web:
+  id: tubeszb_frontend
+  network_settings_id: device_network_settings
+  ethernet_id: ethernet0
+  uart_id: uart_bus_zb
+  firmware_update_id: esphome_fw_updater
+  zwave_uart_id: uart_bus_zw
+  model: "TubesZB Dual Radio CC2652 + Z-Wave"
+  cc2652:
+    flash_script: flash_cc2652_safely
+    boot_probe_script: probe_cc2652_on_boot
+    stream_server_id: zb
+    firmware_sensor: zb_fw_version
+    latest_sensor: zb_latest_fw
+    board_sensor: zb_variant
+    ieee_sensor: zb_ieee
+    check_button: check_cc2652_update
+    flash_button: flash_cc2652
+    probe_button: detect_cc2652_variant
+    reset_button: zRST
+    pause_button: pause_stream
+    resume_button: resume_stream
+    bootloader_button: cc2652_bootloader
+    gateway_beta_switch: beta_channel_switch
+    zigbee_beta_switch: zigbee_fw_beta_switch
+

@@ -1,15 +1,39 @@
+packages:
+  cc2652_flash: !include
+    file: ../packages/cc2652-flash.yaml
+    vars:
+      cc2652_stream_server: stream_srv
+  network_settings: !include ../packages/network-settings.yaml
+  zigbee_web: !include ../packages/cc2652-web.yaml
+
 esphome:
   name: tubeszb-cc2652p2-ethusb-2022
   project:
     name: tubeszb.cc2652p2-ethusb-2022
-    version: "2026.06.24.1"
-  min_version: 2026.3.2
+    version: "2026.10.25.1"
+  min_version: 2026.10.0
+  includes:
+    - <freertos/task.h>
   on_boot:
     - priority: 600
       then:
         - switch.turn_on: zRST_gpio
         - delay: 15ms
         - switch.turn_off: zRST_gpio
+    - priority: 145
+      then:
+        - if:
+            condition:
+              switch.is_on: beta_channel_switch
+            then:
+              - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json");'
+    - priority: 100
+      then:
+        - if:
+            condition:
+              switch.is_on: zigbee_fw_beta_switch
+            then:
+              - lambda: 'id(zigbee_flasher).set_update_url("https://tube0013.github.io/tube_gateways/firmware/cc2652manifest-beta.json");'
 
 esp32:
   board: esp-wrover-kit
@@ -28,8 +52,12 @@ esp32:
       CONFIG_UART_ISR_IN_IRAM: "y"
 
 external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [cc2652_flasher, zigbee_firmware_baud]
   - source: github://tube0013/esphome-components
-    components: [cc2652_flasher, stream_server]
+    components: [stream_server]
 
 # dashboard_import:
 #   package_import_url: github://tube0013/tube_gateways/models/current/tubeszb-cc2652-eth_usb/firmware/esphome/tubezb-cc2652p2-ethusb-2022.yaml
@@ -55,6 +83,14 @@ ethernet:
   #  gateway: GATEWAY
   #  subnet: SUBNET
 
+# lwIP per-socket TCP send buffer. The ESP-IDF default of 5744 bytes stalls
+# stream_server's writev() during EZSP/ZNP bursts, which backs up the ring
+# buffer and can drop frames ("outgoing buffer is full: stream will be
+# corrupted!"). 16kB widens that window; heap cost applies only while a
+# connection has data in flight.
+network:
+  tcp_send_buffer: 16kB
+
 # Enable logging
 logger:
   level: DEBUG
@@ -69,6 +105,8 @@ ota:
   - platform: http_request
 
 http_request:
+  id: http_request_id
+  watchdog_timeout: 10s
 
 update:
   - platform: http_request
@@ -85,11 +123,11 @@ interval:
       - delay: 5s
       - if:
           condition:
-            lambda: 'return id(has_internet);'
+            lambda: 'return id(device_network_settings).internet_allowed() && id(has_internet) && !id(device_network_settings).is_trial_active();'
           then:
-            - update.check: esphome_fw_updater
+            - lambda: 'id(tubeszb_frontend).check_gateway_update();'
             - delay: 1s
-            - cc2652_flasher.check_update: { id: zigbee_flasher }
+            - lambda: 'id(tubeszb_frontend).request_cc2652_check();'
           else:
             - logger.log: "Skipping update checks: No Internet."
 
@@ -136,41 +174,69 @@ script:
     then:
       - if:
           condition:
+            lambda: 'return !id(device_network_settings).internet_allowed();'
+          then:
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: check_connectivity
+      - if:
+          condition:
             lambda: 'return id(ethernet0).is_connected();'
           then:
-            - http_request.get:
-                url: https://www.google.com/generate_204
-                on_response:
-                  then:
-                    - lambda: 'id(has_internet) = (response->status_code == 204);'
-                    - if:
-                        condition:
-                          lambda: 'return id(has_internet);'
-                        then:
-                          - script.execute: run_update_checks
+            # The generate_204 probe used to run inline via http_request.get, which blocks
+            # the main loop for its full timeout (~4.5s) whenever there's no internet route
+            # (DNS/connect hangs rather than failing fast). That was surviving the hardware
+            # watchdog (see watchdog_timeout above) but still stalling the loop long enough
+            # to corrupt in-flight API connections (BAD_INDICATOR). Run the probe on a
+            # background FreeRTOS task instead -- that task is never registered with the
+            # ESP-IDF task watchdog, so it can block as long as it needs to without
+            # affecting the main loop at all. Results are handed back via defer(), which
+            # is safe to call from another task and runs on the next loop() iteration.
+            - lambda: |-
+                struct ConnCheckCtx { esphome::http_request::HttpRequestComponent *req; };
+                auto *ctx = new ConnCheckCtx{ id(http_request_id) };
+
+                xTaskCreate([](void *param) {
+                  auto *ctx = static_cast<ConnCheckCtx *>(param);
+                  auto container = id(device_network_settings).internet_allowed() ? ctx->req->get("https://www.google.com/generate_204") : nullptr;
+                  bool ok = container && container->status_code == 204;
+                  if (container) container->end();
+
+                  ctx->req->defer([ok]() {
+                    id(has_internet) = ok && id(device_network_settings).internet_allowed();
+                    if (id(has_internet)) id(run_update_checks)->execute();
+                  });
+                  delete ctx;
+                  vTaskDelete(nullptr);
+                }, "conn_check", 8192, ctx, 1, nullptr);
           else:
             - logger.log: "Ethernet not ready yet. Skipping connectivity check."
 
   - id: run_update_checks
     then:
-      - logger.log: "Internet confirmed. Triggering firmware checks."
       - if:
           condition:
-            lambda: 'return id(zb_variant).state.empty() || id(zb_variant).state == "unknown";'
+            lambda: 'return !id(device_network_settings).internet_allowed();'
           then:
-            - cc2652_flasher.detect_variant:
-                id: zigbee_flasher
-            - wait_until:
-                condition:
-                  lambda: 'return !id(zb_variant).state.empty() && id(zb_variant).state != "unknown";'
-                timeout: 10s
+            - lambda: 'id(has_internet) = false;'
+            - logger.log: "Skipping online checks: Use without internet is enabled."
+            - script.stop: run_update_checks
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).is_trial_active();'
+          then:
+            - script.stop: run_update_checks
+      - logger.log: "Internet confirmed. Triggering firmware checks."
+      # Startup identity is independent of connectivity and internet policy.
+      - script.wait: probe_cc2652_on_boot
 
-      - update.check: esphome_fw_updater
+      - lambda: 'id(tubeszb_frontend).check_gateway_update();'
       - delay: 1s
-      - cc2652_flasher.check_update: { id: zigbee_flasher }
+      - lambda: 'id(tubeszb_frontend).request_cc2652_check();'
 
   - id: fw_update_mode
     then:
+      - logger.log: {level: INFO, tag: cc2652_flasher, format: "Manual bootloader requested."}
       - switch.turn_on: zBSL
       - delay: 1s
       - switch.turn_on: zRST_gpio
@@ -179,10 +245,45 @@ script:
       - logger.log: "Delaying ~10 seconds for cc2652p2 to settle"
       - delay: 11s
       - switch.turn_off: zBSL
+      - logger.log: {level: INFO, tag: cc2652_flasher, format: "Manual bootloader ready."}
       - logger.log: "Please try update with cc2538-bsl tool now"
       - logger.log: "cc-bsl usage: cc2538-bsl.py -p socket://ip-of-gw:6638 -evw firmware.hex"
 
 switch:
+  - platform: template
+    name: "Beta Zigbee Firmware Channel"
+    id: zigbee_fw_beta_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(zigbee_flasher).set_update_url("https://tube0013.github.io/tube_gateways/firmware/cc2652manifest-beta.json");'
+      - logger.log: "Zigbee firmware channel: BETA"
+    turn_off_action:
+      - lambda: 'id(zigbee_flasher).set_update_url("https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json");'
+      - logger.log: "Zigbee firmware channel: STABLE"
+
+  - platform: template
+    name: "Beta Firmware Channel"
+    id: beta_channel_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:beta
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 70
+    turn_on_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/beta_ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json");'
+      - logger.log: "ESP firmware channel: BETA; use Check ESP Firmware Update to check"
+    turn_off_action:
+      - lambda: 'id(esphome_fw_updater).set_source_url("https://tube0013.github.io/TubesZB-ESPHome-Builder/ota_manifests/ota-tubeszb-cc2652p2-ethusb-2022.json");'
+      - logger.log: "ESP firmware channel: STABLE; use Check ESP Firmware Update to check"
+
   - platform: gpio
     pin: 33
     id: zRST_gpio
@@ -213,6 +314,7 @@ uart:
   rx_buffer_size: 1024
 
 stream_server:
+  id: stream_srv
   uart_id: uart_bus
   port: 6638 # optional, default is 6638
   buffer_size: 1024
@@ -263,6 +365,22 @@ cc2652_flasher:
 
 button:
   - platform: template
+    name: "Check ESP Firmware Update"
+    id: check_esp_fw
+    icon: mdi:cloud-search-outline
+    web_server:
+      sorting_group_id: device_control_group
+      sorting_weight: 75
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed();'
+          then:
+            - component.update: esphome_fw_updater
+
+          else:
+            - logger.log: "Skipped firmware request: Use without internet is enabled."
+  - platform: template
     name: "Flash CC2652"
     id: flash_cc2652
     icon: mdi:flash
@@ -271,8 +389,7 @@ button:
       sorting_weight: 30
     on_press:
       then:
-        - cc2652_flasher.update_firmware:
-            id: zigbee_flasher
+        - script.execute: flash_cc2652_safely
 
   - platform: template
     name: "Check CC2652 Update"
@@ -283,9 +400,15 @@ button:
       sorting_weight: 20
     on_press:
       then:
-        - cc2652_flasher.check_update:
-            id: zigbee_flasher
+        - if:
+            condition:
+              lambda: 'return id(device_network_settings).internet_allowed();'
+            then:
+              - cc2652_flasher.check_update:
+                  id: zigbee_flasher
 
+            else:
+              - logger.log: "Skipped firmware request: Use without internet is enabled."
   - platform: template
     name: "Detect CC2652 Variant"
     id: detect_cc2652_variant
@@ -320,6 +443,7 @@ button:
 
   - platform: template
     name: "Trigger Zigbee Module Bootloader"
+    id: cc2652_bootloader
     disabled_by_default: true
     icon: mdi:application-import
     web_server:

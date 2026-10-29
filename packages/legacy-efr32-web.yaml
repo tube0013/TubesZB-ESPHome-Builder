@@ -1,0 +1,18 @@
+# Fixed-baud retired EFR32 gateways. Physical mappings live in each manifest.
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [tubeszb_web]
+
+tubeszb_web:
+  id: tubeszb_frontend
+  network_settings_id: device_network_settings
+  ethernet_id: ethernet0
+  uart_id: uart_bus
+  firmware_update_id: esphome_fw_updater
+  serial_radio:
+    stream_server_id: ss
+    reset_button: zRST
+    pause_button: pause_stream
+    resume_button: resume_stream

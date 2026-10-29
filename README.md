@@ -1,19 +1,67 @@
-# ESPHome firmware builder
+# TubesZB ESPHome firmware builder
 
-Build ESPHome firmware for specific TubesZB devices.
+Build ESPHome firmware for TubesZB devices. Each hardware model has one firmware
+image that supports both DHCP and a user-configured static IPv4 address.
 
-To Flash a TubesZB device with a web based flasher: https://tube0013.github.io/TubesZB-ESPHome-Builder
+[Open the web flasher](https://tube0013.github.io/TubesZB-ESPHome-Builder).
 
-**For Static IP Firmware Builds**
+Every hardware manifest now opens the TubesZB frontend at the device's main
+address. It includes device/radio status, network settings, gateway firmware
+management, diagnostics and downloadable logs retained across sections. The
+original ESPHome interface remains at `/esphome`.
 
-This Repository can create binaries for TubesZB devices which require a static IP.
+Zigbee models include native radio identity, flashing, bootloader controls and
+saved application baud. Older MGM12/MGM210 profiles use model-specific stable
+images; MGM21 dual boards enter their bootloader over EZSP because the boot pin
+is input-only. Dual-radio models show Zigbee and Z-Wave independently.
+See [rollout coverage and feature gaps](docs/frontend-feature-parity.md),
+[dual-radio notes](docs/dual-radio-frontend.md), and
+[MGM24/BP controls](docs/mgm24-frontend.md).
 
-To Start Create an Issue using the Issue Form, selecting the device name, inputting the desired network configuration.
+The retired MGM12 Pro1 and original MGM210 Series 2 profiles preserve the archived
+WT32-ETH01 pin mappings. Their Arduino-to-ESP-IDF migration builds need physical
+OTA/partition and radio-traffic validation before release use; see the rollout notes.
 
-A GitHub action will start once the issue is submitted and if all goes okay the issue will get a comment including a link to download the compiled binaries for flashing your device.
+New installations use DHCP. Open the device's web interface and select **Network
+settings**, or visit `http://<device-ip>/network`. Choose DHCP or Static IP, enter
+the address, subnet mask, gateway and DNS servers, then select **Apply & Restart**.
+Open the new address and select **Keep settings** within two minutes. Without
+confirmation, the device restores the previous confirmed configuration and restarts.
+An unexpected restart during a trial also restores the confirmed configuration.
 
-The download will include 2 .bin files.
-The firmware.factory.bin is suitible for flashing over usb using https://web.esphome.io
-The firmware.ota.bin can be flashed through the devices web frontend (if option exists).
+Confirmed settings survive normal restarts and OTA updates that preserve NVS.
+The `firmware.factory.bin` image is for USB installation; `firmware.ota.bin` is
+for OTA installation through the device's web interface.
 
-> Inspired by works from @nerivec, @shawly & more.
+Separate static-IP issue builds are retired. The files in `esphome-config/` are
+compatibility entry points to the same manifests used by release builds.
+
+Requires ESPHome **2026.10.0 or later**; development validation uses **2026.10.1**.
+Before publishing a release, set the repository's `ESPHOME_VERSION` variable to
+a compatible version.
+
+See [network settings design, tests, and hardware acceptance checks](docs/network-settings.md).
+
+The TubesZB frontend also supports the seven single-radio CC2652 configurations.
+See [CC2652 frontend](docs/cc2652-frontend.md) for controls and test-image details.
+
+## ESPHome build versions
+
+Set repository variables under **Settings → Secrets and variables → Actions → Variables**:
+
+| Variable | Used by |
+| --- | --- |
+| `ESPHOME_VERSION` | Stable releases and manual builds without an override |
+| `ESPHOME_PRERELEASE_VERSION` | Releases marked as a prerelease |
+
+Prerelease builds fall back to `ESPHOME_VERSION` if `ESPHOME_PRERELEASE_VERSION` is unset.
+The manual **Build ESPHome Firmware** workflow's `esphome_version` input overrides
+these variables for that run only.
+
+Both pins must be compatible with these manifests (ESPHome 2026.10.0 or newer).
+Local development and regression builds use 2026.10.1.
+
+Publishing a prerelease builds with the prerelease pin and publishes its firmware
+to `Beta_Release` and `beta_ota_manifests`. Publishing a stable release uses the
+stable pin and publishes to `Latest_Release` and `ota_manifests`. Manual builds
+upload workflow artifacts only.

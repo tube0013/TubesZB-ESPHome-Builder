@@ -1,0 +1,92 @@
+# Every CC2652 model includes this package. The stream ID is the Zigbee bridge,
+# so dual-radio devices leave the Z-Wave path alone.
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [cc2652_flash_guard]
+
+cc2652_flash_guard: {}
+
+# Identity is local UART work and must run even with Use without internet on.
+esphome:
+  on_boot:
+    - priority: -100
+      then:
+        - script.execute: probe_cc2652_on_boot
+
+globals:
+  - id: cc2652_boot_probe_was_paused
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: cc2652_flash_session
+    type: esphome::cc2652_flash_guard::FlashSession
+    restore_value: false
+
+logger:
+  on_message:
+    - level: DEBUG
+      then:
+        - lambda: |-
+            if (strcmp(tag, "cc2652_flasher") == 0)
+              id(cc2652_flash_session).observe(level <= ESPHOME_LOG_LEVEL_ERROR, message);
+
+script:
+  - id: probe_cc2652_on_boot
+    mode: single
+    then:
+      - lambda: 'id(cc2652_boot_probe_was_paused) = id(${cc2652_stream_server}).is_paused();'
+      - stream_server.pause: {id: '${cc2652_stream_server}'}
+      # Let the early GPIO reset pulse finish before using the ROM bootloader.
+      - delay: 100ms
+      - logger.log: "CC2652 startup: probing radio identity (no internet required)."
+      - cc2652_flasher.detect_variant: {id: zigbee_flasher}
+      - wait_until:
+          condition:
+            lambda: 'return !id(zb_variant).state.empty() && id(zb_variant).state != "unknown";'
+          timeout: 10s
+      # The native component's startup ZNP reads run at 0.7s and 4.5s. Keep
+      # ownership through those reads as well as ROM detection/reset cleanup.
+      - delay: 5s
+      - if:
+          condition:
+            lambda: 'return !id(cc2652_boot_probe_was_paused);'
+          then:
+            - stream_server.resume: {id: '${cc2652_stream_server}'}
+            - logger.log: "CC2652 startup probe finished; Zigbee serial bridge resumed."
+          else:
+            - logger.log: "CC2652 startup probe finished; preserving the existing manual pause."
+
+  - id: flash_cc2652_safely
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: 'return id(device_network_settings).internet_allowed() && id(cc2652_flash_session).begin(id(${cc2652_stream_server}).is_paused());'
+          then:
+            - logger.log: "CC2652 flash: pausing Zigbee serial bridge."
+            - stream_server.pause: {id: '${cc2652_stream_server}'}
+            - cc2652_flasher.update_firmware: {id: zigbee_flasher}
+            # The native action queues work. Wait for its real result, not an
+            # arbitrary flash duration. The main loop cannot run this predicate
+            # during the native flasher's synchronous UART work or cleanup.
+            - wait_until:
+                condition:
+                  lambda: 'return id(cc2652_flash_session).completed;'
+            - if:
+                condition:
+                  lambda: 'return id(cc2652_flash_session).success;'
+                then:
+                  # Successful flashes schedule ZNP identity reads at 1.2s and
+                  # 4s. Keep the bridge paused until those reads have run too.
+                  - delay: 5s
+            - if:
+                condition:
+                  lambda: 'return id(cc2652_flash_session).resume_after;'
+                then:
+                  - stream_server.resume: {id: '${cc2652_stream_server}'}
+                  - logger.log: "CC2652 flash: Zigbee serial bridge resumed."
+                else:
+                  - logger.log: "CC2652 flash: preserving the existing manual pause."
+            - lambda: 'id(cc2652_flash_session).end();'

@@ -1,0 +1,3 @@
+# Compatibility entry point for the same hardware manifest.
+packages:
+  firmware: !include ../manifests/tubeszb-efr32-mgm210-series-2.yaml

@@ -1,0 +1,12 @@
+# Branded frontend on the main address; the original interface remains at /esphome.
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [tubeszb_web]
+
+tubeszb_web:
+  network_settings_id: device_network_settings
+  ethernet_id: ethernet0
+  uart_id: uart_bus
+  firmware_update_id: esphome_fw_updater
