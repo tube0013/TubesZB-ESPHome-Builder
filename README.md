@@ -1,5 +1,10 @@
 # TubesZB ESPHome firmware builder
 
+> **Static IP builder:** With [TubesZB firmware 2026.10.29.1](https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/tag/2026.10.29.1)
+> or later, you no longer need the static-IP issue form or a custom firmware build.
+> Configure and save your static IPv4 settings directly in the device's web
+> interface under **Network**. The builder remains available for legacy firmware.
+
 Build ESPHome firmware for TubesZB devices. Each hardware model has one firmware
 image that supports both DHCP and a user-configured static IPv4 address.
 
