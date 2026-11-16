@@ -76,7 +76,6 @@ esp32:
         - esp_http_client
         - esp_crt_bundle
     sdkconfig_options:
-      CONFIG_LWIP_MAX_SOCKETS: "16"
       CONFIG_PM_ENABLE: "n"
       # Prevent IDF from trying to power-down UART in light sleep, which causes
       # uart_param_config to return ESP_ERR_NOT_SUPPORTED on some targets

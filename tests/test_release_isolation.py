@@ -74,7 +74,7 @@ def test_prerelease_version_and_shared_component_ref() -> None:
     assert len(hardware) == 22
     for path in hardware:
         assert load(path)['esphome']['project']['version'] == '2026.10.29.1', path.name
-    assert load(ROOT / 'packages/network-settings.yaml')['substitutions']['tubeszb_components_ref'] == 'refs/pull/7/head'
+    assert re.fullmatch(r'[0-9a-f]{40}', load(ROOT / 'packages/network-settings.yaml')['substitutions']['tubeszb_components_ref'])
     build = load(ROOT / '.github/workflows/build.yml')
     assert build['on']['release']['types'] == ['published']
     release = build['jobs']['release-assets']['steps']

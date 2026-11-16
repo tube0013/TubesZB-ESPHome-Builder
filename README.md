@@ -11,9 +11,15 @@ image that supports both DHCP and a user-configured static IPv4 address.
 All custom components and embedded frontend assets are maintained in
 [esphome-components](https://github.com/tube0013/esphome-components/pull/7).
 The YAMLs import them from GitHub; there is no local component-source dependency.
-During review, `tubeszb_components_ref` in `packages/network-settings.yaml` points
-to `refs/pull/7/head`. Change that single default to `main` after the component PR
-merges; CI checks out the same reference for host/browser integration tests.
+`tubeszb_components_ref` in `packages/network-settings.yaml` pins the tested
+component commit, including its socket declarations. CI checks out the same
+reference for host/browser integration tests. Update that single pin when
+upgrading the shared components.
+
+ESPHome calculates the socket limit from component requirements. The radio
+flashers, shared HTTP transport and background connectivity probe declare their
+needs; compatibility accounting fills missing HTTP-server UDP declarations on
+older ESPHome versions. Hardware manifests leave `CONFIG_LWIP_MAX_SOCKETS` unset.
 
 **Upgrading an old static-IP build:** the first upgrade starts on DHCP because
 old compiled-in addresses are not stored in the new settings. Find the device's
