@@ -17,9 +17,12 @@ settings, background connectivity probes where already enabled, beta channels,
 and GitHub Pages feeds remain included. The static-IP issue form/workflow stays available on the frozen `2026.10.25.0`
 source, ESPHome `2026.6.5` and pinned legacy components during testing.
 
-The project version and prerelease tag are `2026.10.29.1`. This replaces the failed `2026.10.29.0` release build; the release version
-guard now uses the ESPHome CLI without requiring Python `packaging`. Publishing
-this prerelease triggers only the beta asset/feed path. Keep
-`refs/pull/7/head` until component PR #7 is merged, then switch the shared default
-to `main`. ESPHome `2026.10.1` is the minimum for the new firmware; the legacy
-issue action has its own immutable source and compiler pins.
+The project version and prerelease tag are `2026.10.29.2`. This prerelease
+removes the remaining deprecated stream-server buffer settings and the fixed
+socket limit. The shared component pin includes the missing socket declarations,
+so ESPHome calculates capacity from the enabled components. Publishing this
+prerelease updates the beta asset/feed path.
+
+`packages/network-settings.yaml` pins the tested component commit; CI uses the
+same revision. ESPHome `2026.10.1` remains the minimum for this firmware. The
+legacy issue action retains its own immutable source and compiler pins.

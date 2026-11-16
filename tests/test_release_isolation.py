@@ -73,7 +73,7 @@ def test_prerelease_version_and_shared_component_ref() -> None:
     hardware = [p for p in (ROOT / 'manifests').glob('*.yaml') if 'esp32' in load(p)]
     assert len(hardware) == 22
     for path in hardware:
-        assert load(path)['esphome']['project']['version'] == '2026.10.29.1', path.name
+        assert load(path)['esphome']['project']['version'] == '2026.10.29.2', path.name
     assert re.fullmatch(r'[0-9a-f]{40}', load(ROOT / 'packages/network-settings.yaml')['substitutions']['tubeszb_components_ref'])
     build = load(ROOT / '.github/workflows/build.yml')
     assert build['on']['release']['types'] == ['published']
