@@ -143,6 +143,11 @@
     <main class="container-fluid">
         <fieldset>
             <legend>Select your device</legend>
+            <label data-manifest="./manifest-tubeszb-cc2652p2-ethusb-2021.json"
+                title="CC2652P2 with Ethernet and USB, 2021 version">
+                <input type="radio" name="device" value="tubeszb-cc2652p2-ethusb-2021" />
+                TubesZB CC2652P2 ethusb 2021
+            </label>
             <label data-manifest="./manifest-tubeszb-cc2652p2-ethusb-2022.json"
                 title="CC2652P2 with Ethernet and USB, 2022 version">
                 <input type="radio" name="device" value="tubeszb-cc2652p2-ethusb-2022" />
@@ -178,6 +183,11 @@
                 <input type="radio" name="device" value="tubeszb-dual-radio-kit-cc2652" />
                 TubesZB Dual Radio Kit CC2652
             </label>
+            <label data-manifest="./manifest-tubeszb-dual-radio-mgm21-2022.json"
+                title="Dual Radio Kit with MGM21, 2022 version">
+                <input type="radio" name="device" value="tubeszb-dual-radio-mgm21-2022" />
+                TubesZB Dual Radio Kit MGM21 2022
+            </label>
             <label data-manifest="./manifest-tubeszb-dual-radio-kit-mgm24.json"
                 title="Dual Radio Kit with MGM24">
                 <input type="radio" name="device" value="tubeszb-dual-radio-kit-mgm24" />
@@ -198,10 +208,25 @@
                 <input type="radio" name="device" value="tubeszb-dr-mgm24-exp" />
                 TubesZB Dual Radio Kit MGM24 Experimental
             </label>
+            <label data-manifest="./manifest-tubeszb-efr32-mgm210-poe-2022.json"
+                title="MGM210 with PoE, 2022 version">
+                <input type="radio" name="device" value="tubeszb-efr32-mgm210-poe-2022" />
+                TubesZB MGM21 PoE 2022
+            </label>
             <label data-manifest="./manifest-tubeszb-efr32-mgm210-poe-2023.json"
                 title="MGM210 with PoE, 2023 version">
                 <input type="radio" name="device" value="tubeszb-efr32-mgm210-poe-2023" />
                 TubesZB MGM21 PoE 2023
+            </label>
+            <label data-manifest="./manifest-tubeszb-efr32-mgm12-pro1.json"
+                title="Retired MGM12 Pro1 hardware">
+                <input type="radio" name="device" value="tubeszb-efr32-mgm12-pro1" />
+                TubesZB MGM12 Pro1 (retired)
+            </label>
+            <label data-manifest="./manifest-tubeszb-efr32-mgm210-series-2.json"
+                title="Original MGM210 Series 2 hardware">
+                <input type="radio" name="device" value="tubeszb-efr32-mgm210-series-2" />
+                TubesZB MGM210 Series 2 (original, retired)
             </label>
             <label data-manifest="./manifest-tubeszb-efr32-mgm24-2023.json"
                 title="MGM24 with PoE, 2023 version">
@@ -241,10 +266,10 @@
 
     <section class="container-fluid">
         <p>
-            Lookoing for a firmware with a static IP for your devices? If so please use the issue template in the
-            <a href="https://github.com/tube0013/TubesZB-ESPHome-Builder/issues/new/choose">
-                github repository to submit a request
-            </a>
+            Firmware 2026.10.29.1 and later supports DHCP and saved static IPv4 settings.
+            After installation, open the device's web interface and select <strong>Network</strong>.
+            A custom static-IP build is no longer necessary. See the
+            <a href="https://github.com/tube0013/TubesZB-ESPHome-Builder/releases/latest">release and upgrade notes</a>.
         </p>
 
         <p>
@@ -259,20 +284,28 @@
     </footer>
     <script>
         const deviceInfo = {
+            "tubeszb-cc2652p2-ethusb-2021": "CC2652P2 with Ethernet and USB, 2021 version.",
             "tubeszb-cc2652p2-ethusb-2022": "CC2652P2 with Ethernet and USB, 2022 version.",
             "tubeszb-cc2652p2-ethusb-2023": "CC2652P2 with Ethernet and USB, 2023 version.",
+            "tubeszb-cc2652p2-poe-2021": "CC2652P2 with PoE, 2021 version (Round Version).",
             "tubeszb-cc2652p2-poe-2022": "CC2652P2 with PoE, 2022 version.",
             "tubeszb-cc2652p2-poe-2023": "CC2652P2 with PoE, 2023 version.",
             "tubeszb-cc2652p7-poe-2023": "CC2652P7 with PoE, 2023 version.",
-            "tubeszb-dual-radio-kit-cc2652": "Dual Radio Kit with CC2652 based radio.",
-            "tubeszb-dual-radio-kit-mgm24": "Dual Radio Kit with MGM24 base radio.",
-            "tubeszb-dr-cc2652-exp": "Dual Radio Kit with CC2652 based radio, experimental firmware.",
-            "tubeszb-dr-mgm21-22-exp": "Dual Radio Kit with MGM21/MGM22 based radio, experimental firmware.",
-            "tubeszb-dr-mgm24-exp": "Dual Radio Kit with MGM24 based radio, experimental firmware.",
+            "tubeszb-dual-radio-kit-cc2652": "Dual Radio Kit with CC2652.",
+            "tubeszb-dual-radio-mgm21-2022": "Dual Radio Kit with MGM21, 2022 version.",
+            "tubeszb-dual-radio-kit-mgm24": "Dual Radio Kit with MGM24.",
+            "tubeszb-dr-cc2652-exp": "Dual Radio Kit with CC2652 experimental firmware.",
+            "tubeszb-dr-mgm21-22-exp": "Dual Radio Kit with MGM21/MGM22 experimental firmware.",
+            "tubeszb-dr-mgm24-exp": "Dual Radio Kit with MGM24 experimental firmware.",
+            "tubeszb-efr32-mgm210-poe-2022": "MGM210 with PoE, 2022 version.",
             "tubeszb-efr32-mgm210-poe-2023": "MGM210 with PoE, 2023 version.",
+            "tubeszb-efr32-mgm12-pro1": "Retired MGM12 Pro1 hardware.",
+            "tubeszb-efr32-mgm210-series-2": "Original MGM210 Series 2 hardware.",
             "tubeszb-efr32-mgm24-2023": "MGM24 with PoE, 2023 version.",
             "tubeszb-zw": "ZWave Kit.",
-            // ... add details for other devices
+            "tubeszb-zw-experimental": "ZWave Kit Experimental.",
+            "tubeszb-2026-zw": "ZWave Kit 2026 (Purple PCB).",
+            "tubeszb-2026-zw-experimental": "ZWave Kit 2026 Experimental (Purple PCB)."
         };
 
         document.querySelectorAll('input[name="device"]').forEach((radio) =>

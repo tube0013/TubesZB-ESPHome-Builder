@@ -1,6 +1,6 @@
 {
     "name": "tubeszb-zw-experimental",
-    "version": "v0.0.1",
+    "version": "2026.10.29.1",
     "builds": [
         {
             "chipFamily": "ESP32",

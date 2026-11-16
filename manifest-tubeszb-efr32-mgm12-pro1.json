@@ -1,0 +1,18 @@
+{
+    "builds": [
+        {
+            "chipFamily": "ESP32",
+            "ota": {
+                "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-efr32-mgm12-pro1.ota.bin"
+            },
+            "parts": [
+                {
+                    "offset": 0,
+                    "path": "https://tube0013.github.io/TubesZB-ESPHome-Builder/Latest_Release/tubeszb-efr32-mgm12-pro1.factory.bin"
+                }
+            ]
+        }
+    ],
+    "name": "tubeszb-efr32-mgm12-pro1",
+    "version": "2026.10.29.1"
+}
