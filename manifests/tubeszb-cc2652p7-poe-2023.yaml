@@ -319,7 +319,6 @@ stream_server:
   id: stream_srv
   uart_id: uart_bus
   port: 6638 # optional, default is 6638
-  buffer_size: 1024
 
 
 binary_sensor:
