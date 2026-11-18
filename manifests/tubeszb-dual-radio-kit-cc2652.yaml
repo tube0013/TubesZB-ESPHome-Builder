@@ -324,6 +324,26 @@ switch:
       sorting_weight: 60
 
 select:
+  - platform: template
+    name: "CC2652 Variant Override"
+    id: cc2652_variant_override
+    optimistic: true
+    restore_value: true
+    initial_option: "Auto"
+    options:
+      - "Auto"
+      - "P2"
+      - "P7"
+    # Restore the selection before the flasher's boot detection runs.
+    setup_priority: 810
+    web_server:
+      sorting_group_id: zigbee_control_group
+      sorting_weight: 1
+    on_value:
+      then:
+        - lambda: |-
+            id(zigbee_flasher).set_variant(i == 1 ? 2 : i == 2 ? 7 : 0);
+
   - id: change_baud_rate
     name: Baud rate
     platform: template
@@ -394,6 +414,7 @@ mdns:
         serial_number: !lambda 'return esphome::get_mac_address();'
 
 cc2652_flasher:
+  variant: auto
   id: zigbee_flasher
   runtime_baud_select: change_baud_rate
   uart_id: uart_bus_zb

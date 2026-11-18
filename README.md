@@ -27,6 +27,12 @@ DHCP lease, set and confirm its desired static address, and update the ZHA,
 Zigbee2MQTT or Z-Wave connection address if it changed. See the
 [upgrade and release notes](docs/release-notes.md).
 
+CC2652 devices offer a saved **CC2652 Variant Override** selection with
+**Auto** as the default. If variant detection fails, select **P2** or **P7** for
+your hardware before checking or flashing Zigbee firmware. Return to **Auto** to
+use automatic detection again. The control is also available in the original
+ESPHome interface at `/esphome` under **Zigbee Controls**.
+
 [Open the web flasher](https://tube0013.github.io/TubesZB-ESPHome-Builder).
 
 Every hardware manifest now opens the TubesZB frontend at the device's main
