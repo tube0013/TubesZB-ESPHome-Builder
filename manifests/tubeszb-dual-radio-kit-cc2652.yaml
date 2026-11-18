@@ -394,6 +394,7 @@ mdns:
         serial_number: !lambda 'return esphome::get_mac_address();'
 
 cc2652_flasher:
+  variant: auto
   id: zigbee_flasher
   runtime_baud_select: change_baud_rate
   uart_id: uart_bus_zb

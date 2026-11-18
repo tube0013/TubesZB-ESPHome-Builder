@@ -49,3 +49,25 @@ def test_long_cc2652_flash_observes_result_after_wait_timeout():
     assert success['condition']['lambda']=='return id(cc2652_flash_session).success;'
     assert success['then']==[{'delay':'5s'}]
     assert 'resume_after' in actions[wait+4]['if']['condition']['lambda']
+
+
+def test_saved_cc2652_variant_override_is_shared_by_every_model():
+    from test_frontend_rollout import load
+    package = load(ROOT / 'packages/cc2652-flash.yaml')
+    control = next(s for s in package['select'] if s['id'] == 'cc2652_variant_override')
+    assert control['initial_option'] == 'Auto'
+    assert control['options'] == ['Auto', 'P2', 'P7']
+    assert control['restore_value'].lower() == 'true'
+    assert control['optimistic'].lower() == 'true'
+    assert float(control['setup_priority']) > 800
+    assert 'set_variant(i == 1 ? 2 : i == 2 ? 7 : 0)' in control['on_value']['then'][0]['lambda']
+    for name in ('cc2652-web.yaml', 'dual-cc2652-web.yaml'):
+        frontend = load(ROOT / 'packages' / name)
+        assert frontend['tubeszb_web']['cc2652']['variant_select'] == control['id']
+    paths = list((ROOT / 'manifests').glob('*cc2652*.yaml'))
+    assert len(paths) == 9
+    for path in paths:
+        config = load(path)
+        assert config['cc2652_flasher']['variant'] == 'auto'
+        entry = load(ROOT / 'esphome-config' / path.name)
+        assert entry['packages']['firmware'].endswith('/' + path.name)

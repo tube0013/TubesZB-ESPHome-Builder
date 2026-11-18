@@ -337,6 +337,7 @@ mdns:
         serial_number: !lambda 'return esphome::get_mac_address();'
 
 cc2652_flasher:
+  variant: auto
   id: zigbee_flasher
   uart_id: uart_bus
   url: "https://raw.githubusercontent.com/tube0013/tube_gateways/refs/heads/main/misc/manifest.json"

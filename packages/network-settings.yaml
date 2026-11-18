@@ -1,6 +1,6 @@
 # Included by every hardware manifest. Pin code and socket accounting to the same tested revision.
 substitutions:
-  tubeszb_components_ref: b8e784bc9b3e5f1b413ec616792f3dceaa31c844
+  tubeszb_components_ref: 4d203edac1965c603e31d6719e999268ddcc600b
 external_components:
   - source: github://tube0013/esphome-components@${tubeszb_components_ref}
     components: [network_settings]
