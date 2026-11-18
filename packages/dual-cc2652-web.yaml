@@ -13,6 +13,7 @@ tubeszb_web:
   zwave_uart_id: uart_bus_zw
   model: "TubesZB Dual Radio CC2652 + Z-Wave"
   cc2652:
+    variant_select: cc2652_variant_override
     flash_script: flash_cc2652_safely
     boot_probe_script: probe_cc2652_on_boot
     stream_server_id: zb

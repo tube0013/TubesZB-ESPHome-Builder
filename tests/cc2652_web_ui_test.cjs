@@ -13,7 +13,7 @@ const device={nonce:'cc-token',name:'tubeszb-cc2652p2-poe-2021',model:'TubesZB C
  update_error:false,checking:false,update_verified:false,action_pending:false,
  zigbee:{busy:false,connected:true,paused:false,firmware:'20250321',latest:'20250321',board_name:'CC2652P2',manufacturer:'Texas Instruments',
  ieee:'00124b0000000002',info_status:'Ready',custom_url:'',baud:'115200',baud_options:[],gateway_beta:false,zigbee_beta:false,
- checked:false,operation:'',result:0,progress:-1,port:6638}};
+ checked:false,operation:'',result:0,progress:-1,port:6638,supports_variant_override:true,variant_override:'Auto'}};
 const network={mode:'static',testing:false,remaining:120,restarting:false,storage_ok:true,nonce:'network-token',ip:'192.168.1.52',
  subnet:'255.255.255.0',gateway:'192.168.1.1',dns1:'192.168.1.1',dns2:'0.0.0.0',return_ip:'192.168.1.52',hostname:'tubeszb-cc2652p2-poe-2021.local'};
 const actions=[];
@@ -23,6 +23,7 @@ const server=http.createServer(async(req,res)=>{
  res.setHeader('Content-Type','application/json');
  if(req.method==='GET'&&url.pathname==='/tubeszb/status'){res.end(JSON.stringify(device));return;}
  if(req.method==='GET'&&url.pathname==='/network/status'){res.end(JSON.stringify(network));return;}
+ if(req.method==='GET'){res.writeHead(404);res.end();return;}
  let raw='';for await(const chunk of req)raw+=chunk;
  const body=Object.fromEntries(new URLSearchParams(raw));actions.push({path:url.pathname,body});
  assert.equal(req.headers['x-tubeszb-ui'],'cc-token');
@@ -30,6 +31,7 @@ const server=http.createServer(async(req,res)=>{
  if(url.pathname==='/tubeszb/zigbee-action'){
   const radio=device.zigbee;radio.result=2;radio.operation='settings';
   switch(body.action){
+   case 'variant':radio.variant_override=body.value;radio.checked=false;radio.latest='';radio.board_name=body.value==='Auto'?'CC2652P2':'CC2652'+body.value;break;
    case 'gateway-channel':radio.gateway_beta=body.value==='beta';device.update_verified=false;device.update_state=2;break;
    case 'zigbee-channel':radio.zigbee_beta=body.value==='beta';radio.checked=false;break;
    case 'check':radio.operation='check';radio.checked=!radio.zigbee_beta;radio.result=radio.checked?2:3;break;
@@ -68,6 +70,30 @@ const server=http.createServer(async(req,res)=>{
   assert.deepEqual(await page.locator('[data-view=firmware] h2:visible').allTextContents(),['TubesZB firmware','Install a firmware file','Zigbee radio firmware']);
   assert.equal(await page.getByText('Custom radio firmware source',{exact:true}).isVisible(),false);
   assert.equal(await page.getByRole('button',{name:'Flash Zigbee firmware',exact:true}).isDisabled(),true);
+  const variant=page.getByLabel('CC2652 variant override',{exact:true});
+  assert.equal(await variant.inputValue(),'Auto');
+  // A failed probe must leave the saved override available for recovery.
+  device.zigbee.operation='probe';device.zigbee.result=3;device.zigbee.info_status='BSL probe: autobaud failed';
+  await page.reload();await variant.waitFor();
+  assert.equal(await variant.isEnabled(),true);
+  await variant.selectOption('P7');
+  await page.waitForTimeout(1300);
+  assert.equal(await variant.inputValue(),'P7','Polling preserves an unapplied selection');
+  const beforeVariant=actions.length;
+  await page.getByRole('button',{name:'Apply variant',exact:true}).click();await ready();
+  assert.deepEqual(actions.slice(beforeVariant).map(x=>[x.body.action,x.body.value]),[['variant','P7']]);
+  assert.equal(device.zigbee.variant_override,'P7');
+  assert.equal(await page.getByRole('button',{name:'Flash Zigbee firmware',exact:true}).isDisabled(),true,'Changing variant requires a fresh firmware check');
+  await page.reload();await variant.waitFor();assert.equal(await variant.inputValue(),'P7');
+  // The override is local configuration and remains available in offline mode.
+  network.use_without_internet=true;await page.reload();await variant.waitFor();
+  assert.equal(await page.getByRole('button',{name:'Apply variant',exact:true}).isEnabled(),true);
+  await variant.selectOption('P2');await page.getByRole('button',{name:'Apply variant',exact:true}).click();
+  await page.waitForFunction(()=>!document.querySelector('[data-action="radio-variant"]').disabled);
+  assert.equal(device.zigbee.variant_override,'P2');
+  network.use_without_internet=false;
+  await variant.selectOption('Auto');await page.getByRole('button',{name:'Apply variant',exact:true}).click();await ready();
+  assert.equal(device.zigbee.variant_override,'Auto');
   await page.getByLabel('Use beta gateway firmware',{exact:true}).check();await ready();
   assert.equal(device.zigbee.zigbee_beta,false);
   assert.equal(await page.getByRole('button',{name:'Install update',exact:true}).isVisible(),false);
@@ -92,6 +118,7 @@ const server=http.createServer(async(req,res)=>{
   assert.deepEqual(actions.slice(beforeFlash).map(x=>x.body.action),['flash'],'The browser must call the shared flash path once; UART ownership belongs to the device script');
   assert.equal(device.zigbee.paused,true,'Device flash path owns the paused bridge');
   assert.equal(await page.getByLabel('Use beta Zigbee firmware',{exact:true}).isDisabled(),true);
+  assert.equal(await variant.isDisabled(),true,'Variant changes are blocked during a flash');
   if(process.env.TZB_SCREENSHOT_DIR){fs.mkdirSync(process.env.TZB_SCREENSHOT_DIR,{recursive:true});await page.screenshot({path:path.join(process.env.TZB_SCREENSHOT_DIR,'cc2652-firmware.png'),fullPage:true});}
   await page.getByRole('button',{name:'Network',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'Apply & Restart',exact:true}).isDisabled(),true);

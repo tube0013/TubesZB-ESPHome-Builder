@@ -29,7 +29,8 @@ Zigbee2MQTT or Z-Wave connection address if it changed. See the
 
 CC2652 devices offer a saved **CC2652 Variant Override** selection with
 **Auto** as the default. If variant detection fails, select **P2** or **P7** for
-your hardware before checking or flashing Zigbee firmware. Return to **Auto** to
+your hardware on **Firmware → Zigbee radio firmware**, apply the variant, then
+check and flash Zigbee firmware. Return to **Auto** to
 use automatic detection again. The control is also available in the original
 ESPHome interface at `/esphome` under **Zigbee Controls**.
 
